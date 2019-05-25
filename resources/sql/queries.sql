@@ -7,7 +7,7 @@ VALUES (:id, :pass)
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
-SET login = :login, email = :email
+SET pass = :pass, email = :email
 WHERE id = :id
 
 -- :name get-user :? :1

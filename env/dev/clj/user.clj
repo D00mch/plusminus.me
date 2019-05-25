@@ -58,4 +58,4 @@
   [name]
   (migrations/create name (select-keys env [:database-url])))
 
-
+(defn sa "start all" [] (start) (start-fw) (cljs))

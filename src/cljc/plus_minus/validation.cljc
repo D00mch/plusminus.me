@@ -1,14 +1,15 @@
 (ns plus-minus.validation
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  #?(:cljs (:require-macros [plus-minus.validation :refer [defspec]])))
 
 (def ^:private spec-msgs (atom {}))
 
-(defn defspec [name rule & [human-msg]]
-  (s/def name rule)
-  (when human-msg
-    (swap! spec-msgs assoc name
-           (str/replace human-msg #"\s{2}" " "))))
+(defmacro defspec [name rule & [human-msg]]
+  `(do (s/def ~name ~rule)
+       (when ~human-msg
+         (swap! spec-msgs assoc ~name
+                (str/replace ~human-msg #"\s{2}" " ")))))
 
 (defspec ::range-2-20
   #(<= 2 (count %) 20)
@@ -29,7 +30,8 @@
   "Passwords do not match")
 
 (defspec :unq/person
-  (s/merge ::pass-confirm (s/keys :req-un [::id ::pass])))
+  (s/merge ::pass-confirm (s/keys :req-un [::id ::pass]))
+  "Invalid person")
 
 (defn- form->key-errors [form spec]
   (when-let [problems (::s/problems (s/explain-data spec form))]
@@ -46,19 +48,3 @@
 
 (defn registration-errors [params]
   (form->key-errors params :unq/person))
-
-(let [form {:id 1 :pass 1}
-      problems (::s/problems (s/explain-data :unq/person form))
-      ids  (-> form keys set)]
-  (->> (for [problem problems
-             :let [specs (-> problem :via)
-                   msg   (get @spec-msgs (last specs))
-                   id    (some->> specs
-                              (map (comp keyword name))
-                              (filter ids)
-                              last)]]
-         (do
-           (prn "id : " id)
-           (prn "msg : " msg)
-           [id msg]))
-       (into {})))
