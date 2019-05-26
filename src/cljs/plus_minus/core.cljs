@@ -6,7 +6,8 @@
     [markdown.core :refer [md->html]]
     [plus-minus.ajax :as ajax]
     [plus-minus.components.registration :as reg]
-    [plus-minus.app-db :as app-db]
+    [plus-minus.components.login :as login]
+    [plus-minus.app-db :as db]
     [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
     [clojure.string :as string])
@@ -15,8 +16,27 @@
 (defn nav-link [uri title page]
   [:a.navbar-item
    {:href   uri
-    :active (when (= page (app-db/get :page)) "is-active")}
+    :active (when (= page (db/get :page)) "is-active")}
    title])
+
+(defn account-actions [id]
+  [:div.navbar-end
+   [:div.buttons
+    [:a.button.is-light
+     {:on-click login/logout!}
+     "Logout"]
+    [:a.button.is-light
+     {:on-click #()}
+     "Delete account"]
+    ]])
+
+(defn user-menu []
+  (if-let [id (db/get :identity)]
+    [account-actions id]
+    [:div.navbar-end
+     [:div.buttons
+      (reg/registration-button)
+      (login/login-button)]]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
@@ -33,9 +53,7 @@
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
        [nav-link "#/about" "About" :about]]
-      [:div.navbar-end
-       [:div.buttons
-        (reg/registration-button)]]]]))
+      [user-menu]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -43,21 +61,20 @@
 
 (defn home-page []
   [:section.section>div.container>div.content
-   (when-let [docs (app-db/get :docs)]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+   [:p "Nothing here yet"]])
 
 (def pages
   {:home #'home-page
    :about #'about-page})
 
 (defn modal []
-  (when-let [session-modal (app-db/get :modal)]
+  (when-let [session-modal (db/get :modal)]
     [session-modal]))
 
 (defn page []
   [:div
    [modal]
-   [(pages (app-db/get :page))]])
+   [(pages (db/get :page))]])
 
 ;; -------------------------
 ;; Routes
@@ -80,13 +97,13 @@
     (events/listen
       HistoryEventType/NAVIGATE
       (fn [event]
-        (app-db/put! :page (match-route (.-token event)))))
+        (db/put! :page (match-route (.-token event)))))
     (.setEnabled true)))
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(app-db/put! :docs %)}))
+#_(defn fetch-docs! []
+  (GET "/docs" {:handler #(db/put! :docs %)}))
 
 (defn mount-components []
   (r/render [#'navbar] (.getElementById js/document "navbar"))
@@ -95,7 +112,7 @@
 (defn init! []
   (prn "initing")
   (ajax/load-interceptors!)
-  (fetch-docs!)
+  #_(fetch-docs!)
   (hook-browser-navigation!)
-  (app-db/put! :identity js/identity)
+  (db/put! :identity js/identity)
   (mount-components))

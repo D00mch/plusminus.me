@@ -1,6 +1,5 @@
 (ns plus-minus.components.common
-  (:require [reagent.core :as r]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [plus-minus.app-db :as app-db]))
 
 (defn modal [& {:keys [header body footer style]}]
@@ -12,6 +11,16 @@
     [:header.modal-card-head header]
     [:section.modal-card-body body]
     [:footer.modal-card-foot footer]]])
+
+(defn do-or-close-footer [& {:keys [name on-do styles]}]
+  [:div
+   [:a.button.is-primary
+    {:class (when (get @styles :loading) "is-loading")
+     :on-click on-do}
+    name]
+   [:a.button.is-danger
+    {:on-click #(app-db/remove! :modal)}
+    "Cancel"]])
 
 (defn input [& {:keys [type hint on-save on-stop id fields styles]
                 :or {type "text"}}]
@@ -26,7 +35,7 @@
          {:type        type
           :placeholder hint
           :value       (id @fields)
-          :auto-focus  true
+          :auto-focus  (get-in @styles [id :auto-focus])
           :on-blur     save
           :on-change   #(swap! fields assoc id (-> % .-target .-value))
           :on-key-down #(case (.-which %)

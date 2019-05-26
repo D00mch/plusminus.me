@@ -35,24 +35,29 @@
           (assoc :session (assoc session :identity (:id user))))
       (catch Exception e (handle-reg-exc e)))))
 
-(defn- authenticate [[id pass]]
-  (when-let [user (db/get-user {:id id})]
-    (when (hashers/check pass (:pass user))
-      id)))
+#_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) (.getBytes "user:pass")))
 
 (defn- decode-auth [encoded]
-  (let [auth (second (.split encoded " "))]
+  (let [auth (or (some-> encoded (.split " ") second)
+                 (log/error "Cant decode header header: " encoded)
+                 (throw (ex-info "Bad header" {:header encoded})))]
     (-> (.decode (java.util.Base64/getDecoder) auth)
         (String. (java.nio.charset.Charset/forName "UTF-8"))
         (.split ":"))))
 
 (defn login! [{:keys [session]} auth]
-  (if-let [id (authenticate (decode-auth auth))]
-    (-> {:result :ok}
-        (response/ok)
-        (assoc :session (assoc session :identity id)))
-    (response/unauthorized {:result :unauthorized
-                            :message "login failure"})))
+  (try
+    (let [[id pass]   (decode-auth auth)
+         user        (or (db/get-user {:id id})
+                         (throw (ex-info "Unknown login" {:field :id})))]
+     (when-not (hashers/check pass (:pass user))
+       (throw (ex-info "Wrong password" {:field :pass})))
+     (-> {:result :ok}
+         (assoc :session (assoc session :identity id))))
+    (catch clojure.lang.ExceptionInfo e
+      (response/unauthorized {:result  :unauthorized
+                              :field   (:field (ex-data e))
+                              :message (ex-message e)}))))
 
 (defn logout! []
   (-> {:result :ok}

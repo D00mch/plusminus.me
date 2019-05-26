@@ -48,7 +48,7 @@
             {:url "/api/swagger.json"
              :config {:validator-url nil}})}]]
 
-   ["/ping-pong"
+   ["/ping"
     {:get (constantly (ok {:message "pong"}))}]
 
    ["/register"
@@ -58,8 +58,19 @@
                                 :pass-confirm string?}}
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [{{user :body} :parameters :as req}]
-                       #_{:body {:result :anal}}
                        (auth/register! req user))}}]
+
+   ["/login"
+    {:post {:summary "login a user and create a session"
+            :parameters {:header {:authorization string?}}
+            :responses {200 {:body {:result keyword?}}}
+            :handler (fn [{{{h :authorization} :header} :parameters :as req}]
+                       (auth/login! req h))}}]
+
+   ["/logout"
+    {:post {:summary "remove user session"
+            :responses {200 {:body {:result keyword?}}}
+            :handler (fn [req] (auth/logout!))}}]
 
    ["/math"
     {:swagger {:tags ["math"]}}

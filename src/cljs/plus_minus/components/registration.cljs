@@ -24,41 +24,40 @@
                    (swap! styles dissoc :loading)
                    (swap! styles assoc-in [:errors :id] (:message resp)))})))
 
-(defn registration-form []
+(defn- registration-form []
   (let [fields (r/atom {})
-        styles (r/atom {})]
+        styles (r/atom {:id {:auto-focus true}})]
     (fn []
       [c/modal
        :style  {:style {:width 400}}
        :header [:div  "Plus-minus registration"]
        :body   [:div
                 [c/input
-                 :hint   "enter login"
                  :id     :id
+                 :hint   "enter login"
                  :fields fields
                  :styles styles]
                 [c/input
+                 :id     :pass
                  :type   "password"
                  :hint   "enter password"
-                 :id     :pass
                  :fields fields
                  :styles styles]
                 [c/input
+                 :id     :pass-confirm
                  :type   "password"
                  :hint   "confirm the password"
-                 :id     :pass-confirm
                  :fields fields
                  :styles styles]]
-       :footer [:div
-                [:a.button.is-primary
-                 {:class (when (get @styles :loading) "is-loading")
-                  :on-click #(register! fields styles)}
-                 "Register"]
-                [:a.button.is-danger
-                 {:on-click #(app-db/remove! :modal)}
-                 "Cancel"]]])))
+       :footer (c/do-or-close-footer
+                :name   "Register"
+                :on-do  #(register! fields styles)
+                :styles styles)])))
 
 (defn registration-button []
   [:a.button.is-light
    {:on-click #(app-db/put! :modal registration-form)}
-   "register"])
+   "Register"])
+
+#_(defn delete-account! [id]
+  (ajax/POST ))

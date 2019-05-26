@@ -1,0 +1,9 @@
+HTTP/1.1 405 Method Not Allowed
+Date: Sat, 25 May 2019 13:39:56 GMT
+Content-Type: text/html;charset=utf-8
+X-XSS-Protection: 1; mode=block
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+Content-Length: 1205
+Server: Jetty(9.4.12.v20180830)
+
