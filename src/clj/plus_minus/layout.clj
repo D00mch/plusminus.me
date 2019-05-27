@@ -20,6 +20,7 @@
         template
         (assoc params
           :page template
+          :identity (get-in request [:session :identity])
           :csrf-token *anti-forgery-token*)))
     "text/html; charset=utf-8"))
 

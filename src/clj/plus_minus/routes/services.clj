@@ -1,17 +1,19 @@
 (ns plus-minus.routes.services
   (:require
-    [reitit.swagger :as swagger]
-    [reitit.swagger-ui :as swagger-ui]
-    [reitit.ring.coercion :as coercion]
-    [reitit.coercion.spec :as spec-coercion]
-    [reitit.ring.middleware.muuntaja :as muuntaja]
-    [reitit.ring.middleware.multipart :as multipart]
-    [reitit.ring.middleware.parameters :as parameters]
-    [plus-minus.middleware.formats :as formats]
-    [plus-minus.middleware.exception :as exception]
-    [plus-minus.routes.services.auth :as auth]
-    [ring.util.http-response :refer [ok]]
-    [clojure.java.io :as io]))
+   [reitit.swagger :as swagger]
+   [reitit.swagger-ui :as swagger-ui]
+   [reitit.ring.coercion :as coercion]
+   [reitit.coercion.spec :as spec-coercion]
+   [reitit.ring.middleware.muuntaja :as muuntaja]
+   [reitit.ring.middleware.multipart :as multipart]
+   [reitit.ring.middleware.parameters :as parameters]
+   [plus-minus.middleware :as middleware]
+   [plus-minus.middleware.formats :as formats]
+   [plus-minus.middleware.exception :as exception]
+   [plus-minus.routes.services.auth :as auth]
+   [ring.util.http-response :as response]
+   [clojure.java.io :as io]
+   [plus-minus.middleware :as middleware]))
 
 (defn service-routes []
   ["/api"
@@ -49,7 +51,7 @@
              :config {:validator-url nil}})}]]
 
    ["/ping"
-    {:get (constantly (ok {:message "pong"}))}]
+    {:get (constantly (response/ok {:message "pong"}))}]
 
    ["/register"
     {:post {:summary "register a user, providing id and password"
@@ -70,7 +72,16 @@
    ["/logout"
     {:post {:summary "remove user session"
             :responses {200 {:body {:result keyword?}}}
-            :handler (fn [req] (auth/logout!))}}]
+            :handler (fn [req] (auth/logout! req))}}]
+
+   ["/restricted"
+    {:swagger {:tags ["restricted"]}
+     :middleware [middleware/wrap-restricted]}
+
+    ["/delete-account"
+     {:post {:summary "delete user profile from database"
+             :responses {200 {:body {:result keyword?}}}
+             :handler (fn [{{id :identity} :session}] (auth/delete-account! id))}}]]
 
    ["/math"
     {:swagger {:tags ["math"]}}

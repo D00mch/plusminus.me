@@ -20,10 +20,9 @@
                             (db/put! :identity id)
                             (reset! fields nil))
                 :error-handler
-                #(let [{:keys [field message]} (get % :response)]
-                   (prn "error-handler: field " field ", message " message)
+                #(let [{message :message} (get % :response)]
                    (swap! styles dissoc :loading)
-                   (swap! styles assoc-in [:errors field] message))})))
+                   (swap! styles assoc-in [:errors :id] message))})))
 
 (defn- login-form []
   (let [fields (r/atom {})
@@ -39,11 +38,12 @@
                  :fields fields
                  :styles styles]
                 [c/input
-                 :id     :pass
-                 :type   "password"
-                 :hint   "enter password"
-                 :fields fields
-                 :styles styles]]
+                 :id      :pass
+                 :type    "password"
+                 :hint    "enter password"
+                 :fields  fields
+                 :styles  styles
+                 :on-save (fn [_] (login! fields styles))]]
        :footer (c/do-or-close-footer
                 :name   "Login"
                 :on-do  #(login! fields styles)

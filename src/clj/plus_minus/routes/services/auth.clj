@@ -4,7 +4,8 @@
             [plus-minus.utils :as utils]
             [ring.util.http-response :as response]
             [buddy.hashers :as hashers]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.pprint :refer [pprint]]))
 
 (defn- handle-reg-exc [e]
   (let [duplicate? (->> (utils/ex-chain e)
@@ -21,7 +22,8 @@
          {:result  :error
           :message "server error occured while adding the user"})))))
 
-(defn register! [{session :session} user]
+(defn register! [{session :session :as req} user]
+  (pprint req)
   (if-let [errors (validate/registration-errors user)]
     (response/precondition-failed {:result  :error
                                    :message "precondition failed"
@@ -37,35 +39,35 @@
 
 #_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) (.getBytes "user:pass")))
 
-(defn- decode-auth [encoded]
-  (let [auth (or (some-> encoded (.split " ") second)
-                 (log/error "Cant decode header header: " encoded)
-                 (throw (ex-info "Bad header" {:header encoded})))]
+(defn decode-auth [encoded]
+  (let [auth (second (.split encoded " "))]
     (-> (.decode (java.util.Base64/getDecoder) auth)
         (String. (java.nio.charset.Charset/forName "UTF-8"))
         (.split ":"))))
 
-(defn login! [{:keys [session]} auth]
-  (try
-    (let [[id pass]   (decode-auth auth)
-         user        (or (db/get-user {:id id})
-                         (throw (ex-info "Unknown login" {:field :id})))]
-     (when-not (hashers/check pass (:pass user))
-       (throw (ex-info "Wrong password" {:field :pass})))
-     (-> {:result :ok}
-         (assoc :session (assoc session :identity id))))
-    (catch clojure.lang.ExceptionInfo e
-      (response/unauthorized {:result  :unauthorized
-                              :field   (:field (ex-data e))
-                              :message (ex-message e)}))))
+(defn- authenticate [[id pass]]
+  (when-let [user (db/get-user {:id id})]
+    (when (hashers/check pass (:pass user))
+      id)))
 
-(defn logout! []
+(defn login! [{:keys [session] :as req} auth]
+  (pprint req)
+  (if-let [id (authenticate (decode-auth auth))]
+    (-> {:result :ok}
+        (response/ok)
+        (assoc :session (assoc session :identity id)))
+    (response/unauthorized {:result :unauthorized
+                            :message "login failure"})))
+
+
+(defn logout! [req]
+  (pprint req)
   (-> {:result :ok}
       (response/ok)
       (assoc :session nil)))
 
 (defn delete-account! [identity]
-  (db/delete-user! identity)
+  (db/delete-user! {:id identity})
   (-> {:result :ok}
       (response/ok)
       (assoc :session nil)))

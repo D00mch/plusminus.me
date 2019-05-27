@@ -48,7 +48,8 @@
                  :type   "password"
                  :hint   "confirm the password"
                  :fields fields
-                 :styles styles]]
+                 :styles styles
+                 :on-save (fn [_] (register! fields styles))]]
        :footer (c/do-or-close-footer
                 :name   "Register"
                 :on-do  #(register! fields styles)
@@ -59,5 +60,8 @@
    {:on-click #(app-db/put! :modal registration-form)}
    "Register"])
 
-#_(defn delete-account! [id]
-  (ajax/POST ))
+(defn delete-account! [id]
+  (ajax/POST "/api/restricted/delete-account"
+             {:handler #(do
+                          (app-db/remove! :identity)
+                          (app-db/put! :page :home))}))

@@ -20,15 +20,27 @@
    title])
 
 (defn account-actions [id]
-  [:div.navbar-end
-   [:div.buttons
-    [:a.button.is-light
-     {:on-click login/logout!}
-     "Logout"]
-    [:a.button.is-light
-     {:on-click #()}
-     "Delete account"]
-    ]])
+  (r/with-let [expanded? (r/atom false)]
+    [:div.buttons>div.dropdown
+     {:class (when @expanded? "is-active")}
+     [:div.dropdown-trigger
+      [:button.button
+       {:on-click      #(swap! expanded? not)
+        :aria-haspopup "true"
+        :aria-controls "dropdown-menu"}
+       [:span "Sign Out"]
+       [:span.icon.is-small
+        [:i.fas.fa-angle-down
+         {:aria-hidden "true"}]]]
+      [:div#dropdown-menu.dropdown-menu
+       {:role "menu"}
+       [:div.dropdown-content
+        [:a.dropdown-item
+         {:on-click login/logout!}
+         "Logout"]
+        [:a.dropdown-item
+         {:on-click #(reg/delete-account! (db/get :identity))}
+         "Delete account"]]]]]))
 
 (defn user-menu []
   (if-let [id (db/get :identity)]
@@ -73,6 +85,16 @@
 
 (defn page []
   [:div
+
+   #_[:input.input.is-primary
+    {:type "text"
+     :placeholder "edittext"
+     :on-key-down
+     #_(prn "on key down with " (.-which %))
+     #(case (.-which %)
+         13 (prn "enter pressed")
+         27 (prn "escape pressed"))}]
+
    [modal]
    [(pages (db/get :page))]])
 
