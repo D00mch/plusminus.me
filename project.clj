@@ -31,6 +31,7 @@
                  [org.webjars.npm/material-icons "0.3.0"]
                  [org.webjars/webjars-locator "0.36"]
                  [reagent "0.8.1"]
+                 [clojure-term-colors "0.1.0"] ;; to color game board in repl
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
@@ -83,6 +84,7 @@
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
                                  [cider/piggieback "0.4.0"]
+                                 [org.clojure/test.check "0.9.0"] ;; for spec
                                  [doo "0.1.11"]
                                  [expound "0.7.2"]
                                  [figwheel-sidecar "0.5.18"]
