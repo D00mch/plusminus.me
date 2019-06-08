@@ -33,3 +33,42 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.grid {
+    margin: 0 0;
+    width: 80vw;
+    max-width: 60vh;
+    height: 80vw;
+    max-height: 60vh;
+    font-size: 1rem;
+}
+.row {
+    display: flex;
+    margin: 0px;
+    flex-direction: row;
+    align-items: flex-start;
+}
+.box {
+    background: WhiteSmoke;
+    margin: 5px;
+    color: white;
+    font-weight: bold;
+    flex: 1 0 auto;
+    position: relative;
+}
+.box:after {
+    content: "";
+    float:left;
+    display: block;
+    padding-top: 100%;
+}
+.box .inner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: Gray;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

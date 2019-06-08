@@ -1,5 +1,6 @@
 (ns plus-minus.game.board
   (:require [clojure.spec.alpha :as s]
+            [clojure.test.check.generators]
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.test.alpha :as stest]))
 

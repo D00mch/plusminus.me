@@ -71,9 +71,26 @@
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
 
+(defn digit-form []
+  [:div.box {:style {:display "flex"
+                     :align-items "center"
+                     :justify-content "center"
+                     :width 40
+                     :height 40}}
+   [:p "1"]])
+
+(defn game-matrix [size]
+  [:div.grid
+   (for [i (range size)]
+     [:div.row
+      (for [j (range size)]
+        [:div.box {:style {:margin 5}}
+         [:div.inner (* i j)]])])])
+
 (defn home-page []
   [:section.section>div.container>div.content
-   [:p "Nothing here yet"]])
+   (game-matrix 8)
+   ])
 
 (def pages
   {:home #'home-page

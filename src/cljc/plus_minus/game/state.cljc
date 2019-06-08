@@ -3,7 +3,7 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.test.alpha :as stest]
             [plus-minus.game.board :as b]
-            [clojure.term.colors :as colors]))
+            #?(:clj [clojure.term.colors :as colors])))
 
 (defn state-template [row-size]
   {:board      (b/generate row-size)
@@ -31,7 +31,8 @@
           val       (cond hidden? " *"
                           (neg? val) val
                           :else (str " " val))]
-      (print (if color? (colors/red val) val))
+      (print (if color? #?(:clj (colors/red val)
+                           :cljs val) val))
       (print "|")
       (when new-line?
         (println)))))
