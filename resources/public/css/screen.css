@@ -1,4 +1,7 @@
 html,
+* {
+    box-sizing: border-box;
+}
 body {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -33,14 +36,28 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.grid {
+.board {
+    width: 70vw;
+    max-width: 50vh;
+}
+
+.board.grid {
     margin: 0 0;
-    width: 80vw;
-    max-width: 60vh;
-    height: 80vw;
-    max-height: 60vh;
+    height: 70vw;
+    max-height: 50vh;
     font-size: 1rem;
 }
+
+.board.scors {
+    margin: 0px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.scor {
+    margin: 5px;
+}
+
 .row {
     display: flex;
     margin: 0px;

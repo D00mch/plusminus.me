@@ -16,15 +16,22 @@
 (defn size [{{c :cells} :board}] (count c))
 (defn last-move [{s :start mvs :moves}] (or (peek mvs) s))
 
+(defn valid-moves [{:keys [hrz-turn board moves] :as state}]
+  (let [{:keys [x y]} (b/bcoords board (last-move state))]
+    (->> (range (:row-size board))
+         (mapv #(if hrz-turn [% y] [x %]))
+         (mapv #(b/bxy->index board (% 0) (% 1)))
+         (filterv #(not (some #{%} moves))))))
+
+(defn valid-move? [state m] (->> (valid-moves state) (some #{m})))
+
 (defn state-print [{:keys [board hrz-turn moves hrz-points vrt-points] :as state}]
   (println "h: " hrz-points (if hrz-turn "<- turn" ""))
   (println "v: " vrt-points (if hrz-turn "" "<- turn"))
   (println "moves: " (map #(b/bcoords board %) moves))
   (dotimes [i (b/bcount board)]
     (let [{x  :x y  :y} (b/bcoords board i)
-          {xl :x yl :y} (b/bcoords board (last-move state))
-          color?    (or (and hrz-turn (= y yl))
-                        (and (not hrz-turn) (= x xl)))
+          color?    (valid-move? state i)
           new-line? (= (rem (inc x) (:row-size board)) 0)
           val       (nth (:cells board) i)
           hidden?   (some #{i} moves)
@@ -69,14 +76,6 @@
            (update :hrz-turn not)))
       state)))
 
-(defn valid-moves [{:keys [hrz-turn board moves] :as state}]
-  (let [{:keys [x y]} (b/bcoords board (last-move state))]
-    (->> (range (:row-size board))
-         (mapv #(if hrz-turn [% y] [x %]))
-         (mapv #(b/bxy->index board (% 0) (% 1)))
-         (filterv #(not (some #{%} moves))))))
-
-(defn valid-move? [state m] (->> (valid-moves state) (some #{m})))
 (defn move-val [{{cells :cells} :board} mv] (nth cells mv))
 (defn moves? [state] (-> state valid-moves seq boolean))
 (defn move [state mv] (make-move state mv))
@@ -222,7 +221,7 @@
   (stest/instrument `moves?)
   (stest/instrument `last-move))
 
-(defn test-defns []
+#_(defn test-defns []
   (instrument)
   (-> (stest/enumerate-namespace 'plus-minus.game.state) stest/check))
 

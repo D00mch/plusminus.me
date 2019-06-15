@@ -1,16 +1,17 @@
 (ns plus-minus.core
   (:require
-    [reagent.core :as r]
-    [goog.events :as events]
-    [goog.history.EventType :as HistoryEventType]
-    [markdown.core :refer [md->html]]
-    [plus-minus.ajax :as ajax]
-    [plus-minus.components.registration :as reg]
-    [plus-minus.components.login :as login]
-    [plus-minus.app-db :as db]
-    [ajax.core :refer [GET POST]]
-    [reitit.core :as reitit]
-    [clojure.string :as string])
+   [reagent.core :as r]
+   [goog.events :as events]
+   [goog.history.EventType :as HistoryEventType]
+   [markdown.core :refer [md->html]]
+   [plus-minus.ajax :as ajax]
+   [plus-minus.components.registration :as reg]
+   [plus-minus.components.login :as login]
+   [plus-minus.app-db :as db]
+   [plus-minus.components.board :as board]
+   [ajax.core :refer [GET POST]]
+   [reitit.core :as reitit]
+   [clojure.string :as string])
   (:import goog.History))
 
 (defn nav-link [uri title page]
@@ -79,17 +80,11 @@
                      :height 40}}
    [:p "1"]])
 
-(defn game-matrix [size]
-  [:div.grid
-   (for [i (range size)]
-     [:div.row
-      (for [j (range size)]
-        [:div.box {:style {:margin 5}}
-         [:div.inner (* i j)]])])])
-
 (defn home-page []
   [:section.section>div.container>div.content
-   (game-matrix 8)
+   (board/game-settings)
+   (board/scors)
+   (board/game-matrix)
    ])
 
 (def pages
@@ -102,16 +97,6 @@
 
 (defn page []
   [:div
-
-   #_[:input.input.is-primary
-    {:type "text"
-     :placeholder "edittext"
-     :on-key-down
-     #_(prn "on key down with " (.-which %))
-     #(case (.-which %)
-         13 (prn "enter pressed")
-         27 (prn "escape pressed"))}]
-
    [modal]
    [(pages (db/get :page))]])
 
@@ -154,4 +139,5 @@
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
+  (board/init-game-state)
   (mount-components))

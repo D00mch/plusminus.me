@@ -14,8 +14,8 @@
 
   represented in code as {:row-size n, :board [...]})
 
-(def row-count-min 2)
-(def row-count-max 5)
+(def row-count-min 3)
+(def row-count-max 9)
 
 (def row-count-max-excl   (inc row-count-max))
 (def board-count-min      (int (Math/pow row-count-min 2)))
@@ -100,7 +100,7 @@
   (stest/instrument `bget)
   (stest/instrument `bcoords))
 
-(defn test-defns []
+#_(defn test-defns []
   (instrument)
   (-> (stest/enumerate-namespace 'plus-minus.game.board) stest/check))
 

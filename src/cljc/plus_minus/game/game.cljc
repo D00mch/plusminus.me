@@ -5,12 +5,12 @@
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]))
 
-(defn move-max [state]
+(defn- move-max [state]
   (->> state st/valid-moves
        (apply max-key #(st/move-val state %))
        (st/move state)))
 
-(defn points-diff [{:keys [hrz-turn hrz-points vrt-points]}]
+(defn- points-diff [{:keys [hrz-turn hrz-points vrt-points]}]
   ((if hrz-turn + -) (- hrz-points vrt-points)))
 
 (defn predict [state turns-ahead]
@@ -26,10 +26,11 @@
         mv (->> mvs count (nth pmvs))]
     (st/move state mv)))
 
-(def game-state (atom (st/state-template 3)))
+
 
 
 (comment
+  (def game-state (atom (st/state-template 3)))
 
   (add-watch game-state :bot
              (fn [key atom old-state new-state]
