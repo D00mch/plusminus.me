@@ -31,7 +31,7 @@
 
 (defn generate [size]
   {:row-size size,
-   :cells    (repeatedly (* size size) #(-> 19 rand int (- 9)))})
+   :cells    (vec (repeatedly (* size size) #(-> 19 rand int (- 9))))})
 
 (defn xy->index  [x y row-size] (+ (* y row-size) x))
 (defn bxy->index [board x y]    (xy->index x y (:row-size board)))
@@ -58,7 +58,8 @@
 (s/def ::row-size (s/int-in row-count-min row-count-max-excl))
 (s/def ::cell (s/int-in -9 10))
 (s/def ::square #(-> % count Math/sqrt (mod 1) (== 0)))
-(s/def ::cells (s/& (s/+ ::cell) ::square))
+;;(s/def ::cells (s/& (s/+ ::cell) ::square))
+(s/def ::cells (s/coll-of ::cell :kind vector?))
 (s/def ::board
   (s/with-gen
     (s/and (s/keys :req-un [::row-size ::cells])
