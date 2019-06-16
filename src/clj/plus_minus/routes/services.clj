@@ -11,6 +11,8 @@
    [plus-minus.middleware.formats :as formats]
    [plus-minus.middleware.exception :as exception]
    [plus-minus.routes.services.auth :as auth]
+   [plus-minus.game.state :as game-state]
+   [plus-minus.routes.services.state :as state]
    [ring.util.http-response :as response]
    [clojure.java.io :as io]
    [plus-minus.middleware :as middleware]))
@@ -73,6 +75,20 @@
     {:post {:summary "remove user session"
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [req] (auth/logout! req))}}]
+
+   ["/state"
+    {:get {:summary "get last game state or new state"
+           :parameters {:query {:id string?}}
+           :responses {200 {:body {:result ::game-state/state}}}
+           :handler (fn [{{{id :id} :query} :parameters}]
+                      (state/get-state id))}
+
+     :put {:summary "upsert game state"
+           :parameters {:body {:id    string?
+                               :state ::game-state/state}}
+           :responses {200 {:body {:result keyword?}}}
+           :handler (fn [{{{id :id, s :state} :body} :parameters}]
+                      (state/upsert-state id s))}}]
 
    ["/restricted"
     {:swagger {:tags ["restricted"]}

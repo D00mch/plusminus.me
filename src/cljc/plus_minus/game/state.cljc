@@ -144,12 +144,13 @@
 
 (s/def ::hrz-turn boolean?)
 (s/def ::start    ::b/index)
+(s/def ::hrz-points int?)
+(s/def ::vrt-points int?)
 
 (s/def ::state
   (s/with-gen
-    (s/and (s/keys :req-un [::b/board ::moves ::hrz-turn ::start])
-           #(-> % :hrz-points int?)
-           #(-> % :vrt-points int?)
+    (s/and (s/keys :req-un [::b/board ::moves ::hrz-turn ::start
+                            ::hrz-points ::vrt-points])
            #(every? (fn [move] (b/ind-in-board? move (:board %)))
                     (:moves %)))
     state-generator))
@@ -221,7 +222,7 @@
   (stest/instrument `moves?)
   (stest/instrument `last-move))
 
-#_(defn test-defns []
+(defn test-defns []
   (instrument)
   (-> (stest/enumerate-namespace 'plus-minus.game.state) stest/check))
 

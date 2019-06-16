@@ -1,5 +1,5 @@
 (ns plus-minus.test.game
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is testing]]
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
             [clojure.spec.test.alpha :as stest]

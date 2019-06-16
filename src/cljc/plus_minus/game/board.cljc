@@ -100,7 +100,7 @@
   (stest/instrument `bget)
   (stest/instrument `bcoords))
 
-#_(defn test-defns []
+(defn test-defns []
   (instrument)
   (-> (stest/enumerate-namespace 'plus-minus.game.board) stest/check))
 
