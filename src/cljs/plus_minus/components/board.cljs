@@ -35,20 +35,27 @@
 (defn- after-delay [f]
   (js/setTimeout f 1000))
 
-(defn- reset-watchers []
+(defn- reset-watchers
+  "watcher make moves, resets game on end and ivalid state"
+  []
   (remove-watch db/state :bot)
   (add-watch
    db/state :bot
    (fn [key atom old-state new-state]
-     (let [{:keys [board] :as state} (:game-state @atom)]
-       (cond (-> state s/moves? not)
+     (let [{:keys [board] :as state} (:game-state @atom)
+           reset-game #(change-state (s/state-template
+                                      (or (:row-size board) 4)))]
+       (cond (-> state s/valid-state? not)
+             (do (js/alert "Game resets due to ivalid game-state")
+                 (reset-game))
+
+             (-> state s/moves? not)
              (after-delay
               #(do (js/alert (end-game-msg state))
-                   (change-state (s/state-template
-                                  (or (:row-size board) 4))))),
+                   (reset-game)))
+
              (not (user-turn state))
-             (after-delay
-              #(change-state (g/move-bot state))))))))
+             (after-delay #(change-state (g/move-bot state))))))))
 
 (defn init-game-state []
   (db/put! :usr-hrz-turn true)

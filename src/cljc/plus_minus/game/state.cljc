@@ -93,6 +93,7 @@
 
 (defn rand-move "rand move or nil" [state] (first (shuffle (valid-moves state))))
 
+(defn valid-state? [state] (s/valid? ::state->simulated state))
 
 ;;************************* GENERATORS *************************
 
