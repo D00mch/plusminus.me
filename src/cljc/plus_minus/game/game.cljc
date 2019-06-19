@@ -7,16 +7,16 @@
        (apply max-key #(st/move-val state %))
        (st/move state)))
 
-(defn- points-diff [{:keys [hrz-turn hrz-points vrt-points]}]
+(defn- points-diff [hrz-turn {:keys [hrz-points vrt-points]}]
   ((if hrz-turn + -) (- hrz-points vrt-points)))
 
 (defn predict [state turns-ahead]
-  (cond (-> state st/moves? not) state
+  (cond (-> state st/moves? not) (update state :hrz-turn not)
         (<= turns-ahead 0) (move-max state)
         :else (->> (st/valid-moves state)
                    (map #(st/move state %))
                    (map #(predict % (dec turns-ahead)))
-                   (apply max-key points-diff))))
+                   (apply max-key #(points-diff (:hrz-turn state) %)))))
 
 (defn move-bot [{mvs :moves :as state}] ;; TODO: spec that state have moves
   (let [{pmvs :moves} (predict state 3)
@@ -40,4 +40,5 @@
                                                     (println "the end")),
                        (not hrz-turn) (reset! atom (move-bot state))))))
 
-  (remove-watch game-state :bot))
+  (remove-watch game-state :bot)
+  )

@@ -57,21 +57,22 @@
   (add-watch
    db/state :bot
    (fn [key atom old-state new-state]
-     (let [{:keys [board] :as state} (:game-state @atom)
-           reset-game #(change-state (s/state-template
-                                      (or (:row-size board) 4)))]
-       (cond (-> state s/valid-state? not)
-             (do (js/alert "Game resets due to ivalid game-state")
-                 (reset-game))
+     (when-not (= (:game-state old-state) (:game-state new-state))
+       (let [{:keys [board] :as state} (:game-state @atom)
+             reset-game #(change-state (s/state-template
+                                        (or (:row-size board) 4)))]
+         (cond (-> state s/valid-state? not)
+               (do (js/alert "Game resets due to ivalid game-state")
+                   (reset-game))
 
-             (-> state s/moves? not)
-             (after-delay
-              #(do (js/alert (end-game-msg state))
-                   (send-end-game state false)
-                   (reset-game)))
+               (-> state s/moves? not)
+               (after-delay
+                #(do (reset-game)
+                     (js/alert (end-game-msg state))
+                     (send-end-game state false)))
 
-             (not (user-turn state))
-             (after-delay #(change-state (g/move-bot state))))))))
+               (not (user-turn state))
+               (after-delay #(change-state (g/move-bot state)))))))))
 
 (defn- load-stats! [id]
   (ajax/GET "api/game/statistics"
@@ -89,7 +90,7 @@
                :error-handler #(let [{message :message} (get % :response)]
                                  (change-state (s/state-template 4)))})))
 
-(defn alert-form [row-size]
+(defn alert-restart [row-size]
   (let [styles (r/atom {:id {:auto-focus true}})]
     (fn []
      [c/modal
@@ -109,7 +110,7 @@
    [:select {:on-change #(let [row-size (int (.. % -target -value))
                                moves    (-> :game-state db/get :moves seq)]
                            (if moves
-                             (db/put! :modal (alert-form row-size))
+                             (db/put! :modal (alert-restart row-size))
                              (db/put! :game-state (s/state-template row-size))))
              :value (db/get-in [:game-state :board :row-size] 4)}
     (for [row-size (range b/row-count-min b/row-count-max)]

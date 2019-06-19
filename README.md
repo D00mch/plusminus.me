@@ -12,7 +12,6 @@ check Android version on [Google play][2]
 - multiplayer;
 - animation;
 - design;
-- bot logic;
 - event driven database;
 
 ## Prerequisites
