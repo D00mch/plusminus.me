@@ -82,10 +82,13 @@
 
 (defn home-page []
   [:section.section>div.container>div.content
-   (board/game-settings)
-   (board/scors)
-   (board/game-matrix)
-   ])
+   [:div {:style {:display :flex
+                  :flex-direction :column
+                  :flex-wrap :wrap}}
+    [board/game-settings]
+    [board/scors]
+    [board/game-matrix]
+    [board/game-stats]]])
 
 (def pages
   {:home #'home-page

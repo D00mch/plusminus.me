@@ -38,13 +38,13 @@ body {
 
 .board {
     width: 70vw;
-    max-width: 50vh;
+    max-width: 450px;
 }
 
 .board.grid {
     margin: 0 0;
     height: 70vw;
-    max-height: 50vh;
+    max-height: 450px;
     font-size: 1rem;
 }
 
@@ -52,6 +52,13 @@ body {
     margin: 0px 0;
     display: flex;
     justify-content: space-between;
+}
+
+.board.stats {
+    margin: 70px 10px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
 }
 
 .scor {

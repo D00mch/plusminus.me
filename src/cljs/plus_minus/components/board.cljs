@@ -26,6 +26,9 @@
 (defn- user-turn [{hrz :hrz-turn}]
   (= (db/get :usr-hrz-turn) hrz))
 
+(def ^:private stats-handler
+  #(->> % :statistics (db/put! :game-statistics)))
+
 (defn- send-end-game [state usr-gave-up]
   (when (db/get :identity)
     (ajax/PUT "api/game/end"
@@ -33,7 +36,7 @@
                         :state   state
                         :usr-hrz true
                         :give-up usr-gave-up}
-               :handler #()
+               :handler stats-handler
                })))
 
 (defn- end-game-msg [{:keys [hrz-points vrt-points hrz-turn]}]
@@ -47,7 +50,7 @@
 (defn- after-delay [f]
   (js/setTimeout f 1000))
 
-(defn- reset-watchers
+(defn- reset-watchers!
   "watcher make moves, resets game on end and ivalid state"
   []
   (remove-watch db/state :bot)
@@ -70,9 +73,14 @@
              (not (user-turn state))
              (after-delay #(change-state (g/move-bot state))))))))
 
+(defn- load-stats! [id]
+  (ajax/GET "api/game/statistics"
+            {:params {:id id}
+             :handler stats-handler}))
+
 (defn init-game-state []
   (db/put! :usr-hrz-turn true)
-  (reset-watchers)
+  (reset-watchers!)
   (if-let [cookie-state (cookies/get :game-state)]
     (change-state cookie-state)
     (ajax/GET "api/game/state"
@@ -94,7 +102,7 @@
                :on-do (fn []
                         (db/remove! :modal)
                         (send-end-game (db/get :game-state) true)
-                        (db/put! :game-state (s/state-template row-size))))])))
+                        (change-state (s/state-template row-size))))])))
 
 (defn game-settings []
   [:div.control>div.select {:style {:margin-bottom 16}}
@@ -111,6 +119,18 @@
   [:div.board.scors
    [:div.scor (str "You: " (db/get-in [:game-state :hrz-points]))]
    [:div.scor (str "He: " (db/get-in [:game-state :vrt-points]))]])
+
+(defn game-stats []
+  (let [id    (db/get :identity)
+        stats (db/get :game-statistics)]
+    (cond (and id (not stats)) (load-stats! id)
+          (and (not id))       (db/remove! :game-statistics))
+    (if stats
+      [:div.board.stats
+       [:div.scor (str "Win: "  (:win stats))]
+       [:div.scor (str "Lose: " (:lose stats))]
+       [:div.scor (str "Draw: " (:draw stats))]]
+      [:div.board.stats [:label "Authorize to see statistics"]])))
 
 (defn game-matrix [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   (let [{{r :row-size, cells :cells :as board} :board
