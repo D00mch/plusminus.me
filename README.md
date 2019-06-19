@@ -1,8 +1,19 @@
 # plus-minus
 
-generated using Luminus version "3.32"
+Math game.
 
-FIXME
+check Android version on [Google play][2]
+
+[2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
+
+## Status: in progress 
+
+### TODOS
+- multiplayer;
+- animation;
+- design;
+- bot logic;
+- event driven database;
 
 ## Prerequisites
 
