@@ -33,6 +33,7 @@
                  [reagent "0.8.1"]
                  [reanimated "0.6.1"]
                  [clojure-term-colors "0.1.0"] ;; to color game board in repl
+                 [com.walmartlabs/cond-let "1.0.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]
                  [ring/ring-defaults "0.3.2"]

@@ -1,8 +1,5 @@
 (ns plus-minus.game.game
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.spec.test.alpha :as stest]
-            [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]))
 
 (defn- move-max [state]
@@ -26,8 +23,11 @@
         mv (->> mvs count (nth pmvs))]
     (st/move state mv)))
 
-
-
+(defn on-game-end [{:keys [hrz-points vrt-points] :as state} usr-hrz-turn]
+  (if (= hrz-points vrt-points)
+    :draw
+    (let [hrz-wins (> hrz-points vrt-points)]
+      (if (= usr-hrz-turn hrz-wins) :win :lose))))
 
 (comment
   (def game-state (atom (st/state-template 3)))

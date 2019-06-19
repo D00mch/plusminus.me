@@ -14,6 +14,7 @@
    [plus-minus.game.state :as game-state]
    [plus-minus.routes.services.state :as state]
    [ring.util.http-response :as response]
+   [clojure.spec.alpha :as spec]
    [clojure.java.io :as io]
    [plus-minus.middleware :as middleware]))
 
@@ -76,19 +77,40 @@
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [req] (auth/logout! req))}}]
 
-   ["/state"
-    {:get {:summary "get last game state or new state"
-           :parameters {:query {:id string?}}
-           :responses {200 {:body {:result ::game-state/state}}}
-           :handler (fn [{{{id :id} :query} :parameters}]
-                      (state/get-state id))}
+   ["/game"
+    {:swagger {:tags ["game"]}}
 
-     :put {:summary "upsert game state"
-           :parameters {:body {:id    string?
-                               :state ::game-state/state}}
-           :responses {200 {:body {:result keyword?}}}
-           :handler (fn [{{{id :id, s :state} :body} :parameters}]
-                      (state/upsert-state id s))}}]
+    ["/state"
+     {:get {:summary "get last game state or new state"
+            :parameters {:query {:id string?}}
+            :responses {200 {:body {:state ::game-state/state}}}
+            :handler (fn [{{{id :id} :query} :parameters}]
+                       (state/get-state id))}
+
+      :put {:summary "upsert game state"
+            :parameters {:body {:id    string?
+                                :state ::game-state/state}}
+            :responses {200 {:body {:result keyword?}}}
+            :handler (fn [{{{id :id, s :state} :body} :parameters}]
+                       (state/upsert-state id s))}}]
+
+    ["/end"
+     {:put {:summary "update user game statistics"
+            :parameters {:body {:id      string?
+                                :state   ::game-state/state
+                                :usr-hrz boolean?
+                                :give-up boolean?}}
+            :responses {200 {:body {:statistics ::state/statistics}}}
+            :handler (fn [{{{:keys [id state usr-hrz give-up]} :body} :parameters}]
+                       (state/game-end id state usr-hrz give-up))}}]
+
+    ["/statistics"
+     {:get {:summary "get user game statistics"
+            :parameters {:query {:id string?}}
+            :responses {200 {:body {:statistics ::state/statistics}}}
+            :handler (fn [{{{id :id} :query} :parameters}]
+                       (state/get-stats id))}}
+     ]]
 
    ["/restricted"
     {:swagger {:tags ["restricted"]}

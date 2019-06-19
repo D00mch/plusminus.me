@@ -7,15 +7,17 @@
             [ajax.core :as ajax]
 
             [reanimated.core :as anim]
-            ))
+
+            [plus-minus.components.common :as c]
+            [reagent.core :as r]))
 
 (defn- change-state [state]
   (db/put! :game-state state)
   (cookies/set! :game-state state)
   (when (db/get :identity)
-    (ajax/PUT "api/state"
+    (ajax/PUT "api/game/state"
               {:params {:id (db/get :identity)
-                        :state (db/get :game-state)}
+                        :state state}
                :handler #()})))
 
 (defn- move [state mv]
@@ -23,6 +25,16 @@
 
 (defn- user-turn [{hrz :hrz-turn}]
   (= (db/get :usr-hrz-turn) hrz))
+
+(defn- send-end-game [state usr-gave-up]
+  (when (db/get :identity)
+    (ajax/PUT "api/game/end"
+              {:params {:id      (db/get :identity)
+                        :state   state
+                        :usr-hrz true
+                        :give-up usr-gave-up}
+               :handler #()
+               })))
 
 (defn- end-game-msg [{:keys [hrz-points vrt-points hrz-turn]}]
   (if (= hrz-points vrt-points)
@@ -52,6 +64,7 @@
              (-> state s/moves? not)
              (after-delay
               #(do (js/alert (end-game-msg state))
+                   (send-end-game state false)
                    (reset-game)))
 
              (not (user-turn state))
@@ -62,16 +75,34 @@
   (reset-watchers)
   (if-let [cookie-state (cookies/get :game-state)]
     (change-state cookie-state)
-    (ajax/GET "api/state"
-              {:handler #(-> % :result change-state)
+    (ajax/GET "api/game/state"
+              {:handler #(-> % :state change-state)
                :params {:id (db/get :identity)}
                :error-handler #(let [{message :message} (get % :response)]
                                  (change-state (s/state-template 4)))})))
 
+(defn alert-form [row-size]
+  (let [styles (r/atom {:id {:auto-focus true}})]
+    (fn []
+     [c/modal
+      :style  {:style {:width 400}}
+      :header [:div "Admit defeat?"]
+      :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
+      :footer (c/do-or-close-footer
+               :styles styles
+               :name "Defeat"
+               :on-do (fn []
+                        (db/remove! :modal)
+                        (send-end-game (db/get :game-state) true)
+                        (db/put! :game-state (s/state-template row-size))))])))
+
 (defn game-settings []
   [:div.control>div.select {:style {:margin-bottom 16}}
-   [:select {:on-change #(let [row-size (int (.. % -target -value))]
-                           (db/put! :game-state (s/state-template row-size)))
+   [:select {:on-change #(let [row-size (int (.. % -target -value))
+                               moves    (-> :game-state db/get :moves seq)]
+                           (if moves
+                             (db/put! :modal (alert-form row-size))
+                             (db/put! :game-state (s/state-template row-size))))
              :value (db/get-in [:game-state :board :row-size] 4)}
     (for [row-size (range b/row-count-min b/row-count-max)]
       [:option row-size])]])
