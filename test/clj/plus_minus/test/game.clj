@@ -2,8 +2,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
-            [clojure.spec.test.alpha :as stest]
-            ))
+            [clojure.spec.test.alpha :as stest]))
 
 (defn ns-specs-test [spec-f]
   (let [result (-> (spec-f) stest/summarize-results)]

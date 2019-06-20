@@ -44,6 +44,7 @@
 
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
   :test-paths ["test/clj"]
+  :monkeypatch-clojure-test false ;; https://github.com/technomancy/leiningen/issues/2524
   :resource-paths ["resources" "target/cljsbuild"]
   :target-path "target/%s/"
   :main ^:skip-aot plus-minus.core
