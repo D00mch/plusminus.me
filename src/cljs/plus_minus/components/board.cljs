@@ -48,7 +48,7 @@
         "You lose"))))
 
 (defn- after-delay [f]
-  (js/setTimeout f 1000))
+  (js/setTimeout f 1250))
 
 (defn- reset-watchers!
   "watcher make moves, resets game on end and ivalid state"
@@ -156,7 +156,7 @@
             [:div.box {:style {:margin 5
                                ;;:opacity 0.3
                                :visibility (when hidden "hidden")
-                               :background (when valid "#209cee")}
+                               :background (when valid (if turn "#209cee" "#ee1f1f"))}
                        :on-click #(if turn
                                     (move state i)
                                     (js/alert "Can't make this move!"))}
