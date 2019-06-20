@@ -11,17 +11,27 @@
             [plus-minus.components.common :as c]
             [reagent.core :as r]))
 
-(defn- change-state [state]
+(defn- change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
   (cookies/set! :game-state state)
-  (when (db/get :identity)
+  (prn "about to sync fucking state")
+  (when (and sync (db/get :identity))
+    (prn "syncing")
     (ajax/PUT "api/game/state"
               {:params {:id (db/get :identity)
                         :state state}
-               :handler #()})))
+               :handler #(db/remove! :game-sync-request)})))
 
 (defn- move [state mv]
-  (change-state (s/move state mv)))
+  (if-let [id (db/get :identity)]
+    (ajax/PUT
+     "api/game/move"
+     {:url-params {:id id, :move mv}
+      :handler #(change-state (s/move state mv) :sync (db/get :game-sync-request))
+      :error-handler #(let [{msg :message} (get % :response)]
+                        (db/put! :game-sync-request true)
+                        (fn [_] (change-state (s/move state mv))))})
+    (change-state (s/move state mv))))
 
 (defn- user-turn [{hrz :hrz-turn}]
   (= (db/get :usr-hrz-turn) hrz))
@@ -72,7 +82,7 @@
                      (send-end-game state false)))
 
                (not (user-turn state))
-               (after-delay #(change-state (g/move-bot state)))))))))
+               (after-delay #(move state (-> (g/move-bot state) :moves last)))))))))
 
 (defn- load-stats! []
   (if-let [id (db/get :identity)]
@@ -119,7 +129,7 @@
                                moves    (-> :game-state db/get :moves seq)]
                            (if moves
                              (db/put! :modal (alert-restart row-size))
-                             (db/put! :game-state (s/state-template row-size))))
+                             (change-state (s/state-template row-size))))
              :value (db/get-in [:game-state :board :row-size] 4)}
     (for [row-size (range b/row-count-min b/row-count-max)]
       [:option row-size])]])
