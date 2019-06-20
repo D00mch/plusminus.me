@@ -16,7 +16,9 @@
    [ring.util.http-response :as response]
    [clojure.spec.alpha :as spec]
    [clojure.java.io :as io]
-   [plus-minus.middleware :as middleware]))
+   [plus-minus.middleware :as middleware]
+   [plus-minus.game.state :as st]
+   [plus-minus.game.board :as b]))
 
 (defn service-routes []
   ["/api"
@@ -93,6 +95,14 @@
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [{{{id :id, s :state} :body} :parameters}]
                        (state/upsert-state id s))}}]
+
+    ["/move"
+     {:put {:summary "make move and update current game-state"
+            :parameters {:query {:id   string?
+                                 :move ::b/index}}
+            :responses {200 {:body {:result keyword?}}}
+            :handler (fn [{{{id :id, mv :move} :query} :parameters}]
+                       (state/move id mv))}}]
 
     ["/end"
      {:put {:summary "update user game statistics"

@@ -5,6 +5,7 @@
             [plus-minus.routes.services.common :as common]
             [plus-minus.game.state :as s]
             [plus-minus.game.game :as g]
+            [com.walmartlabs.cond-let :refer [cond-let]]
             [clojure.tools.logging :as log]
             [clojure.spec.alpha :as spec]
             [clojure.pprint :refer [pprint]]))
@@ -23,6 +24,19 @@
           (db/upsert-state! {:id id, :state state})
           {:result :ok})
    :msg "server error occured while saving state"))
+
+(defn move [id mv]
+  (cond-let
+   :let [old-state (-> {:id id} db/get-state :state)]
+   (not old-state)
+   (common/e-precondition "can't move without first providing the state")
+
+   :let [valid (s/valid-move? old-state mv)]
+   (not valid)
+   (common/e-precondition "invalid move")
+
+   :else
+   (upsert-state id (s/move old-state mv))))
 
 (spec/def ::win (spec/or :n zero? :n pos-int?))
 (spec/def ::lose (spec/or :n zero? :n pos-int?))
