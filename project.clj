@@ -18,7 +18,7 @@
                  [luminus/ring-ttl-session "0.3.2"]
                  [markdown-clj "1.10.0"]
                  [metosin/muuntaja "0.6.4"]
-                 [metosin/reitit "0.3.1"]
+                 [metosin/reitit "0.3.9"]
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.6.0"]
@@ -32,6 +32,7 @@
                  [org.webjars/webjars-locator "0.36"]
                  [reagent "0.8.1"]
                  [reanimated "0.6.1"]
+                 [org.clojure/test.check "0.9.0"] ;; for spec
                  [clojure-term-colors "0.1.0"] ;; to color game board in repl
                  [com.walmartlabs/cond-let "1.0.0"]
                  [ring-webjars "0.2.0"]
@@ -86,7 +87,6 @@
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
                                  [cider/piggieback "0.4.0"]
-                                 [org.clojure/test.check "0.9.0"] ;; for spec
                                  [doo "0.1.11"]
                                  [expound "0.7.2"]
                                  [figwheel-sidecar "0.5.18"]
