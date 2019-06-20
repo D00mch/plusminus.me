@@ -74,21 +74,29 @@
                (not (user-turn state))
                (after-delay #(change-state (g/move-bot state)))))))))
 
-(defn- load-stats! [id]
-  (ajax/GET "api/game/statistics"
-            {:params {:id id}
-             :handler stats-handler}))
+(defn- load-stats! []
+  (if-let [id (db/get :identity)]
+    (ajax/GET "api/game/statistics"
+              {:params {:id id}
+               :handler stats-handler})
+    (db/remove! :game-statistics)))
+
+(defn- load-game-state! []
+  (let [id    (db/get :identity)
+        state (or (cookies/get :game-state) (s/state-template 4))]
+    (if id
+      (ajax/GET "api/game/state"
+                {:handler #(-> % :state change-state)
+                 :params {:id id}
+                 :error-handler #(let [{message :message} (get % :response)]
+                                   (change-state state))})
+      (change-state state))))
 
 (defn init-game-state []
   (db/put! :usr-hrz-turn true)
-  (reset-watchers!)
-  (if-let [cookie-state (cookies/get :game-state)]
-    (change-state cookie-state)
-    (ajax/GET "api/game/state"
-              {:handler #(-> % :state change-state)
-               :params {:id (db/get :identity)}
-               :error-handler #(let [{message :message} (get % :response)]
-                                 (change-state (s/state-template 4)))})))
+  (load-stats!)
+  (load-game-state!)
+  (reset-watchers!))
 
 (defn alert-restart [row-size]
   (let [styles (r/atom {:id {:auto-focus true}})]
@@ -124,13 +132,11 @@
 (defn game-stats []
   (let [id    (db/get :identity)
         stats (db/get :game-statistics)]
-    (cond (and id (not stats)) (load-stats! id)
-          (and (not id))       (db/remove! :game-statistics))
-    (if stats
+    (if (and id stats)
       [:div.board.stats
-       [:div.scor (str "Win: "  (:win stats))]
-       [:div.scor (str "Lose: " (:lose stats))]
-       [:div.scor (str "Draw: " (:draw stats))]]
+       [:div.scor (str "Win: "  (or (:win stats) 0))]
+       [:div.scor (str "Lose: " (or (:lose stats) 0))]
+       [:div.scor (str "Draw: " (or (:draw stats) 0))]]
       [:div.board.stats [:label "Authorize to see statistics"]])))
 
 (defn game-matrix [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
