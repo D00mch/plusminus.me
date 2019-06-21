@@ -2,8 +2,12 @@
 
 Math game.
 
+check current web-version on [herokuapp][1] 
+
 check Android version on [Google play][2]
 
+
+[1]: https://plus-minus-game.herokuapp.com/
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
 
 ## Status: in progress 
@@ -16,9 +20,9 @@ check Android version on [Google play][2]
 
 ## Prerequisites
 
-You will need [Leiningen][1] 2.0 or above installed.
+You will need [Leiningen][3] 2.0 or above installed.
 
-[1]: https://github.com/technomancy/leiningen
+[3]: https://github.com/technomancy/leiningen
 
 ## Running
 
