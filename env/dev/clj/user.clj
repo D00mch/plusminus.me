@@ -8,10 +8,17 @@
     [plus-minus.figwheel :refer [start-fw stop-fw cljs]]
     [plus-minus.core :refer [start-app]]
     [plus-minus.db.core]
+    [plus-minus.game.board :as board]
+    [plus-minus.game.state :as state]
+    [plus-minus.routes.multiplayer.room :as room]
     [conman.core :as conman]
     [luminus-migrations.core :as migrations]))
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
+
+(board/instrument)
+(state/instrument)
+(room/instrument)
 
 (defn start
   "Starts application.
