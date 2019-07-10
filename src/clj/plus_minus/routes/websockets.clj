@@ -38,7 +38,8 @@
   (def out (ByteArrayOutputStream. 4096))
   (def writer (t/writer out :json))
   (t/write writer {:state {:board {:row-count 1, :cells [0 1 2 3]}}})
-  (t/write writer {:a [1 2]})
+  (t/write writer [:move 1])
+
   (.reset out)
 
   (notify-clients! nil (.toString out)))
