@@ -1,32 +1,49 @@
 (ns plus-minus.routes.websockets
-  (:require [clojure.tools.logging :as log]
+  (:require [plus-minus.routes.multiplayer.room :as room]
+            [clojure.tools.logging :as log]
             [immutant.web.async :as async]
-            [cognitect.transit :as t])
+            [cognitect.transit :as t]
+            [com.walmartlabs.cond-let :refer [cond-let]])
   (:import [java.io ByteArrayOutputStream]
            [java.util.concurrent Executors TimeUnit Future]))
 
-(defonce channels (atom #{}))
-
-#_(org.projectodd.wunderboss.web.undertow.async.websocket.UndertowWebsocketChannel. "")
+(defonce id->channel (ref {}))
 
 (defn connect! [channel]
-  (log/info "channel open")
-  (swap! channels conj channel))
+  (log/info "channel open" channel))
 
 (defn disconnect! [channel {:keys [code reason]}]
-  (log/info "close code:" code "reason:" reason)
-  (swap! channels #(remove #{channel} %)))
+  (log/info "close code:" code "reason:" reason))
 
-(defn notify-clients! [channel msg]
-  (println "thread name: " (.getName (Thread/currentThread)))
-  (println "client from chan" channel "sends" msg)
-  (doseq [channel @channels]
-    (async/send! channel msg)))
+(defn- send! [channel data]
+  (let [out (ByteArrayOutputStream.)
+        w   (t/writer out :json)
+        _   (t/write w data)
+        ret (.toString out)]
+    (.reset out)
+    (async/send! channel ret)))
+
+(defn on-message! [ch [type id data :as msg]]
+  (dosync (alter id->channel assoc id ch))
+  (let [[reply _ :as ret] (case type
+                            :state   (room/state-request! id)
+                            :move    (room/move! msg)
+                            :give-up (room/give-up! msg))]
+    (case reply
+      :error (send! ch ret)
+      :state (send ch
+                   (-> ret (dissoc :turn-timer :player1-ready :player2-ready :status)))
+      (let [game (-> @room/player->room (get id))
+            id2  (room/player-turn-id game)
+            ch2  (get @id->channel id2)]
+        (when (= reply :end)
+          (send! ch ret))
+        (send! ch2 ret)))))
 
 (def websocket-callbacks
   {:on-open connect!
    :on-close disconnect!
-   :on-message notify-clients!})
+   :on-message on-message!})
 
 (defn ws-handler [request]
   (async/as-channel request websocket-callbacks))

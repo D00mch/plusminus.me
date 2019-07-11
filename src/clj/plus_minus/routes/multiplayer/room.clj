@@ -12,7 +12,7 @@
 ;; MULTIPLAYER IMPLEMENTED WITH STM
 
 (def ^:private random (java.util.Random.))
-(def ^:private service (Executors/newScheduledThreadPool
+(defonce ^:private service (Executors/newScheduledThreadPool
                         (+ 2 (. (Runtime/getRuntime) availableProcessors))))
 
 (def ^:dynamic *turn-time-sec* 300)
@@ -21,12 +21,12 @@
 
 ;;************************* STATE *************************
 
-(def id (AtomicInteger. 0))
-(defn- generate-id! [] (.getAndIncrement id))
+(def ^:private generate-id!
+  (let [id (AtomicInteger. 0)] #(.getAndIncrement id)))
 
-(def rooms (ref {}))
-(def size->room "tmp storage for waiting games" (ref {}))
-(def player->room (ref {}))
+(defonce rooms (ref {}))
+(defonce size->room (ref {}))
+(defonce player->room (ref {}))
 
 (defn display-state []
   (->> @rooms count (str "rooms: ") println)
@@ -100,7 +100,7 @@
   [size player-id]
   (->> (if-let [game (->> (get @size->room size)
                           (get @rooms))]
-         (dosync (join-game! size (:game-id game) player-id))
+         (join-game! size (:game-id game) player-id)
          (let [game    (build-initial-state size player-id)
                game-id (:game-id game)]
             (alter size->room assoc size game-id)
@@ -122,7 +122,7 @@
    (cond-let
     :let [game-id   (get @player->room player-id)
           game      (get @rooms game-id)]
-    (not game) [:error :game-doesnt-exist]
+    (not game)      [:error :game-doesnt-exist]
 
     :let [ready-key (try (player-ready-key game player-id) (catch Exception e nil))]
     (not ready-key) [:error :game-player-missmatch]
@@ -164,15 +164,26 @@
 
    :else                                [:move move]))
 
+;;************************* GIVE UP *************************
+
+(defn give-up! [[type player-id _]]
+  {:pre [(= type :give-up)]}
+  (cond-let
+   :let [game-id (get @player->room player-id)
+         game    (get @rooms game-id)]
+   (nil? game) [:error :game-doesnt-exist]
+
+   :else       (game-end! game)))
+
 ;;************************* SPECS *************************
 
 (def ^:private game-status #{:wait :active})
 (def ^:private game-msg #{:state :move :give-up})
-(def ^:private game-reply #{:state :move :end :error})
+(def ^:private game-replies #{:state :move :end :error})
 (def ^:private game-errors
   #{:game-player-missmatch :game-doesnt-exist
     :invalid-move :not-your-turn :players-not-ready})
-(def ^:private game-result #{:draw :win :disconnect})
+(def ^:private game-results #{:draw :win :disconnect})
 
 (spec/def ::status game-status)
 
@@ -190,10 +201,10 @@
                           :data      (spec/? any?)))
 
 (spec/def ::reply
-  (spec/cat :msg-type game-reply
+  (spec/cat :msg-type game-replies
             :data     (spec/or
                        :move  ::b/index
-                       :end   (spec/cat :result game-result
+                       :end   (spec/cat :result game-results
                                         :win-id (spec/? ::validation/id))
                        :state ::game
                        :error game-errors)))
