@@ -34,6 +34,7 @@
                  [reanimated "0.6.1"]
                  [org.clojure/test.check "0.9.0"] ;; for spec
                  [clojure-term-colors "0.1.0"] ;; to color game board in repl
+                 [funcool/beicon "5.0.0"] ;; rxjava and rxjs
                  [com.walmartlabs/cond-let "1.0.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]
