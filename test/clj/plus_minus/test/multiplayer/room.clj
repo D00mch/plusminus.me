@@ -53,7 +53,7 @@
 (deftest get-or-create!
   (reset-to-default!)
   (let [size-vars      (range b/row-count-min b/row-count-max-excl)
-        count-per-size 20
+        count-per-size 50
         sizes          (for [s size-vars
                              c (repeat count-per-size s)]
                          c)
@@ -93,15 +93,11 @@
   "return promise"
   [id]
   (submit #(do (Thread/sleep (+ 5 (rand-int 10)))
-               (let [r (room/state-request! id)]
-                 (when (keyword? r)
-                   (prn "assert!")
-                   (prn r))
-                 ))))
+               (room/state-request! id))))
 
 (deftest state-request!
   (reset-to-default!)
-  (let [ids   (-> ::validation/id spec/gen (gen/sample 400) distinct)
+  (let [ids   (-> ::validation/id spec/gen (gen/sample 800) distinct)
         games (doseq [[id1 id2] (partition 2 ids)]
                 (create-game! (gen/generate (spec/gen ::b/row-size)) id1 id2))
         tasks (->> ids (map #(submit-state-req! %)) doall)]
@@ -149,9 +145,10 @@
         size    (gen/generate (spec/gen ::b/row-size))]
 
     (testing "when game wasnt requested, result is disconnect"
-      (let [game-id (create-game! size player1 player2)]
+      (let [game-id (create-game! size player1 player2)
+            game    (get @room/rooms game-id)]
         (is (= (room/game-end! game-id)
-               [:end [:disconnect]]))))
+               [:end [:disconnect (:player1-id game)]]))))
 
     (testing "when both players seen game - lose one whose turn"
       (let [game-id (create-game! size player1 player2)

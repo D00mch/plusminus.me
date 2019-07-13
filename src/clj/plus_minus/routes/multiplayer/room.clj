@@ -42,16 +42,17 @@
 
 (defn- game-result [game]
   (let [result (-> game :game-state (game/on-game-end (:player1-hrz game)))]
-    (cond (= result :draw) [:draw]
-          (= result :win)  [:win (:player1-id game)]
-          (= result :lose) [:win (:player2-id game)])))
+    (case result
+      :draw [:draw (:player1-id game)]
+      :win  [:win  (:player1-id game)]
+      :lose [:win  (:player2-id game)])))
 
 (defn- player-turn? [game player-id]
   (= player-id (player-turn-id game)))
 
 ;;************************* GAME JUDGE *************************
 
-(defn- on-disconnect [game] [:end [:disconnect]])
+(defn- on-disconnect [game] [:end [:disconnect (:player1-id game)]])
 (defn- on-result [game]
   (let [moves  (-> game :game-state st/moves?)
         result (if moves
@@ -60,7 +61,7 @@
     [:end result]))
 
 (defn game-end! [game-id]
-  (when-let [game (or (get @rooms game-id))]
+  (when-let [game (get @rooms game-id)]
     (dosync (alter rooms dissoc game-id)
             (alter player->room dissoc (:player1-id game) (:player2-id game)))
     (if (both-players-ready game)
@@ -69,10 +70,13 @@
 
 ;;************************* GAME CREATION *************************
 
-(defn- schedule-turn-timer [game-id]
-  (.schedule service #(game-end! game-id) *turn-time-sec* TimeUnit/SECONDS))
+(defn- schedule-turn-timer [game-id on-elapsed]
+  (.schedule service
+             #(on-elapsed (game-end! game-id))
+             *turn-time-sec*
+             TimeUnit/SECONDS))
 
-(defn- build-initial-state [size player-id]
+(defn- build-initial-state [size player-id on-elapsed]
   (let [game-id (generate-id!)]
     {:game-state    (st/state-template size)
      :status        :wait
@@ -80,7 +84,7 @@
      :creted        (java.util.Date.)
      :player1-id    player-id
      :player1-hrz   (.nextBoolean random)
-     :turn-timer    (schedule-turn-timer game-id)
+     :turn-timer    (schedule-turn-timer game-id on-elapsed)
      :player1-ready false
      :player2-ready false}))
 
@@ -97,11 +101,11 @@
 
 (defn get-or-create!
   "Try to match existing game or create new one. Return game-id"
-  [size player-id]
+  [size player-id & {on-elapsed :on-elapsed :or {on-elapsed #()}}]
   (->> (if-let [game (->> (get @size->room size)
                           (get @rooms))]
          (join-game! size (:game-id game) player-id)
-         (let [game    (build-initial-state size player-id)
+         (let [game    (build-initial-state size player-id on-elapsed)
                game-id (:game-id game)]
             (alter size->room assoc size game-id)
             (commute rooms assoc game-id game)
@@ -117,7 +121,7 @@
 
 (defn state-request!
   "Return state. When last player sees the game state, setting up turn-timer."
-  [player-id]
+  [player-id & {on-elapsed :on-elapsed :or {on-elapsed #()}}]
   (dosync
    (cond-let
     :let [game-id   (get @player->room player-id)
@@ -134,7 +138,7 @@
           game-seen (if (and (not started) seen) ;; both just seen the game
                       (assoc game-seen
                              :status :active
-                             :turn-timer (schedule-turn-timer game-id))
+                             :turn-timer (schedule-turn-timer game-id on-elapsed))
                       game-seen)]
       (when-not (= game game-seen)
         (alter rooms assoc game-id game-seen))
@@ -144,7 +148,7 @@
 
 (defn move!
   "Takes a ::msg, return changed game. Throws exceptions"
-  [[type player-id move]]
+  [[type player-id move] & {on-elapsed :on-elapsed :or {on-elapsed #()}}]
   {:pre [(= type :move)]}
 
   (cond-let
@@ -158,7 +162,7 @@
    (not (st/valid-move? state move))    [:error :invalid-move]
 
    :let [game (-> (update game :game-state st/move move)
-                  (assoc :turn-timer (schedule-turn-timer game-id)))
+                  (assoc :turn-timer (schedule-turn-timer game-id on-elapsed)))
          game (dosync (commute rooms assoc game-id game) game)]
    (-> game :game-state st/moves? not)  (game-end! game-id)
 
@@ -205,7 +209,7 @@
             :data     (spec/or
                        :move  ::b/index
                        :end   (spec/cat :result game-results
-                                        :win-id (spec/? ::validation/id))
+                                        :win-id ::validation/id)
                        :state ::game
                        :error game-errors)))
 
@@ -215,7 +219,8 @@
 (comment "reply formats"
   [:state tmp-game]
   [:move 1]
-  [:end [:draw]]
+  [:end [:draw "dumch"]]
+  [:end [:disconnect "dumch"]]
   [:end [:win "dumch"]]
   [:error :invalid-move]
   )

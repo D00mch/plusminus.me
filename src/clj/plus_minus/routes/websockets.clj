@@ -23,6 +23,11 @@
     (.reset out)
     (async/send! channel ret)))
 
+;; TODO: implement
+;; may be add player1-id? to be able to get the game
+(defn- on-time-elapsed [[type [result id] :as result]] ;; [:end [:disconnect id]]
+  )
+
 (defn on-message! [ch [type id data :as msg]]
   (dosync (alter id->channel assoc id ch))
   (let [[reply _ :as ret] (case type
