@@ -20,6 +20,8 @@
    [plus-minus.game.state :as st]
    [plus-minus.game.board :as b]))
 
+;; http://localhost:3000/swagger-ui/index.html#/
+
 (defn service-routes []
   ["/api"
    {:coercion spec-coercion/coercion

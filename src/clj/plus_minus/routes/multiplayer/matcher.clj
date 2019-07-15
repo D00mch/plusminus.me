@@ -5,8 +5,7 @@
             [plus-minus.game.state :as st]
             [clojure.tools.logging :as log]
             [beicon.core :as rx])
-  (:import java.util.Random
-           [java.util.concurrent.atomic AtomicLong]))
+  (:import [java.util.concurrent.atomic AtomicLong]))
 
 (def ^:private random (java.util.Random.))
 
@@ -43,4 +42,4 @@
       (topics/publish :reply (->Reply :error p1 :game-with-yourself)))))
 
 (defn subscribe "subscribe once! returns rx.disposable" []
-  (rx/subscribe (matched-requests) publish #(log/error "matched-requests on-error: " %)))
+  (rx/subscribe (matched-requests) publish #(log/error "matcher error: " %)))

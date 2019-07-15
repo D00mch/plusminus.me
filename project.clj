@@ -12,7 +12,7 @@
                  [com.cognitect/transit-clj "0.8.313"]
                  [conman "0.8.3"]
                  [cprop "0.1.13"]
-                 [luminus-jetty "0.1.7"]
+                 [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.5"]
                  [luminus-transit "0.1.1"]
                  [luminus/ring-ttl-session "0.3.2"]
