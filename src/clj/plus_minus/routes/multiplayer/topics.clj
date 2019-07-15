@@ -69,7 +69,7 @@
 (s/def ::reply-type #{:state :move :end :error})
 (s/def ::outcome #{:draw :win :disconnect})
 (s/def ::errors #{:ivalid-move :not-your-turn :game-doesnt-exist
-                  :game-with-yourself :unknown})
+                  :game-with-yourself :invalid-msg :unknown})
 (s/def ::result (s/keys :req-un [::outcome ::validation/id]))
 (s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])
                       #(case (:reply-type %)

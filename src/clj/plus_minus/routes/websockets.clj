@@ -1,17 +1,38 @@
 (ns plus-minus.routes.websockets
   (:require [plus-minus.routes.multiplayer.topics :as topics
-             :refer [map->Message]]
+             :refer [map->Message ->Reply]]
             [plus-minus.routes.multiplayer.room :as room]
             [plus-minus.routes.multiplayer.matcher :as matcher]
             [plus-minus.routes.multiplayer.room :as room]
             [clojure.tools.logging :as log]
             [immutant.web.async :as async]
             [cognitect.transit :as t]
+            [clojure.java.io :as io]
             [com.walmartlabs.cond-let :refer [cond-let]]
             [beicon.core :as rx]
             [mount.core :as mount])
   (:import [java.io ByteArrayOutputStream]
            [java.util.concurrent Executors TimeUnit Future]))
+
+;; https://gist.github.com/mattly/217eb6f26cb5d728a6cc88b4d6b926bb
+
+(defn- ->stream [input]
+  (cond (string? input) (io/input-stream (.getBytes input))
+        :default input))
+
+(defn- read-json [input]
+  (with-open [ins (->stream input)]
+    (-> ins (t/reader :json) t/read)))
+
+(defn- send-json! [channel data]
+  (let [out (ByteArrayOutputStream.)
+        w   (t/writer out :json)
+        _   (t/write w data)
+        ret (.toString out)]
+    (.reset out)
+    (async/send! channel ret)))
+
+;;************************* SOCKET *************************
 
 (defonce id->channel (atom {}))
 
@@ -19,10 +40,13 @@
 (defn- disconnect! [channel {:keys [code reason]}]
   (log/info "close code:" code "reason:" reason))
 
-(defn- on-message! [ch {id :id :as msg}]
-  (log/info "msg:" msg)
-  (swap! id->channel assoc id ch)
-  (topics/publish :msg (map->Message msg)))
+(defn- on-message! [ch json]
+  (log/info "msg:" json)
+  (let [{id :id :as msg} (read-json json)]
+    (swap! id->channel assoc id ch)
+    (let [valid (topics/publish :msg (map->Message msg))]
+      (when-not valid
+        (topics/publish :reply (->Reply :error id :invalid-msg))))))
 
 (def websocket-callbacks
   {:on-open connect!
@@ -36,17 +60,9 @@
 
 ;;************************* SUBSCRIPTION *************************
 
-(defn- send! [channel data]
-  (let [out (ByteArrayOutputStream.)
-        w   (t/writer out :json)
-        _   (t/write w data)
-        ret (.toString out)]
-    (.reset out)
-    (async/send! channel ret)))
-
 (defn- on-reply [{type :reply-type id :id :as reply}]
   (when     (= type :end)              (swap! id->channel dissoc id))
-  (when-let [ch (get @id->channel id)] (send! ch reply)))
+  (when-let [ch (get @id->channel id)] (send-json! ch reply)))
 
 (defn- subscribe []
   (rx/subscribe (topics/consume :reply) on-reply #(log/error "on-error:" %)))
