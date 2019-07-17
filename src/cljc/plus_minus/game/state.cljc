@@ -5,6 +5,7 @@
             [plus-minus.game.board :as b]
             #?(:clj [clojure.term.colors :as colors])))
 
+;; TODO: optimize to be record
 (defn state-template [row-size]
   {:board      (b/generate row-size)
    :start      (rand-int (* row-size row-size))

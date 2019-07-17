@@ -24,6 +24,7 @@
   (let [{:keys [subj spec]} (get topics topic)]
     (if-let [errors (s/explain-data spec data)]
       (do (log/error "can't publish invalid data" errors)
+          (clojure.pprint/pprint errors)
           false)
       (do (rx/push! subj data)
           true))))
@@ -33,10 +34,16 @@
   [topic]
   (get-in topics [topic :subj]))
 
+;; TODO: remove
+(defn reset-state! []
+  (def topics {:matched {:subj (subject), :spec ::game}
+               :msg     {:subj (subject), :spec ::msg}
+               :reply   {:subj (subject), :spec ::reply}}))
+
 ;;************************* SPECS *************************
 
 ;; user's input
-(defrecord Message [msg-type id data])
+(defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up})
 (s/def ::msg (s/and
               (s/keys :req-un [::msg-type ::validation/id])
@@ -45,7 +52,7 @@
 ;;(s/explain ::msg (->Message :new "dumch" 3))
 
 ;; matched: created games
-(defrecord Game [state game-id created player1 player2 player1-hrz])
+(defrecord Game [state game-id created player1 player2 ^boolean player1-hrz])
 (s/def ::game-id number?)
 (s/def ::player1 ::validation/id)
 (s/def ::player2 ::validation/id)
@@ -64,8 +71,8 @@
 
 
 ;; reply to user
-(defrecord Reply   [reply-type id data])
-(defrecord Result  [outcome id])                      ; data for Reply
+(defrecord Reply   [reply-type, ^String id, data])
+(defrecord Result  [outcome, ^String id]) ;; data for Reply
 (s/def ::reply-type #{:state :move :end :error})
 (s/def ::outcome #{:draw :win :disconnect})
 (s/def ::errors #{:ivalid-move :not-your-turn :game-doesnt-exist
@@ -82,14 +89,11 @@
 
   (defn subscribe-all []
     (def matcher-subs (plus-minus.routes.multiplayer.matcher/subscribe))
-    (def room-subs (plus-minus.routes.multiplayer.room/subscribe-to-new-games))
-    (def tmp-subs2
-      (rx/subscribe (consume :reply) #(println "reply:" %))))
+    (def room-subs (plus-minus.routes.multiplayer.room/subscribe)))
 
   (defn unsubscribe-all []
     (.dispose matcher-subs)
-    (.dispose room-subs)
-    (.dispose tmp-subs2))
+    (.dispose room-subs))
 
   (subscribe-all)
   (unsubscribe-all)

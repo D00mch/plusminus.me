@@ -5,9 +5,10 @@
             [plus-minus.game.state :as st]
             [clojure.tools.logging :as log]
             [beicon.core :as rx])
-  (:import [java.util.concurrent.atomic AtomicLong]))
+  (:import [java.util.concurrent.atomic AtomicLong]
+           [java.util Random]))
 
-(def ^:private random (java.util.Random.))
+(def ^:private random (Random.))
 
 (def ^:private generate-id!
   (let [id (AtomicLong. 0)] #(.getAndIncrement id)))
@@ -20,7 +21,7 @@
       :created     (java.util.Date.)
       :player1     player1
       :player2     player2
-      :player1-hrz (.nextBoolean random)})))
+      :player1-hrz (.nextBoolean ^Random random)})))
 
 (defn- grouped-by-2 [observable size]
   (->> observable
@@ -29,17 +30,18 @@
 
 (defn- matched-requests []
   (let [requests (->> (topics/consume :msg)
-                      (rx/filter #(-> % :msg-type (= :new))))]
+                      (rx/filter #(-> % :msg-type (= :new)))
+                      (rx/observe-on :thread))]
     (apply rx/merge (->> (range b/row-count-min b/row-count-max-excl)
                          (map #(grouped-by-2 requests %))))))
 
-(defn- publish [[{p1 :id size :data} {p2 :id}]]
-  (log/info "matched-requests on-next: " p1 p2)
+(defn- publish [[{p1 :id size :data} {p2 :id} :as data]]
   (let [game     (build-initial-state size p1 p2)
-        published (do (log/info "about to publish game: " game)
-                      (topics/publish :matched game))]
+        published (topics/publish :matched game)]
     (when-not published
-      (topics/publish :reply (->Reply :error p1 :game-with-yourself)))))
+      (do
+        (log/info "cant publish the game: " data)
+        (topics/publish :reply (->Reply :error p1 :game-with-yourself))))))
 
 (defn subscribe "subscribe once! returns rx.disposable" []
   (rx/subscribe (matched-requests) publish #(log/error "matcher error: " %)))

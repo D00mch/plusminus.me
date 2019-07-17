@@ -11,6 +11,8 @@
     [conman.core :as conman]
     [luminus-migrations.core :as migrations]))
 
+(set! *warn-on-reflection* true)
+
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (defn start
