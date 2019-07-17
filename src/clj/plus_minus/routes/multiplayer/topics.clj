@@ -24,7 +24,6 @@
   (let [{:keys [subj spec]} (get topics topic)]
     (if-let [errors (s/explain-data spec data)]
       (do (log/error "can't publish invalid data" errors)
-          (clojure.pprint/pprint errors)
           false)
       (do (rx/push! subj data)
           true))))
@@ -75,7 +74,7 @@
 (defrecord Result  [outcome, ^String id]) ;; data for Reply
 (s/def ::reply-type #{:state :move :end :error})
 (s/def ::outcome #{:draw :win :disconnect})
-(s/def ::errors #{:ivalid-move :not-your-turn :game-doesnt-exist
+(s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
                   :game-with-yourself :invalid-msg :unknown})
 (s/def ::result (s/keys :req-un [::outcome ::validation/id]))
 (s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])
@@ -83,7 +82,7 @@
                          :end   (s/valid? ::outcome (-> % :data :outcome))
                          :error (s/valid? ::errors (:data %))
                          (any? %))))
-#_(s/explain ::reply (->Reply :error :game-with-yourself))
+(s/explain-data ::reply (->Reply :error "bob" :invalid-move))
 
 (comment "tmp code to simulate the game"
 

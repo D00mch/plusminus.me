@@ -14,7 +14,13 @@
             [clojure.pprint :refer [pprint]]
             [plus-minus.game.game :as game])
   (:import [io.reactivex.observers TestObserver]
-           [io.reactivex.disposables CompositeDisposable Disposable]))
+           [io.reactivex.disposables CompositeDisposable Disposable]
+           [java.util.concurrent CountDownLatch]))
+
+
+;;************************* STATE *************************
+
+(def ^{:private true} log? false) ;; for testing with repl
 
 (defn- subscribe-all []
   (def matcher-subs (plus-minus.routes.multiplayer.matcher/subscribe))
@@ -29,38 +35,53 @@
   (room/reset-state!)
   (topics/reset-state!))
 
-(defn- log [prn & args]
-  (when prn (apply println args)))
+;;**************************************************
+
+(defn- log [& args]
+  (when log? (apply println args)))
 
 (defn- push! [type id data]
   (topics/publish :msg (->Message type id data)))
 
-(defn- on-player-gets-message [player game prn]
+(defn- on-player-gets-message [player game latch move]
   (fn [{:keys [reply-type data]}]
-    (log prn player "gets" reply-type)
+    (log player "gets" reply-type)
     (case reply-type
       :state (reset! game data)
       :move  (swap! game update :state st/move data)
-      :end   (log prn "the end")
-      :error (log prn "error " data))
+      :end   (do
+               (.countDown ^CountDownLatch latch)
+               (log "the end"))
+      :error (log "error " data))
     (when-not (= reply-type :end)
       (if (= player (room/player-turn-id @game))
-        (if (push! :move player (game/some-move (:state @game)))
-          (log prn player "moved")
-          (log prn player "failed to move"))
-        (log prn player "says: not my turn")))))
+        (if (push! :move player (move (:state @game)))
+          (log player "moved")
+          (log player "failed to move"))
+        (log player "says: not my turn")))))
 
-(defn- imitate-player [reply-obs player & {prn :print :or {prn false}}]
+(defn- bot-move [state]
+  (game/some-move state))
+
+(defn- rand-move [state]
+  (if (= 0 (rand-int 2))
+    (rand-int (st/size state))
+    (bot-move state)))
+
+(defn- imitate-player
+  ":move - fn state->move"
+  [reply-obs player latch & {move :move-fn
+                             :or {move bot-move}}]
   (rx/subscribe
    (->> reply-obs (rx/subscribe-on (rx/scheduler :thread)))
-   (on-player-gets-message player (atom nil) prn)
+   (on-player-gets-message player (atom nil) latch move)
    #(println "imitate-player on-error" %)))
 
-(defn- start-a-game [player1 player2]
+(defn- start-a-game [player1 player2 latch move-fn]
   (let [replies1 (->> (topics/consume :reply) (rx/filter #(= (:id %) player1)))
         replies2 (->> (topics/consume :reply) (rx/filter #(= (:id %) player2)))
-        dis1     (imitate-player replies1 player1 :print false)
-        dis2     (imitate-player replies2 player2 :print false)]
+        dis1     (imitate-player replies1 player1 latch :move-fn move-fn)
+        dis2     (imitate-player replies2 player2 latch :move-fn move-fn)]
     ;; now when players subscribed, we can publish start game events
     (push! :new player1 3)
     (push! :new player2 3)
@@ -68,12 +89,24 @@
 
 (deftest play-games []
   (subscribe-all)
-  (let [ids      (-> (spec/gen ::validation/id) (gen/sample 100) distinct)
+  (let [ids      (-> (spec/gen ::validation/id) (gen/sample 1000) distinct)
         id-pairs (partition 2 ids)
-        games    (->> id-pairs (map (fn [[id1 id2]] (start-a-game id1 id2))) doall)]
-    ;; TODO: fix with TestObserver
-    (Thread/sleep 1000) ;; Sorry, no time to wirte lots of reifies for TestObserver
+        latch    (CountDownLatch. (-> (count id-pairs) (* 2)))
+        games    (->> id-pairs
+                      (map (fn [[p1 p2]] (start-a-game p1 p2 latch bot-move)))
+                      doall)]
+    (.await latch)
     (prn "about to dispose")
     (doseq [g games] (.dispose ^Disposable g))
+    (unsubscribe-all)
+    (is (empty? @room/rooms))))
+
+(deftest play-with-errors []
+  (subscribe-all)
+  (let [latch (CountDownLatch. 2)
+        game  (start-a-game "bob" "regeda" latch rand-move)]
+    (.await latch)
+    (prn "about to dispose")
+    (.dispose ^Disposable game)
     (unsubscribe-all)
     (is (empty? @room/rooms))))
