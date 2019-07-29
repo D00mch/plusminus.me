@@ -1,9 +1,9 @@
 (ns plus-minus.routes.multiplayer.matcher
-  (:require [plus-minus.routes.multiplayer.topics :as topics
+  (:require [plus-minus.routes.multiplayer.topics :as topics]
+            [plus-minus.multiplayer.contract :as contract
              :refer [map->Game ->Reply]]
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
-            [clojure.tools.logging :as log]
             [beicon.core :as rx])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
@@ -28,20 +28,16 @@
        (rx/filter #(= (:data %) size))
        (rx/buffer 2)))
 
-(defn- matched-requests []
-  (let [requests (->> (topics/consume :msg)
+(defn- matched-requests [messages]
+  (let [requests (->> messages
                       (rx/filter #(-> % :msg-type (= :new)))
                       (rx/observe-on :thread))]
     (apply rx/merge (->> (range b/row-count-min b/row-count-max-excl)
                          (map #(grouped-by-2 requests %))))))
 
-(defn- publish [[{p1 :id size :data} {p2 :id} :as data]]
-  (let [game     (build-initial-state size p1 p2)
-        published (topics/publish :matched game)]
-    (when-not published
-      (do
-        (log/info "cant publish the game: " data)
-        (topics/publish :reply (->Reply :error p1 :game-with-yourself))))))
+(defn- build-game [[{p1 :id size :data} {p2 :id}]]
+  (build-initial-state size p1 p2))
 
-(defn subscribe "subscribe once! returns rx.disposable" []
-  (rx/subscribe (matched-requests) publish #(log/error "matcher error: " %)))
+(defn generate-games [messages]
+  (->> (matched-requests messages)
+       (rx/map build-game)))

@@ -1,36 +1,27 @@
 (ns plus-minus.routes.multiplayer.room
-  (:require [plus-minus.routes.multiplayer.topics :as topics
-             :refer [->Reply]]
-            [plus-minus.game.board :as b]
+  (:require [plus-minus.routes.multiplayer.topics :as topics]
+            [plus-minus.multiplayer.contract :as contract
+             :refer [->Reply ->Message]]
+            [plus-minus.routes.multiplayer.matcher :as matcher]
             [plus-minus.game.state :as st]
             [plus-minus.game.game :as game]
             [clojure.tools.logging :as log]
             [beicon.core :as rx]
+            [clojure.spec.alpha :as s]
             [com.walmartlabs.cond-let :refer [cond-let]]
-            [clojure.string :as str])
-  (:import [io.reactivex.disposables CompositeDisposable]))
+            [plus-minus.validation :as validation]) )
 
-;; TODO: set up timers
+;; handles user's messages in active game
+;; methods with '-obs' ending return observables
 
-;;************************* STATE *************************
+;; TODO: rename: replies?
 
-(defonce rooms (ref {}))
-(defonce player->room (ref {}))
+(s/def ::sys-msg-type #{:time-elapsed})
+(s/def ::msg (s/or :player-msg ::contract/msg
+                   :system-msg (s/and (s/keys :req-un [::validation/id])
+                                      #(s/valid? ::sys-msg-type (:msg-type %)))))
+#_(s/explain ::msg (->Message :time-elapsed "dumch" nil))
 
-(defn display-state []
-  (->> @rooms count (str "rooms: ") println)
-  (->> @player->room count (str "players: ") println))
-
-(defn print-state [game-id]
-  (let [state (get-in @rooms [game-id :state])]
-    (st/state-print state)))
-
-;; TODO make private or remove
-(defn reset-state! []
-  (dosync (ref-set rooms {})
-          (ref-set player->room {})))
-
-;;************************* MOVES *************************
 
 (defn player-turn-id [game]
   (if (= (-> game :state :hrz-turn) (:player1-hrz game))
@@ -47,82 +38,57 @@
 (defn- player-turn? [game player-id]
   (= player-id (player-turn-id game)))
 
-(defn- push-error [player-id key]
-  (topics/publish :reply (->Reply :error player-id key)))
+(defn- error-obs [player-id key]
+  (rx/just (->Reply :error player-id key)))
 
-(defn- push [game reply-type data]
-  (and (topics/publish :reply (->Reply reply-type (:player1 game) data))
-       (topics/publish :reply (->Reply reply-type (:player2 game) data))))
+(defn- replies-obs [game reply-type data]
+  (rx/of (->Reply reply-type (:player1 game) data)
+         (->Reply reply-type (:player2 game) data)))
 
-(defn game-end! [game-id]
-  (when-let [game (get @rooms game-id)]
-    (dosync (alter rooms dissoc game-id)
-            (alter player->room dissoc (:player1 game) (:player2 game)))
-    (let [moves  (-> game :state st/moves?)
-          result (if moves
-                   {:outcome :win, :id (player-turn-id game)}
-                   (game-result game))]
-      (push game :end result))))
+(defn game-end-obs! [game]
+  (let [moves  (-> game :state st/moves?)
+        result (if moves
+                 {:outcome :win, :id (player-turn-id game)}
+                 (game-result game))]
+    (replies-obs game :end result)))
 
-(defn on-move!
+(defn- ->state [game replies]
+  {:game game, :replies-obs replies, :turn-timer nil})
+
+(defn move->state!
   "get user msg, publishes a reply"
-  [{type :msg-type, id :id, move :data}]
+  [game {type :msg-type, id :id, move :data}]
+  (log/info "on move")
   {:pre [(= type :move)]}
   (cond-let
-   :let [game-id (get @player->room id)
-         game    (get @rooms game-id)]
-   (nil? game)                          (push-error id :game-doesnt-exist)
-   (not (player-turn? game id))         (push-error id :not-your-turn)
+   (not (player-turn? game id))      (->state game (error-obs id :not-your-turn))
 
    :let [state  (:state game)]
-   (not (st/valid-move? state move))    (push-error id :invalid-move)
+   (not (st/valid-move? state move)) (->state game (error-obs id :invalid-move))
 
-   :let [game (update game :state st/move move)
-         game (dosync (alter rooms assoc game-id game) game)]
-   (-> game :state st/moves? not)  (game-end! game-id)
+   :let [game (update game :state st/move move)]
+   (-> game :state st/moves? not)    (do
+                                       (log/info "about to return :end")
+                                       (->state game (game-end-obs! game)))
 
-   :else                                (push game :move move)))
+   :else                             (do
+                                       (log/info "about ot return :move")
+                                       (->state game (replies-obs game :move move)))))
 
-;;************************* SUBSCRIPTION *************************
+(defn state-resp [game]
+  (->state game (replies-obs game :state game)))
 
-;; locking to get sure messages in the same order in particular game
+(defn- reduce-game-msg [{:keys [game _]} msg]
+  (case (:msg-type msg)
+    :state        (state-resp game)
+    :move         (move->state! game msg)
+    :time-elapsed (->state game (game-end-obs! game))
+    :give-up      (->state game (game-end-obs! game))))
 
-(defn- on-new-game [game]
-  (let [game-id (:game-id game)
-        player1 (:player1 game)
-        player2 (:player2 game)]
-    (dosync (alter rooms assoc game-id game)
-            (alter player->room assoc player1 game-id, player2 game-id))
-    (let [published (locking (:game-id game) (push game :state game))]
-      (when-not published
-        (do
-          (log/info "can't publish game with id" game-id)
-          (push game :error :unknown))))))
-
-(defn- on-message [{:keys [msg-type id data] :as msg}]
-  (let [game-id (get @player->room id)
-        game    (get @rooms game-id)]
-    (if game
-      (locking game-id
-        (case msg-type
-          :state   (push game :state game)
-          :move    (on-move! msg)
-          :give-up (game-end! game-id)))
-      (do (log/info "on-message; cant find game" msg-type id data)
-          (push-error id :game-doesnt-exist)))))
-
-(defn subscribe-to-new-games []
-  (let [matched (->> (topics/consume :matched)
-                     (rx/observe-on :thread))]
-    (rx/subscribe matched on-new-game #(log/error "new-rooms on-error: " %))))
-
-(defn subscribe-to-usr-msgs []
-  (let [msgs (->> (topics/consume :msg)
-                  (rx/filter #(-> % :msg-type (not= :new)))
-                  (rx/observe-on :thread))]
-    (rx/subscribe msgs on-message #(log/error "usr-msgs on-error: " %))))
-
-(defn subscribe []
-  (doto (CompositeDisposable.)
-    (.add (subscribe-to-new-games))
-    (.add (subscribe-to-usr-msgs))))
+;; TODO: rename to reply-obs?
+(defn reply
+  "return Observable<Reply>"
+  [game messages-obs]
+  (->> messages-obs
+       (rx/scan reduce-game-msg (state-resp game))
+       (rx/flat-map (fn [{:keys [_ replies-obs]}] replies-obs))))

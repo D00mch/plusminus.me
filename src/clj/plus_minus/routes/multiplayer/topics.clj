@@ -1,22 +1,15 @@
 (ns plus-minus.routes.multiplayer.topics
-  (:require [plus-minus.game.board :as b]
-            [plus-minus.game.state :as st]
-            [plus-minus.validation :as validation]
-            [beicon.core :as rx]
+  (:require [beicon.core :as rx]
             [clojure.spec.alpha :as s]
-            [clojure.spec.alpha :as spec]
-            [clojure.tools.logging :as log])
-  (:import [io.reactivex Observable]
-           [io.reactivex.subjects BehaviorSubject]
-           [io.reactivex.internal.observers LambdaObserver]
-           [io.reactivex.functions Function])
+            [clojure.tools.logging :as log]
+            [plus-minus.multiplayer.contract :as contract
+             :refer [->Message]])
   (:gen-class))
 
 (defn- subject [] (-> (rx/subject) rx/to-serialized))
 
-(def topics {:matched {:subj (subject), :spec ::game}
-             :msg     {:subj (subject), :spec ::msg}
-             :reply   {:subj (subject), :spec ::reply}})
+(def topics {:msg     {:subj (subject), :spec ::contract/msg}
+             :reply   {:subj (subject), :spec ::contract/reply}})
 
 (defn publish
   "returns true, if successful"
@@ -33,80 +26,7 @@
   [topic]
   (get-in topics [topic :subj]))
 
-;; TODO: remove
+;; TODO: tmp for tests, remove
 (defn reset-state! []
-  (def topics {:matched {:subj (subject), :spec ::game}
-               :msg     {:subj (subject), :spec ::msg}
-               :reply   {:subj (subject), :spec ::reply}}))
-
-;;************************* SPECS *************************
-
-;; user's input
-(defrecord Message [msg-type, ^String id, data])
-(s/def ::msg-type #{:new :state :move :give-up})
-(s/def ::msg (s/and
-              (s/keys :req-un [::msg-type ::validation/id])
-              #(if (= (:msg-type %) :new) (s/valid?  ::b/row-size (:data %)) true)
-              #(if (= (:msg-type %) :move) (s/valid? ::b/index (:data %)) true)))
-;;(s/explain ::msg (->Message :new "dumch" 3))
-
-;; matched: created games
-(defrecord Game [state game-id created player1 player2 ^boolean player1-hrz])
-(s/def ::game-id number?)
-(s/def ::player1 ::validation/id)
-(s/def ::player2 ::validation/id)
-(s/def ::player1-hrz boolean?)
-(s/def ::created inst?)
-(s/def ::game (s/and (s/keys :req-un [::st/state ::game-id ::created
-                                      ::player1 ::player2 ::player1-hrz])
-                     #(not= (:player1 %) (:player2 %))))
-#_(s/explain ::game (map->Game
-                   {:state       (st/state-template 3)
-                    :game-id     9999999
-                    :created      (java.util.Date.)
-                    :player1     "bob"
-                    :player2     "dumch"
-                    :player1-hrz true}))
-
-
-;; reply to user
-(defrecord Reply   [reply-type, ^String id, data])
-(defrecord Result  [outcome, ^String id]) ;; data for Reply
-(s/def ::reply-type #{:state :move :end :error})
-(s/def ::outcome #{:draw :win :disconnect})
-(s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
-                  :game-with-yourself :invalid-msg :unknown})
-(s/def ::result (s/keys :req-un [::outcome ::validation/id]))
-(s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])
-                      #(case (:reply-type %)
-                         :end   (s/valid? ::outcome (-> % :data :outcome))
-                         :error (s/valid? ::errors (:data %))
-                         (any? %))))
-(s/explain-data ::reply (->Reply :error "bob" :invalid-move))
-
-(comment "tmp code to simulate the game"
-
-  (defn subscribe-all []
-    (def matcher-subs (plus-minus.routes.multiplayer.matcher/subscribe))
-    (def room-subs (plus-minus.routes.multiplayer.room/subscribe)))
-
-  (defn unsubscribe-all []
-    (.dispose matcher-subs)
-    (.dispose room-subs))
-
-  (subscribe-all)
-  (unsubscribe-all)
-
-  (publish :msg (->Message :new "Bob" 3))
-  (publish :msg (->Message :new "Dumch" 3))
-  (publish :msg (->Message :move "Bob" 2))
-  (publish :msg (->Message :move "Dumch" 5))
-
-  (def tmp-subs (rx/subscribe (->> (consume :msg)
-                                   (rx/map #(do (println "having " %)
-                                                %))
-                                   (rx/filter #(-> % :msg-type (= :new))))
-                              #(println "msg: " %)
-                              #(println "err: " %)))
-  (.dispose tmp-subs)
-)
+  (def topics {:msg     {:subj (subject), :spec ::contract/msg}
+               :reply   {:subj (subject), :spec ::contract/reply}}))

@@ -1,5 +1,6 @@
 (ns plus-minus.routes.websockets
-  (:require [plus-minus.routes.multiplayer.topics :as topics
+  (:require [plus-minus.routes.multiplayer.topics :as topics]
+            [plus-minus.multiplayer.contract :as contract
              :refer [map->Message ->Reply]]
             [plus-minus.routes.multiplayer.room :as room]
             [plus-minus.routes.multiplayer.matcher :as matcher]
@@ -44,9 +45,7 @@
   (log/info "msg:" json)
   (let [{id :id :as msg} (read-json json)]
     (swap! id->channel assoc id ch)
-    (let [valid (topics/publish :msg (map->Message msg))]
-      (when-not valid
-        (topics/publish :reply (->Reply :error id :invalid-msg))))))
+    #_(rx/publish topics/messages (map->Message msg))))
 
 (def websocket-callbacks
   {:on-open connect!
@@ -65,17 +64,7 @@
   (when-let [ch (get @id->channel id)] (send-json! ch reply)))
 
 (defn- subscribe []
-  (rx/subscribe (topics/consume :reply) on-reply #(log/error "on-error:" %)))
-
-(mount/defstate matcher-disposable
-  "subscribes matcher to new game requests"
-  :start (matcher/subscribe)
-  :stop  (.dispose matcher-disposable))
-
-(mount/defstate room-disposable
-  "subscribes room to new games and user's messages"
-  :start (room/subscribe)
-  :stop  (.dispose room-disposable))
+  #_(rx/subscribe room/replies on-reply #(log/error "on-error:" %)))
 
 (mount/defstate reply-disposable
   "subscribes to replies"
