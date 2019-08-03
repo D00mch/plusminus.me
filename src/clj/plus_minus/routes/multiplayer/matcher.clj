@@ -1,10 +1,11 @@
 (ns plus-minus.routes.multiplayer.matcher
   (:require [plus-minus.routes.multiplayer.topics :as topics]
             [plus-minus.multiplayer.contract :as contract
-             :refer [map->Game ->Reply]]
+             :refer [map->Game ->Reply ->Message]]
+            [plus-minus.utils :as utils]
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
-            [beicon.core :as rx])
+            [clojure.core.async :refer [>! <! alt! go go-loop chan] :as async])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
@@ -23,21 +24,47 @@
       :player2     player2
       :player1-hrz (.nextBoolean ^Random random)})))
 
-(defn- grouped-by-2 [observable size]
-  (->> observable
-       (rx/filter #(= (:data %) size))
-       (rx/buffer 2)))
+(def ^:private grouped-by-2-trans
+  (fn [rf]
+    (let [size->id (atom {})]
+      (fn ([] (rf))
+          ([result] (rf result))
+          ([result {id :id, size :data}]
+           (if-let [cached-id (get @size->id size)]
+             (do (swap! size->id dissoc size)
+                 (rf result (build-initial-state size cached-id id)))
+             (do (swap! size->id assoc size id)
+                 result)))))))
 
-(defn- matched-requests [messages]
-  (let [requests (->> messages
-                      (rx/filter #(-> % :msg-type (= :new)))
-                      (rx/observe-on :thread))]
-    (apply rx/merge (->> (range b/row-count-min b/row-count-max-excl)
-                         (map #(grouped-by-2 requests %))))))
+(def ^:private xform
+  (comp (filter #(-> % :msg-type (= :new)))
+        grouped-by-2-trans))
 
-(defn- build-game [[{p1 :id size :data} {p2 :id}]]
-  (build-initial-state size p1 p2))
+(defn pipe-games!
+  "takes chan in> contract/Message, returns chan out> contract/Game;
+  out> will be closed when in> closed"
+  [in> out>]
+  (utils/pipe! out> xform in> true)
+  out>)
 
-(defn generate-games [messages]
-  (->> (matched-requests messages)
-       (rx/map build-game)))
+;; tests
+(comment
+
+  (do
+    (def in> (chan))
+    (def out> (chan))
+    (pipe-games! in> out>)
+    (go-loop [g (<! out>)]
+      (println g)
+      (when g (recur (<! out>)))))
+
+  (async/>!! in> (->Message :new "bobby" 3))
+  (async/>!! in> (->Message :new "regedar" 3))
+
+  (async/onto-chan in> [(->Message :new "bob" 3)
+                        (->Message :move "cat" 2)
+                        (->Message :new "john" 4)
+                        (->Message :new "regeda" 3)])
+
+  (clojure.core.async.impl.protocols/closed? out>)
+  )

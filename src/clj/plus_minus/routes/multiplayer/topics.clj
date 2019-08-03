@@ -1,32 +1,39 @@
 (ns plus-minus.routes.multiplayer.topics
-  (:require [beicon.core :as rx]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
+            [clojure.core.async :as async :refer [>! <! chan go go-loop tap mult]]
             [plus-minus.multiplayer.contract :as contract
              :refer [->Message]])
   (:gen-class))
 
-(defn- subject [] (-> (rx/subject) rx/to-serialized))
+(defn ->chan [spec]
+  (let [c (chan)] {:chan c, :mult (mult c), :spec spec}))
 
-(def topics {:msg     {:subj (subject), :spec ::contract/msg}
-             :reply   {:subj (subject), :spec ::contract/reply}})
+(def channels {:msg   (->chan ::contract/msg)
+               :reply (->chan ::contract/reply)})
 
-(defn publish
-  "returns true, if successful"
-  [topic data]
-  (let [{:keys [subj spec]} (get topics topic)]
-    (if-let [errors (s/explain-data spec data)]
+(defn tap! [topic chan]
+  (tap (get-in channels [topic :mult]) chan)
+  chan)
+
+(defn in-chan
+  "don't read from this channel - it has read race contention,
+  because it's tapped with mult;
+  use topics/tap! instead"
+  [topic]
+  (get-in channels [topic :chan]))
+
+(defn push! [topic val]
+  (let [{:keys [chan spec]} (get channels topic)]
+    (if-let [errors (s/explain-data spec val)]
       (do (log/error "can't publish invalid data" errors)
           false)
-      (do (rx/push! subj data)
+      (do (go (>! chan val))
           true))))
-
-(defn consume
-  "returns Observable"
-  [topic]
-  (get-in topics [topic :subj]))
 
 ;; TODO: tmp for tests, remove
 (defn reset-state! []
-  (def topics {:msg     {:subj (subject), :spec ::contract/msg}
-               :reply   {:subj (subject), :spec ::contract/reply}}))
+  (async/close! (get-in channels [:msg :chan]))
+  (async/close! (get-in channels [:reply :chan]))
+  (def channels {:msg   (->chan ::contract/msg)
+                 :reply (->chan ::contract/reply)}))

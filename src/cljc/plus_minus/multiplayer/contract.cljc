@@ -33,12 +33,13 @@
 
 ;; reply to user
 (defrecord Reply   [reply-type, ^String id, data])
-(defrecord Result  [outcome, ^String id]) ;; data for Reply
+(defrecord Result  [outcome, ^String id, cause]) ;; data for Reply
 (s/def ::reply-type #{:state :move :end :error})
 (s/def ::outcome #{:draw :win :disconnect})
 (s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
                   :game-with-yourself :invalid-msg :unknown})
-(s/def ::result (s/keys :req-un [::outcome ::validation/id]))
+(s/def ::cause #{:give-up :time-out :no-moves})
+(s/def ::result (s/keys :req-un [::outcome ::validation/id ::cause]))
 (s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])
                       #(case (:reply-type %)
                          :end   (s/valid? ::outcome (-> % :data :outcome))

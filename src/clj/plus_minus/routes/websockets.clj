@@ -1,19 +1,20 @@
 (ns plus-minus.routes.websockets
-  (:require [plus-minus.routes.multiplayer.topics :as topics]
-            [plus-minus.multiplayer.contract :as contract
-             :refer [map->Message ->Reply]]
-            [plus-minus.routes.multiplayer.room :as room]
-            [plus-minus.routes.multiplayer.matcher :as matcher]
-            [plus-minus.routes.multiplayer.room :as room]
+  (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [immutant.web.async :as async]
             [cognitect.transit :as t]
-            [clojure.java.io :as io]
             [com.walmartlabs.cond-let :refer [cond-let]]
-            [beicon.core :as rx]
-            [mount.core :as mount])
-  (:import [java.io ByteArrayOutputStream]
-           [java.util.concurrent Executors TimeUnit Future]))
+            [immutant.web.async :as async]
+            [mount.core :as mount]
+            [plus-minus.multiplayer.contract
+             :as
+             contract
+             :refer
+             [->Reply map->Message]]
+            [plus-minus.routes.multiplayer.matcher :as matcher]
+            [plus-minus.routes.multiplayer.reply :as room]
+            [plus-minus.routes.multiplayer.topics :as topics])
+  (:import java.io.ByteArrayOutputStream
+           [java.util.concurrent Executors Future TimeUnit]))
 
 ;; https://gist.github.com/mattly/217eb6f26cb5d728a6cc88b4d6b926bb
 
@@ -59,14 +60,14 @@
 
 ;;************************* SUBSCRIPTION *************************
 
-(defn- on-reply [{type :reply-type id :id :as reply}]
-  (when     (= type :end)              (swap! id->channel dissoc id))
-  (when-let [ch (get @id->channel id)] (send-json! ch reply)))
+;; (defn- on-reply [{type :reply-type id :id :as reply}]
+;;   (when     (= type :end)              (swap! id->channel dissoc id))
+;;   (when-let [ch (get @id->channel id)] (send-json! ch reply)))
 
-(defn- subscribe []
-  #_(rx/subscribe room/replies on-reply #(log/error "on-error:" %)))
+;; (defn- subscribe []
+;;   #_(rx/subscribe room/replies on-reply #(log/error "on-error:" %)))
 
-(mount/defstate reply-disposable
-  "subscribes to replies"
-  :start (subscribe)
-  :stop (.dispose reply-disposable))
+;; (mount/defstate reply-disposable
+;;   "subscribes to replies"
+;;   :start (subscribe)
+;;   :stop (.dispose reply-disposable))
