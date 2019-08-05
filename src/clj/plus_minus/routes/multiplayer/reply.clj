@@ -91,9 +91,7 @@
 
 (defn- xf-msg->reply [game]
   (comp (move->reply-trans game)
-        (mapcat identity)
-        #_(cat (state-replies game))
-        ))
+        (mapcat identity)))
 
 (defn pipe-replies!
   "takes contracts/Game as initial state,

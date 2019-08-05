@@ -26,14 +26,14 @@
 
 (def ^:private grouped-by-2-trans
   (fn [rf]
-    (let [size->id (atom {})]
+    (let [size->id (transient {})]
       (fn ([] (rf))
           ([result] (rf result))
           ([result {id :id, size :data}]
-           (if-let [cached-id (get @size->id size)]
-             (do (swap! size->id dissoc size)
+           (if-let [cached-id (get size->id size)]
+             (do (dissoc! size->id size) ;; TODO return pair here
                  (rf result (build-initial-state size cached-id id)))
-             (do (swap! size->id assoc size id)
+             (do (assoc! size->id size id)
                  result)))))))
 
 (def ^:private xform

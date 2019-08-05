@@ -1,5 +1,5 @@
 (ns plus-minus.test.multiplayer
-  (:require [clojure.core.async :as async :refer [>!! <!! <! >! go go-loop chan]]
+  (:require [clojure.core.async :as async :refer [<!! <! >! go go-loop chan]]
             [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as spec]
             [clojure.spec.gen.alpha :as gen]
@@ -17,37 +17,19 @@
             [plus-minus.routes.multiplayer.topics :as topics]
             [plus-minus.validation :as validation]
             [clojure.string :as str])
-  (:import [plus_minus.multiplayer.contract Game Message]
-           java.util.concurrent.CountDownLatch))
+  (:import [plus_minus.multiplayer.contract Game Message]))
 
 (defn- reset-state! []
   (topics/reset-state!)
   (reset! (var-get #'game/id->msgs>) {}))
 
-(def ^{:private true} log? false) ;; for testing with repl
+(def players-num 2000) ;; TODO: change with 2000 and make it work
+(def log? false) ;; for testing with repl
 
 (defn- log [& args] (when log? (log/info (str/join " " args)) #_(apply println args)))
 
 (defn- push! [type id data]
   (topics/push! :msg (->Message type id data)))
-
-(defn- on-player-gets-message
-  "game is atom, latch - CountDownLatch"
-  [player game latch move]
-  (fn [{:keys [reply-type data]}]
-    (log player "gets" reply-type)
-    (case reply-type
-      :state (reset! game data)
-      :move  (swap! game update :state st/move data)
-      :end   (do
-               (.countDown ^CountDownLatch latch)
-               (log "the end"))
-      :error (log "error " data))
-    (when-not (= reply-type :end)
-      (if (= player (room/player-turn-id @game))
-        (do (push! :move player (move (:state @game)))
-            (log player "moved"))
-        (log player "says: not my turn")))))
 
 (defn- bot-move [state]
   (g/some-move state))
@@ -57,20 +39,49 @@
     (rand-int (st/size state))
     (bot-move state)))
 
+(defn- try-move [game player move]
+  (if (= player (room/player-turn-id game))
+    (do (push! :move player (move (:state game)))
+        (log player "moved"))
+    (log player "says: not my turn")))
+
+;; TODO: remove, tmp to debug
+(def ex-chan (chan))
+(go-loop []
+  (when-let [e (<! ex-chan)]
+    (log/error e "shit!")
+    (when-let [ed (ex-data e)] (pprint ed))
+    (recur)))
+
 (defn- imitate-player!
   ":move - fn state->move"
-  [reply> player latch & {move :move-fn :or {move bot-move}}]
-  (let [on-reply (on-player-gets-message player (atom nil) latch move)]
-    (go-loop []
-      (when-let [r (<! reply>)]
-        (on-reply r)
-        (recur)))))
+  [reply> player & {move :move-fn :or {move bot-move}}]
+  (go-loop [game {}]
+    (when-let [{:keys [reply-type data] :as reply} (<! reply>)]
+      (log player "gets" reply)
+      (case reply-type
+        :state (do (try-move data player move)
+                   (recur data))
+        :move  (if (not= game {})
+                 (let [new-game (update game :state st/move data)]
+                   (try-move new-game player move)
+                   (recur new-game))
+                 (>! ex-chan (ex-info "game not init on move" {:reply reply})))
+        :error (do (log "error" data)
+                   (>! ex-chan (ex-info "error to player" {:reply reply}))
+                   (if (= game {})
+                     (>! ex-chan (ex-info "game not init on error" {:reply reply}))
+                     (try-move game player move))
+                   (recur game))
+        :end   (log "the end")))))
 
-(defn- start-a-game! [player1 player2 latch move-fn]
-  (let [replies1> (topics/tap! :reply (chan 1 (filter #(= (:id %) player1))))
-        replies2> (topics/tap! :reply (chan 1 (filter #(= (:id %) player2))))]
-    (imitate-player! replies1> player1 latch :move-fn move-fn)
-    (imitate-player! replies2> player2 latch :move-fn move-fn)
+(defn- start-a-game! [player1 player2 move-fn]
+  (let [replies1> (topics/tap! :reply (chan 1 (filter #(= (:id %) player1))
+                                            #(log/error "replies1>" %)))
+        replies2> (topics/tap! :reply (chan 1 (filter #(= (:id %) player2))
+                                            #(log/error "replies2>" %)))]
+    (imitate-player! replies1> player1 :move-fn move-fn)
+    (imitate-player! replies2> player2 :move-fn move-fn)
     (push! :new player1 3)
     (push! :new player2 3)))
 
@@ -86,27 +97,19 @@
 (deftest play-games []
   (reset-state!)
   (when log? (print-replies!))
-  (let [ids      (-> (spec/gen ::validation/id) (gen/sample 1000) distinct)
+  (let [ids      (-> (spec/gen ::validation/id) (gen/sample players-num) distinct)
         id-pairs (partition 2 ids)
-        latch    (CountDownLatch. (-> (count id-pairs) (* 2)))]
+        end>     (topics/tap! :reply
+                              (chan 1 (comp (filter #(= (:reply-type %) :end))
+                                            (drop (- (* 2 (count id-pairs)) 1)))))]
     (game/listen!)
     (doseq [[p1 p2] id-pairs]
-      (start-a-game! p1 p2 latch bot-move))
-    (.await latch)
-    (prn "about to dispose")
-    (is (empty? (deref (var-get #'game/id->msgs>))))))
+      (start-a-game! p1 p2 bot-move))
 
-;; #_(deftest play-with-errors []
-;;   (let [latch (CountDownLatch. 2)
-;;         game  (start-a-game "bob" "regeda" latch bot-move)]
-;;     (.await latch)
-;;     (prn "about to dispose")
-;;     (.dispose ^Disposable game)
-;;     (is (empty? @room/rooms))))
+    ;; if comment this, 'fail... no more than 1024...' will appear too
+    (println "last reply" (<!! end>))
 
-;; ;; TODO: test give-up and state-request
-
-;; ;;;; new
+    #_(is (empty? (deref (var-get #'game/id->msgs>))))))
 
 (comment
 

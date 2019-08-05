@@ -10,8 +10,8 @@
 (def ^:private id->msgs> (atom {}))
 
 (defn- add-new-games!
-  "new-games> - channel with contract/Game - matched games;
-  adding chan with contract/Message into id->msgs> atom"
+  "new-games> - channel with contract/Game, matched games;
+  here we add chan with contract/Message into id->msgs> atom"
   [new-games>]
   (go-loop [{id1 :player1, id2 :player2 :as game} (<! new-games>)]
     (when game
@@ -34,8 +34,8 @@
       (recur))))
 
 (defn listen! []
-  (let [all-msgs>  (topics/tap! :msg (chan))
+  (let [all-msgs>  (topics/tap! :msg (chan 1 nil))
         new-games> (matcher/pipe-games! all-msgs> (chan))
-        moves>     (topics/tap! :msg (chan 100 (filter #(not= (:msg-type %) :new))))]
+        moves>     (topics/tap! :msg (chan 1 (filter #(not= (:msg-type %) :new))))]
     (add-new-games! new-games>)
     (pipe-messages>replies>! moves>)))
