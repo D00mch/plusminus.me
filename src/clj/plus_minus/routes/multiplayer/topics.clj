@@ -1,7 +1,7 @@
 (ns plus-minus.routes.multiplayer.topics
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
-            [clojure.core.async :as async :refer [>! <! chan go go-loop tap mult]]
+            [clojure.core.async :as async :refer [>!! <! chan go go-loop tap mult]]
             [plus-minus.multiplayer.contract :as contract
              :refer [->Message]])
   (:gen-class))
@@ -23,12 +23,14 @@
   [topic]
   (get-in channels [topic :chan]))
 
-(defn push! [topic val]
+(defn push!
+  "blocking push! to channel"
+  [topic val]
   (let [{:keys [chan spec]} (get channels topic)]
     (if-let [errors (s/explain-data spec val)]
       (do (log/error "can't publish invalid data" errors)
           false)
-      (do (go (>! chan val))
+      (do (>!! chan val)
           true))))
 
 ;; TODO: tmp for tests, remove

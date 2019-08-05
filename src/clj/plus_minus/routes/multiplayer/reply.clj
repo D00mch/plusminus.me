@@ -103,10 +103,10 @@
         end> (chan 1 (comp (filter #(= (:reply-type %) :end))
                            (drop 1)
                            (map (fn [_] :end))))] ; to close after 2 :end
-    (go (doseq [r (state-replies game)] (>! bus> r))       ; pass init state to players
-        (utils/pipe! bus> (xf-msg->reply game) in> false)) ; process messages
     (async/tap mult end>)
     (async/tap mult out>)
+    (doseq [r (state-replies game)] (>!! bus> r))
+    (utils/pipe! bus> (xf-msg->reply game) in> false)
     end>))
 
 
@@ -123,10 +123,11 @@
        :player1-hrz true})
     (def in> (chan))
     (def out> (chan))
-    (def end> (pipe-replies! game in> out>))
     (go-loop [v (<! out>)]
       (println v)
-      (when v (recur (<! out>)))))
+      (when v (recur (<! out>))))
+    (def end> (pipe-replies! game in> out>))
+    )
 
   (do (prn (player-turn-id game))
       (prn (st/valid-moves (:state game)))
