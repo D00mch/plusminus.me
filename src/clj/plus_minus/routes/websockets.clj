@@ -5,11 +5,7 @@
             [com.walmartlabs.cond-let :refer [cond-let]]
             [immutant.web.async :as async]
             [mount.core :as mount]
-            [plus-minus.multiplayer.contract
-             :as
-             contract
-             :refer
-             [->Reply map->Message]]
+            [plus-minus.multiplayer.contract :as contract :refer [->Reply map->Message]]
             [plus-minus.routes.multiplayer.matcher :as matcher]
             [plus-minus.routes.multiplayer.reply :as room]
             [plus-minus.routes.multiplayer.topics :as topics])

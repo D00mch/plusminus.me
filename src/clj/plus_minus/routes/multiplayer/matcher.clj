@@ -1,11 +1,9 @@
 (ns plus-minus.routes.multiplayer.matcher
-  (:require [plus-minus.routes.multiplayer.topics :as topics]
-            [plus-minus.multiplayer.contract :as contract
-             :refer [map->Game ->Reply ->Message]]
+  (:require [plus-minus.multiplayer.contract :as contract
+             :refer [map->Game ->Message]]
             [plus-minus.utils :as utils]
-            [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
-            [clojure.core.async :refer [>! <! alt! go go-loop chan] :as async])
+            [clojure.core.async :refer [<! go-loop chan] :as async])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
@@ -17,28 +15,29 @@
 (defn- build-initial-state [size player1 player2]
   (let [game-id (generate-id!)]
     (map->Game
-     {:state      (st/state-template size)
+     {:state       (st/state-template size)
       :game-id     game-id
-      :created     (java.util.Date.)
+      :created     (System/currentTimeMillis)
+      :updated     (System/currentTimeMillis)
       :player1     player1
       :player2     player2
       :player1-hrz (.nextBoolean ^Random random)})))
 
-(def ^:private grouped-by-2-trans
+(def ^:private msg->game-by-size
   (fn [rf]
     (let [size->id (transient {})]
       (fn ([] (rf))
           ([result] (rf result))
           ([result {id :id, size :data}]
            (if-let [cached-id (get size->id size)]
-             (do (dissoc! size->id size) ;; TODO return pair here
+             (do (dissoc! size->id size)
                  (rf result (build-initial-state size cached-id id)))
              (do (assoc! size->id size id)
                  result)))))))
 
 (def ^:private xform
   (comp (filter #(-> % :msg-type (= :new)))
-        grouped-by-2-trans))
+        msg->game-by-size))
 
 (defn pipe-games!
   "takes chan in> contract/Message, returns chan out> contract/Game;

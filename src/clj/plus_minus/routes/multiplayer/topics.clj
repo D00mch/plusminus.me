@@ -2,8 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async :refer [>!! <! chan go go-loop tap mult]]
-            [plus-minus.multiplayer.contract :as contract
-             :refer [->Message]])
+            [plus-minus.multiplayer.contract :as contract])
   (:gen-class))
 
 (defn ->chan [spec]

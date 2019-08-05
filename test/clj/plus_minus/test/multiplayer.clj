@@ -94,9 +94,8 @@
 (deftest error-games []
   (reset-state!)
   (game/listen!)
-  (let [end>     (topics/tap! :reply
-                              (chan 1 (comp (filter #(= (:reply-type %) :end))
-                                            (drop 1))))]
+  (let [xf   (comp (filter #(= (:reply-type %) :end)) (drop 1))
+        end> (topics/tap! :reply (chan 1 xf))]
     (start-a-game! "bob" "regeda" rand-move)
     (println "last reply:" (<!! end>))
     (is (empty? (deref (var-get #'game/id->msgs>))))))
