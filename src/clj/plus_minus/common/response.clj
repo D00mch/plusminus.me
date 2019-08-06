@@ -1,4 +1,4 @@
-(ns plus-minus.routes.services.common
+(ns plus-minus.common.response
   (:require [ring.util.http-response :as response]
             [clojure.tools.logging :as log]))
 

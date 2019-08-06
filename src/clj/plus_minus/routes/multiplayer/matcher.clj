@@ -1,15 +1,15 @@
 (ns plus-minus.routes.multiplayer.matcher
   (:require [plus-minus.multiplayer.contract :as contract
              :refer [map->Game ->Message]]
-            [plus-minus.utils :as utils]
+            [plus-minus.common.async :as a-utils]
             [plus-minus.game.state :as st]
             [clojure.core.async :refer [<! go-loop chan] :as async])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
-(def ^:private random (Random.))
+(defonce ^:private random (Random.))
 
-(def ^:private generate-id!
+(defonce ^:private generate-id!
   (let [id (AtomicLong. 0)] #(.getAndIncrement id)))
 
 (defn- build-initial-state [size player1 player2]
@@ -23,6 +23,7 @@
       :player2     player2
       :player1-hrz (.nextBoolean ^Random random)})))
 
+;; TODO: fix issue with playing with yourself
 (def ^:private msg->game-by-size
   (fn [rf]
     (let [size->id (transient {})]
@@ -43,7 +44,7 @@
   "takes chan in> contract/Message, returns chan out> contract/Game;
   out> will be closed when in> closed"
   [in> out>]
-  (utils/pipe! out> xform in> true)
+  (a-utils/pipe! out> xform in> true)
   out>)
 
 ;; tests

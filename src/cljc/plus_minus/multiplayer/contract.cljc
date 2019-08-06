@@ -3,7 +3,8 @@
             [plus-minus.game.state :as st]
             [plus-minus.validation :as validation]
             [clojure.spec.alpha :as s]
-            [clojure.spec.alpha :as spec]))
+            [clojure.spec.alpha :as spec])
+  #?(:cljs (:require-macros [cljs.core :refer [defrecord]])))
 
 (defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up :turn-time})

@@ -47,10 +47,11 @@
     (when-let [{:keys [reply-type data] :as reply} (<! reply>)]
       (log player "gets" reply-type)
       (case reply-type
-        :state (reset! game data)
-        :move  (swap! game update :state st/move data)
-        :error (log "error" data)
-        :end   (do (async/close! reply>)
+        :state     (reset! game data)
+        :move      (swap! game update :state st/move data)
+        :error     (log "error" data)
+        :turn-time (log "turn-time")
+        :end       (do (async/close! reply>)
                    (log "the end")))
       (when-not (= reply-type :end)
         (if (= player (room/player-turn-id @game))
@@ -89,7 +90,8 @@
     (doseq [[p1 p2] id-pairs]
       (start-a-game! p1 p2 bot-move))
     (println "last reply:" (<!! end>))
-    (is (empty? (deref (var-get #'game/id->msgs>))))))
+    (is (empty? (deref (var-get #'game/id->msgs>))))
+    (game/close!)))
 
 (deftest error-games []
   (reset-state!)
@@ -98,7 +100,8 @@
         end> (topics/tap! :reply (chan 1 xf))]
     (start-a-game! "bob" "regeda" rand-move)
     (println "last reply:" (<!! end>))
-    (is (empty? (deref (var-get #'game/id->msgs>))))))
+    (is (empty? (deref (var-get #'game/id->msgs>))))
+    (game/close!)))
 
 
 (comment
@@ -111,40 +114,44 @@
       (when-let [ed (ex-data e)] (pprint ed))
       (recur)))
 
+
+  (let [replies> (topics/tap! :reply (chan))]
+    (go-loop []
+      (when-let [v (<! replies>)]
+        (if (->> (:data v) (instance? Game))
+          (pprint (dissoc (:data v) :created))
+          (pprint v))
+        (recur))))
+
   (do
-    (let [replies> (topics/tap! :reply (chan))]
-      (go-loop []
-        (when-let [v (<! replies>)]
-          (if (->> (:data v) (instance? Game))
-            (pprint (dissoc (:data v) :created))
-            (pprint v))
-          (recur))))
     (game/listen!)
     (topics/push! :msg (->Message :new "bob" 3))
     (topics/push! :msg (->Message :new "bol" 3)))
 
   (def game
     {:state
-     {:board {:row-size 3, :cells [-8 -3 4 5 9 3 0 -7 -4]},
-      :start 5,
+     {:board {:row-size 3, :cells [-3 -5 -2 7 -7 -8 9 -5 9]},
+      :start 1,
       :moves [],
       :hrz-points 0,
       :vrt-points 0,
       :hrz-turn true},
-     :game-id 0,
+     :game-id 8,
      :player1 "bob",
      :player2 "bol",
-     :player1-hrz true})
+     :player1-hrz false,
+     :updated 1565078256386})
 
   (do (prn (room/player-turn-id game))
       (prn (st/valid-moves (:state game)))
       (st/state-print (:state game)))
 
-  (let [mv 0
+  (let [mv 5
         nm "bol"]
     (push! :move nm mv)
     (def game (update game :state st/move mv)))
 
+  (game/close!)
   (reset-state!)
 
   (deref (var-get #'game/id->msgs>))

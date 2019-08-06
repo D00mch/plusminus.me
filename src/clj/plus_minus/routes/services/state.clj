@@ -1,25 +1,21 @@
 (ns plus-minus.routes.services.state
   (:require [plus-minus.db.core :as db]
-            [plus-minus.utils :as utils]
-            [plus-minus.game.board :as b]
-            [plus-minus.routes.services.common :as common]
+            [plus-minus.common.response :as response]
             [plus-minus.game.state :as s]
             [plus-minus.game.game :as g]
             [com.walmartlabs.cond-let :refer [cond-let]]
-            [clojure.tools.logging :as log]
-            [clojure.spec.alpha :as spec]
-            [clojure.pprint :refer [pprint]]))
+            [clojure.spec.alpha :as spec]))
 
 (defn- get-or-generate [id]
   (or (-> {:id id} db/get-state :state) (s/state-template 4)))
 
 (defn get-state [id]
-  (common/try-with-wrap-internal-error
+  (response/try-with-wrap-internal-error
    :fun (fn [] {:state (get-or-generate id)})
    :msg  "server error occured while getting state"))
 
 (defn upsert-state [id state]
-  (common/try-with-wrap-internal-error
+  (response/try-with-wrap-internal-error
    :fun (fn []
           (db/upsert-state! {:id id, :state state})
           {:result :ok})
@@ -29,11 +25,11 @@
   (cond-let
    :let [old-state (-> {:id id} db/get-state :state)]
    (not old-state)
-   (common/e-precondition "can't move without first providing the state")
+   (response/e-precondition "can't move without first providing the state")
 
    :let [valid (s/valid-move? old-state mv)]
    (not valid)
-   (common/e-precondition "invalid move")
+   (response/e-precondition "invalid move")
 
    :else
    (upsert-state id (s/move old-state mv))))
@@ -44,18 +40,18 @@
 (spec/def ::statistics (spec/keys :req-un [::win ::lose ::draw]))
 
 (defn get-stats [id]
-  (common/try-with-wrap-internal-error
+  (response/try-with-wrap-internal-error
    :fun #(-> {:id id} db/get-statistics (dissoc :player_id))
    :msg "server error occured while getting stats"))
 
 (defn game-end [id state usr-hrz usr-give-up]
   (if (and (s/moves? state) (not usr-give-up))
-    (common/e-precondition "can't end the game with free moves and not giving-up")
+    (response/e-precondition "can't end the game with free moves and not giving-up")
     (let [stats     (or (-> {:id id} db/get-statistics :statistics)
                         {:win 0 :lose 0 :draw 0})
           result    (if usr-give-up :lose (g/on-game-end state usr-hrz))
           new-stats (update stats result inc)]
-      (common/try-with-wrap-internal-error
+      (response/try-with-wrap-internal-error
        :fun #(do (db/upsert-statistics! {:id id :statistics new-stats})
                  {:statistics new-stats})
        :msg  "server error occured while saving stats"))))

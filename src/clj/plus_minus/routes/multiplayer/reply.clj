@@ -98,10 +98,10 @@
         end> (chan 1 (comp (filter #(= (:reply-type %) :end))
                            (drop 1)
                            (map (fn [_] :end))))] ; to close after 2 :end
-    (async/tap mult end>)
-    (async/tap mult out>)
+    (async/tap mult end> true)
+    (async/tap mult out> false)
     (doseq [r (state-replies game)] (>!! bus> r))
-    (timer/pipe-with-move-timer! bus> (xf-msg->reply game) in>)
+    (timer/pipe-with-move-timer! bus> (xf-msg->reply game) in> true)
     end>))
 
  ;;testing

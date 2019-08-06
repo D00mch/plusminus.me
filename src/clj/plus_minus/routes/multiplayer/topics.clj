@@ -29,8 +29,7 @@
     (if-let [errors (s/explain-data spec val)]
       (do (log/error "can't publish invalid data" errors)
           false)
-      (do (>!! chan val)
-          true))))
+      (>!! chan val))))
 
 ;; TODO: tmp for tests, remove
 (defn reset-state! []
