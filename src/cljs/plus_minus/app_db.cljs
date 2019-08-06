@@ -1,6 +1,30 @@
 (ns plus-minus.app-db
   (:refer-clojure :exclude [get get-in reset! swap!])
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [plus-minus.game.state :as st]
+            [plus-minus.validation :as v]
+            [reagent.core :as reagent :refer [atom]]
+            [clojure.spec.alpha :as s]))
+
+(comment
+  ;; state example
+  {:page :home,
+   :identity nil,
+   :usr-hrz-turn true,
+   :game-state
+   {:board
+    {:row-size 4, :cells [-2 1 -1 -9 4 9 8 -9 -2 -6 8 9 -5 -7 -4 -9]},
+    :start 9,
+    :moves [],
+    :hrz-points 0,
+    :vrt-points 0,
+    :hrz-turn true}}
+
+  (s/def ::page #{:home :about})
+  (s/def ::identity ::v/id)
+  (s/def ::usr-hrz-turn boolean)
+  (s/def ::game-state ::st/state)
+  (s/def ::db-state (s/keys :req-un [::page ::identity ::usr-hrz-turn ::game-state]))
+  )
 
 (defonce state (atom {}))
 

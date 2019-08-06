@@ -4,7 +4,7 @@
             [goog.crypt.base64 :as b64]
             [clojure.string :as str]
             [ajax.core :as ajax]
-            [plus-minus.components.board :as board]
+            [plus-minus.game.bot :as bot]
             [plus-minus.components.common :as c]))
 
 (defn- encode-auth [user pass]
@@ -20,7 +20,7 @@
                             (db/remove! :modal)
                             (db/put! :identity id)
                             (reset! fields nil)
-                            (board/init-game-state))
+                            (bot/init-game-state))
                 :error-handler
                 #(let [{message :message} (get % :response)]
                    (swap! styles dissoc :loading)
