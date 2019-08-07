@@ -99,7 +99,7 @@
                                    (change-state state))})
       (change-state state))))
 
-(defn init-game-state []
+(defn init-game-state! []
   (db/put! :usr-hrz-turn true)
   (load-stats!)
   (load-game-state!)
@@ -128,28 +128,29 @@
        [:div.scor (str "Win: "  (or (:win stats) 0))]
        [:div.scor (str "Lose: " (or (:lose stats) 0))]
        [:div.scor (str "Draw: " (or (:draw stats) 0))]]
-      [:div.board.stats [:label "Authorize to see statistics"]])))
+      [:div.board.stats
+       [:label "Authorize to see statistics and play with other players"]])))
 
 (defn game-matrix [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.content
    [:div {:style {:display :flex
                   :flex-direction :column
                   :flex-wrap :wrap}}
-    (board/game-settings
+    [board/game-settings
      :state     (:game-state @db/state)
      :on-change #(let [row-size %
                        moves    (-> :game-state db/get :moves seq)]
                    (if moves
                      (db/put! :modal (alert-restart row-size))
-                     (change-state (s/state-template row-size)))))
-    (board/scors
+                     (change-state (s/state-template row-size))))]
+    [board/scors
      :state   (:game-state @db/state)
-     :usr-hrz usr-hrz)
-    (board/matrix
+     :usr-hrz usr-hrz]
+    [board/matrix
      :on-click  (fn [turn? state index]
                   (if turn?
                     (move state index)
                     (js/alert "Can't make this move")))
      :game-state (:game-state @db/state)
-     :user-hrz   usr-hrz)
+     :user-hrz   usr-hrz]
     [game-stats]]])

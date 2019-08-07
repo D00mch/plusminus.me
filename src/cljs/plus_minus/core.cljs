@@ -49,7 +49,7 @@
     [:div.navbar-end
      [:div.buttons
       (reg/registration-button)
-      (login/login-button)]]))
+      (login/login-button #(bot/init-game-state!))]]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
@@ -89,7 +89,7 @@
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
-    [session-modal]))
+    [session-modal (println "logged in")]))
 
 (defn page []
   [:div
@@ -135,5 +135,5 @@
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
-  (bot/init-game-state)
+  (bot/init-game-state!)
   (mount-components))

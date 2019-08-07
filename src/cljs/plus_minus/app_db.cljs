@@ -10,14 +10,13 @@
   {:page :home,
    :identity nil,
    :usr-hrz-turn true,
-   :game-state
-   {:board
-    {:row-size 4, :cells [-2 1 -1 -9 4 9 8 -9 -2 -6 8 9 -5 -7 -4 -9]},
-    :start 9,
-    :moves [],
-    :hrz-points 0,
-    :vrt-points 0,
-    :hrz-turn true}}
+   :game-state {:board
+                {:row-size 4, :cells [-2 1 -1 -9 4 9 8 -9 -2 -6 8 9 -5 -7 -4 -9]},
+                :start 9,
+                :moves [],
+                :hrz-points 0,
+                :vrt-points 0,
+                :hrz-turn true}}
 
   (s/def ::page #{:home :about})
   (s/def ::identity ::v/id)

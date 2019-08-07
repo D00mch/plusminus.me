@@ -18,21 +18,22 @@
 
 (defn matrix
   "on-click - fn [turn? state index]"
-  [& {on-click :on-click, game-state :game-state, usr-hrz :user-hrz}]
-  (let [{{r :row-size, cells :cells :as board} :board
-         moves :moves
-         hrz-turn :hrz-turn :as state} game-state]
-    [:div.board.grid
-     (for [y (range r)]
-       [:div.row
-        (for [x (range r)]
-          (let [i      (b/xy->index x y r)
-                valid  (s/valid-move? state i)
-                turn   (and valid (= usr-hrz hrz-turn))
-                hidden (some #{i} moves)]
-            [:div.box {:style {:margin 5
-                               :visibility (when hidden "hidden")
-                               :background (when valid (if turn "#209cee" "#ee1f1f"))}
-                       :on-click #(on-click turn state i)}
-             [:div.inner {:style {:color (when valid "white")}}
-              (nth cells i)]]))])]))
+  [& {on-click                           :on-click,
+      usr-hrz                            :user-hrz
+      {{r :row-size,cells :cells} :board
+       moves :moves
+       hrz-turn :hrz-turn :as state}     :game-state}]
+  [:div.board.grid
+   (for [y (range r)]
+     [:div.row
+      (for [x (range r)]
+        (let [i      (b/xy->index x y r)
+              valid  (s/valid-move? state i)
+              turn   (and valid (= usr-hrz hrz-turn))
+              hidden (some #{i} moves)]
+          [:div.box {:style {:margin 5
+                             :visibility (when hidden "hidden")
+                             :background (when valid (if turn "#209cee" "#ee1f1f"))}
+                     :on-click #(on-click turn state i)}
+           [:div.inner {:style {:color (when valid "white")}}
+            (nth cells i)]]))])])
