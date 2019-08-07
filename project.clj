@@ -12,7 +12,7 @@
                  [com.cognitect/transit-clj "0.8.313"]
                  [conman "0.8.3"]
                  [cprop "0.1.13"]
-                 [luminus-jetty "0.1.7"]
+                 [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.5"]
                  [luminus-transit "0.1.1"]
                  [luminus/ring-ttl-session "0.3.2"]
@@ -34,6 +34,7 @@
                  [reanimated "0.6.1"]
                  [org.clojure/test.check "0.9.0"] ;; for spec
                  [clojure-term-colors "0.1.0"] ;; to color game board in repl
+                 [net.cgrand/xforms "0.18.2"] ;; transducers extension
                  [com.walmartlabs/cond-let "1.0.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]

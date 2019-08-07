@@ -14,3 +14,9 @@ profiles.clj
 
 /node_modules
 /log
+
+#IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws

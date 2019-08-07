@@ -5,6 +5,7 @@
     [plus-minus.routes.home :refer [home-routes]]
     [plus-minus.routes.services :refer [service-routes]]
     [plus-minus.routes.oauth :refer [oauth-routes]]
+    [plus-minus.routes.websockets :refer [websocket-routes] :as ws]
     [reitit.swagger-ui :as swagger-ui]
     [reitit.ring :as ring]
     [ring.middleware.content-type :refer [wrap-content-type]]
@@ -22,6 +23,7 @@
     (ring/ring-handler
       (ring/router
         [(home-routes)
+         ["/ws" ws/ws-handler]
          (service-routes)
          (oauth-routes)])
       (ring/routes

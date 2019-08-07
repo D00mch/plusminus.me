@@ -23,6 +23,9 @@
         mv (->> mvs count (nth pmvs))]
     (st/move state mv)))
 
+(defn some-move [state]
+  (-> state move-bot :moves last))
+
 (defn on-game-end [{:keys [hrz-points vrt-points] :as state} usr-hrz-turn]
   (if (= hrz-points vrt-points)
     :draw
