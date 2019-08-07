@@ -8,7 +8,7 @@
    [plus-minus.components.registration :as reg]
    [plus-minus.components.login :as login]
    [plus-minus.app-db :as db]
-   [plus-minus.components.board :as board]
+   [plus-minus.game.bot :as bot]
    [ajax.core :refer [GET POST]]
    [reitit.core :as reitit]
    [clojure.string :as string])
@@ -49,7 +49,7 @@
     [:div.navbar-end
      [:div.buttons
       (reg/registration-button)
-      (login/login-button)]]))
+      (login/login-button #(bot/init-game-state!))]]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
@@ -81,14 +81,7 @@
    [:p "1"]])
 
 (defn home-page []
-  [:section.section>div.container>div.content
-   [:div {:style {:display :flex
-                  :flex-direction :column
-                  :flex-wrap :wrap}}
-    [board/game-settings]
-    [board/scors]
-    [board/game-matrix]
-    [board/game-stats]]])
+  [bot/game-matrix])
 
 (def pages
   {:home #'home-page
@@ -96,7 +89,7 @@
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
-    [session-modal]))
+    [session-modal (println "logged in")]))
 
 (defn page []
   [:div
@@ -142,5 +135,5 @@
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
-  (board/init-game-state)
+  (bot/init-game-state!)
   (mount-components))
