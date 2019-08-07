@@ -3,13 +3,12 @@
    [reagent.core :as r]
    [goog.events :as events]
    [goog.history.EventType :as HistoryEventType]
-   [markdown.core :refer [md->html]]
    [plus-minus.ajax :as ajax]
    [plus-minus.components.registration :as reg]
    [plus-minus.components.login :as login]
    [plus-minus.app-db :as db]
    [plus-minus.game.bot :as bot]
-   [ajax.core :refer [GET POST]]
+   [plus-minus.game.online :as online]
    [reitit.core :as reitit]
    [clojure.string :as string])
   (:import goog.History))
@@ -65,27 +64,25 @@
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]]
+       [nav-link "#/about" "About" :about]
+       [nav-link "#/multiplayer" "Multiplayer" :multiplayer]]
       [user-menu]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
 
-(defn digit-form []
-  [:div.box {:style {:display "flex"
-                     :align-items "center"
-                     :justify-content "center"
-                     :width 40
-                     :height 40}}
-   [:p "1"]])
-
 (defn home-page []
-  [bot/game-matrix])
+  [bot/game-component])
+
+(defn multiplayer-page []
+  (online/init-waiting-state!)
+  [online/game-component])
 
 (def pages
-  {:home #'home-page
-   :about #'about-page})
+  {:home        #'home-page
+   :about       #'about-page
+   :multiplayer #'multiplayer-page})
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
@@ -102,7 +99,8 @@
 (def router
   (reitit/router
     [["/" :home]
-     ["/about" :about]]))
+     ["/about" :about]
+     ["/multiplayer" :multiplayer]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")

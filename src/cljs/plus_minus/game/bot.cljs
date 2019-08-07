@@ -131,7 +131,7 @@
       [:div.board.stats
        [:label "Authorize to see statistics and play with other players"]])))
 
-(defn game-matrix [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
+(defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.content
    [:div {:style {:display :flex
                   :flex-direction :column
