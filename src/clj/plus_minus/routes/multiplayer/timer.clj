@@ -1,9 +1,10 @@
 (ns plus-minus.routes.multiplayer.timer
   (:require [plus-minus.multiplayer.contract :refer [->Message]]
+            [plus-minus.config :refer [env]]
             [clojure.core.async :refer [go-loop chan timeout alts! >! pipe close!]]))
 
-(def ^:const ping-ms 3000)
-(def ^:const turn-ms 30000)
+(def ^:const ping-ms (if-let [v (:ping-ms env)] v 3000))
+(def ^:const turn-ms (if-let [v (:turn-ms env)] v 30000))
 
 (defn millis [] (System/currentTimeMillis))
 

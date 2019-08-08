@@ -39,18 +39,21 @@
     (let [[v ch] (alts! [exit> games-messages>])]
       (cond
         (= ch exit>) (log/info "exit signal received in pipe-messages>replies!")
-        v            (let [{:keys [id] :as msg} v]
-                       (if-let [msg> (get @id->msgs> id)]
-                         (>! msg> msg)
-                         (log/error "can't find msg> chan for id" id))
+        v            (let [{id :id t :msg-type :as msg} v
+                           msg>                          (get @id->msgs> id)]
+                       (cond msg>        (>! msg> msg) ;; game exists, pass the msg
+                             ;; matcher's business
+                             (= t :drop) nil
+                             (= t :new)  nil
+                             :else       (log/error "can't find msg> chan for id" id))
                        (recur))))))
 
 (defn listen! []
   (let [all-msgs>  (topics/tap! :msg (chan 1 nil))
-        new-games> (matcher/pipe-games! all-msgs> (chan))
-        moves>     (topics/tap! :msg (chan 1 (filter #(not= (:msg-type %) :new))))
-        ex1>        (chan)
-        ex2>        (chan)]
+        new-games> (matcher/pipe-games! all-msgs> (chan) (topics/in-chan :reply))
+        moves>     (topics/tap! :msg (chan))
+        ex1>       (chan)
+        ex2>       (chan)]
     (go (<! exit>)
         (>! ex1> 1)
         (>! ex2> 1)

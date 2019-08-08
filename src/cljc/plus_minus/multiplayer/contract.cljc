@@ -6,11 +6,21 @@
             [clojure.spec.alpha :as spec])
   #?(:cljs (:require-macros [cljs.core :refer [defrecord]])))
 
+(comment
+  "request new game with :new (Message :new id size),
+  when someone else requested :new with the same size, game will be matched"
+  "if you want to request a game with new size, you have to pass :drop msg first
+   or you will initiate two games at the same time."
+
+  ":turn-time will immediatelly return millis till the turn end"
+  )
+
 (defrecord Message [msg-type, ^String id, data])
-(s/def ::msg-type #{:new :state :move :give-up :turn-time})
+(s/def ::msg-type #{:new :state :move :give-up :turn-time :drop})
 (s/def ::msg (s/and
               (s/keys :req-un [::msg-type ::validation/id])
               #(if (= (:msg-type %) :new) (s/valid?  ::b/row-size (:data %)) true)
+              #(if (= (:msg-type %) :drop) (s/valid?  ::b/row-size (:data %)) true)
               #(if (= (:msg-type %) :move) (s/valid? ::b/index (:data %)) true)))
 ;;(s/explain ::msg (->Message :new "dumch" 3))
 
@@ -38,7 +48,7 @@
 ;; reply to user
 (defrecord Reply   [reply-type, ^String id, data])
 (defrecord Result  [outcome, ^String id, cause]) ;; data for Reply
-(s/def ::reply-type #{:state :move :end :error :turn-time})
+(s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop})
 (s/def ::outcome #{:draw :win :disconnect})
 (s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
                   :game-with-yourself :invalid-msg :unknown})

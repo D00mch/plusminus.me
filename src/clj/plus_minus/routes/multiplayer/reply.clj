@@ -34,11 +34,14 @@
   (list (->Reply reply-type (:player1 game) data)
         (->Reply reply-type (:player2 game) data)))
 
-(defn- game-end-replies [game & {cause :cause}]
+(defn- game-end-replies [game {id :id type :msg-type}]
   (let [moves  (-> game :state st/moves?)
-        result (if moves
-                 (->Result :win (other-player game (player-turn-id game)) cause)
-                 (game-result game))]
+        result (cond
+                 (= type :give-up) (->Result :win (other-player game id) :give-up)
+                 moves             (->Result :win
+                                             (other-player game (player-turn-id game))
+                                             :time-out)
+                 :else             (game-result game))]
     (replies game :end result)))
 
 (defrecord GR [game replies])
@@ -48,7 +51,7 @@
 (defn- state-replies [game] (replies game :state game))
 
 (defn- move->game-replies
-  [game {type :msg-type, id :id, move :data}]
+  [game {type :msg-type, id :id, move :data :as msg}]
   {:pre [(= type :move)]}
   (cond-let
    (not (player-turn? game id))      (->GR game (error-replies id :not-your-turn))
@@ -57,7 +60,7 @@
    (not (st/valid-move? state move)) (->GR game (error-replies id :invalid-move))
 
    :let [game (update game :state st/move move)]
-   (-> game :state st/moves? not)    (->GR game (game-end-replies game))
+   (-> game :state st/moves? not)    (->GR game (game-end-replies game msg))
 
    :else                             (->GR (timer/updated game)
                                            (replies game :move move))))
@@ -68,15 +71,16 @@
       (fn
         ([] (rf))
         ([result] (rf result))
-        ([result {type :msg-type :as msg}]
+        ([result {id :id type :msg-type :as msg}]
          (rf result
              (if (timer/elapsed? @vgame)
-               (game-end-replies @vgame :cause :time-out)
+               (game-end-replies @vgame msg)
                (case type
-                 :new          (do (log/error "get :new msg" msg) (result))
-                 :turn-time    (time-replies @vgame)
+                 :new          (do (log/error "get :new msg" msg) result)
+                 :drop         result
+                 :turn-time    (filter #(-> % :id (= id)) (time-replies @vgame))
                  :state        (state-replies @vgame)
-                 :give-up      (game-end-replies @vgame :cause :give-up)
+                 :give-up      (game-end-replies @vgame msg)
                  :move         (let [{:keys [game replies]}
                                      (move->game-replies @vgame msg)]
                                  (vreset! vgame game)
@@ -103,43 +107,3 @@
     (doseq [r (state-replies game)] (>!! bus> r))
     (timer/pipe-with-move-timer! bus> (xf-msg->reply game) in> true)
     end>))
-
- ;;testing
-(comment
-
-  (do
-    (def game
-      {:state {:board {:row-size 3,:cells [4 2 -5 9 -8 -7 -5 -5 8]},
-               :start 6,:moves [],:hrz-points 0,:vrt-points 0,:hrz-turn true},
-       :game-id 0,
-       :created (System/currentTimeMillis),
-       :updated (System/currentTimeMillis),
-       :player1 "bob",:player2 "regeda",
-       :player1-hrz true})
-    (def in> (chan))
-    (def out> (chan))
-    (go-loop [v (<! out>)]
-      (println v)
-      (when v (recur (<! out>))))
-    (def end> (pipe-replies! game in> out>))
-    )
-
-  (do (prn (player-turn-id game))
-      (prn (st/valid-moves (:state game)))
-      (st/state-print (:state game)))
-
-  (let [mv 8
-        nm "bob"
-        ;; nm "regeda"
-        ] (>!! in> (->Message :move nm mv))
-       (def game (update game :state st/move mv)))
-
-  (>!! in> (->Message :give-up "regeda" nil))
-
-  (clojure.core.async.impl.protocols/closed? in>)
-  (<!! end>)
-  (do
-    (async/close! end>)
-    (async/close! in>)
-    (async/close! out>))
-  )

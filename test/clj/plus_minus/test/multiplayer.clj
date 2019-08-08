@@ -19,6 +19,8 @@
             [clojure.string :as str])
   (:import [plus_minus.multiplayer.contract Game Message]))
 
+;; MULTIPLAYER INTEGRATION TEST
+
 (defn- reset-state! []
   (topics/reset-state!)
   (reset! (var-get #'game/id->msgs>) {}))
