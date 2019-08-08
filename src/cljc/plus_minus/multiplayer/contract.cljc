@@ -27,6 +27,15 @@
 ;; matched: created games
 (defrecord Game [state game-id player1 player2 ^boolean player1-hrz
                  created updated])
+
+(defn turn-id [game]
+  (if (= (-> game :state :hrz-turn) (:player1-hrz game))
+    (:player1 game)
+    (:player2 game)))
+
+(defn other-id [{p1 :player1 p2 :player2 :as game} p]
+  (if (= p1 p) p2 p1))
+
 (s/def ::game-id number?)
 (s/def ::player1 ::validation/id)
 (s/def ::player2 ::validation/id)
@@ -47,9 +56,9 @@
 
 ;; reply to user
 (defrecord Reply   [reply-type, ^String id, data])
-(defrecord Result  [outcome, ^String id, cause]) ;; data for Reply
+(defrecord Result  [outcome, cause]) ;; data for Reply
 (s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop})
-(s/def ::outcome #{:draw :win :disconnect})
+(s/def ::outcome #{:draw :win :lose})
 (s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
                   :game-with-yourself :invalid-msg :unknown})
 (s/def ::cause #{:give-up :time-out :no-moves})

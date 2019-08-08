@@ -56,7 +56,7 @@
         :end       (do (async/close! reply>)
                    (log "the end")))
       (when-not (= reply-type :end)
-        (if (= player (room/player-turn-id @game))
+        (if (= player (contract/turn-id @game))
          (do (>! (topics/in-chan :msg)
                  (->Message :move player (move (:state @game))))
              (log player "moved"))
@@ -144,7 +144,7 @@
      :player1-hrz false,
      :updated 1565078256386})
 
-  (do (prn (room/player-turn-id game))
+  (do (prn (contract/turn-id game))
       (prn (st/valid-moves (:state game)))
       (st/state-print (:state game)))
 

@@ -1,5 +1,5 @@
 (ns plus-minus.routes.multiplayer.reply
-  (:require [plus-minus.multiplayer.contract :as contract
+  (:require [plus-minus.multiplayer.contract :as c
              :refer [->Reply ->Result ->Message]]
             [clojure.core.async :refer [>!! <!! <! go-loop chan]
              :as async]
@@ -9,23 +9,8 @@
             [clojure.tools.logging :as log]
             [com.walmartlabs.cond-let :refer [cond-let]]))
 
-(defn player-turn-id [game]
-  (if (= (-> game :state :hrz-turn) (:player1-hrz game))
-    (:player1 game)
-    (:player2 game)))
-
-(defn other-player [{p1 :player1 p2 :player2 :as game} p]
-  (if (= p1 p) p2 p1))
-
-(defn- game-result [game]
-  (let [result (-> game :state (game/on-game-end (:player1-hrz game)))]
-    (case result
-      :draw (->Result :draw (:player1 game) :no-moves)
-      :win  (->Result :win  (:player1 game) :no-moves)
-      :lose (->Result :win  (:player2 game) :no-moves))))
-
 (defn- player-turn? [game player-id]
-  (= player-id (player-turn-id game)))
+  (= player-id (c/turn-id game)))
 
 (defn- error-replies [player-id key]
   (list (->Reply :error player-id key)))
@@ -34,15 +19,30 @@
   (list (->Reply reply-type (:player1 game) data)
         (->Reply reply-type (:player2 game) data)))
 
+(defn- end-results [{p1 :player1 p2 :player2 :as game} p1-outcome p2-outcome cause]
+  (list (->Reply :end p1 (->Result p1-outcome cause))
+        (->Reply :end p2 (->Result p2-outcome cause))))
+
+(defn- calc-end-results [game]
+  (let [result (-> game :state (game/on-game-end (:player1-hrz game)))]
+    (case result
+      :draw (end-results game :draw :draw :no-moves)
+      :win  (end-results game :win :lose :no-moves)
+      :lose (end-results game :lose :win :no-moves))))
+
+(defn- winner-results [{p1 :player1 p2 :player2 :as game} winner cause]
+  (end-results game
+               (if (= p1 winner) :win :lose)
+               (if (= p2 winner) :win :lose)
+               cause))
+
 (defn- game-end-replies [game {id :id type :msg-type}]
-  (let [moves  (-> game :state st/moves?)
-        result (cond
-                 (= type :give-up) (->Result :win (other-player game id) :give-up)
-                 moves             (->Result :win
-                                             (other-player game (player-turn-id game))
-                                             :time-out)
-                 :else             (game-result game))]
-    (replies game :end result)))
+  (let [moves  (-> game :state st/moves?)]
+    (cond
+      (= type
+         :give-up) (winner-results game (c/other-id game id) :give-up)
+      moves        (winner-results game (c/other-id game (c/turn-id game)) :time-out)
+      :else        (calc-end-results game))))
 
 (defrecord GR [game replies])
 

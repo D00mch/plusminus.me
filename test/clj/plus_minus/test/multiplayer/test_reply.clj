@@ -5,7 +5,7 @@
             [clojure.spec.alpha :as spec]
             [clojure.spec.gen.alpha :as gen]
             [plus-minus.validation :as validation]
-            [plus-minus.multiplayer.contract :refer [->Message]]
+            [plus-minus.multiplayer.contract :refer [->Message] :as contract]
             [plus-minus.routes.multiplayer.reply :as reply]
             [plus-minus.routes.multiplayer.matcher :as matcher]
             [clojure.test :refer [deftest is testing]]
@@ -33,7 +33,7 @@
 
     (testing "can get two move replies"
       (>!! in> (->Message :move
-                          (reply/player-turn-id game)
+                          (contract/turn-id game)
                           (game/some-move (:state game))))
       (is (instance? Reply (do (get-with-timeout!! mvs>)
                                (get-with-timeout!! mvs>)))))
@@ -56,14 +56,35 @@
 
     (close! in>)))
 
-#_(deftest drop-when-game-started
-  (testing "just give-up the game if user drops it after start"
-    (let [game (matcher/initial-state 3 "p1" "p2")
-          in>  (chan 10)
-          out> (chan 10)
-          end> (reply/pipe-replies! game in> out>)]
-      (>!! in> (->Message :drop "p1" nil))
-      )))
+(deftest results
+  (testing "give-up results"
+    (let [[p1 p2] ["bob" "regeda"]
+          game    (matcher/initial-state 3 p1 p2)
+          [r1 r2] (#'reply/game-end-replies game (->Message :give-up p1 nil))]
+      (is (= (-> r1 :data :outcome) :lose))
+      (is (= (-> r2 :data :outcome) :win))
+      (is (= (-> r1 :data :cause) (-> r2 :data :cause) :give-up))))
+
+  (testing "timeout results"
+    (let [[p1 p2] ["bob" "regeda"]
+          game    (matcher/initial-state 3 p1 p2)
+          [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))
+          mover   (contract/turn-id game)
+          winner  (contract/other-id game mover)]
+      (is (= (-> (if (= p1 mover) r1 r2) :data :outcome) :lose))
+      (is (= (-> (if (= p1 mover) r2 r1) :data :outcome) :win))
+      (is (= (-> r1 :data :cause) (-> r2 :data :cause) :time-out))))
+
+  (testing "no moves result"
+    (let [[p1 p2] ["bob" "regeda"]
+          game    (update (matcher/initial-state 3 p1 p2) :state game/play)
+          [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))
+          ]
+      (is (= (-> r1 :data :outcome)
+             (game/on-game-end (:state game) (:player1-hrz game))))
+      (is (= (-> r2 :data :outcome)
+             (game/on-game-end (:state game) (not (:player1-hrz game)))))
+      (is (= (-> r1 :data :cause) (-> r2 :data :cause) :no-moves)))))
 
 (comment
 
