@@ -32,6 +32,14 @@
     (let [hrz-wins (> hrz-points vrt-points)]
       (if (= usr-hrz-turn hrz-wins) :win :lose))))
 
+(defn play
+  "Simulate game til the end with best moves"
+  [{:as state}]
+  (->> (iterate move-bot state)
+       (take-while #(st/moves? %))
+       last
+       move-bot))
+
 (comment
   (def game-state (atom (st/state-template 3)))
 

@@ -1,9 +1,9 @@
 (ns plus-minus.routes.multiplayer.matcher
   (:require [plus-minus.multiplayer.contract :as contract
-             :refer [map->Game ->Message]]
+             :refer [map->Game ->Reply]]
             [plus-minus.common.async :as a-utils]
             [plus-minus.game.state :as st]
-            [clojure.core.async :refer [<! go-loop chan] :as async])
+            [clojure.core.async :refer [>!!] :as async])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
@@ -12,7 +12,7 @@
 (defonce ^:private generate-id!
   (let [id (AtomicLong. 0)] #(.getAndIncrement id)))
 
-(defn- build-initial-state [size player1 player2]
+(defn initial-state [size player1 player2]
   (let [game-id (generate-id!)]
     (map->Game
      {:state       (st/state-template size)
@@ -23,48 +23,36 @@
       :player2     player2
       :player1-hrz (.nextBoolean ^Random random)})))
 
-;; TODO: fix issue with playing with yourself
-(def ^:private msg->game-by-size
+(defn- msg->game-by-size
+  "drop> - channel for :drop feedback"
+  [drop>]
   (fn [rf]
     (let [size->id (transient {})]
       (fn ([] (rf))
-          ([result] (rf result))
-          ([result {id :id, size :data}]
-           (if-let [cached-id (get size->id size)]
-             (do (dissoc! size->id size)
-                 (rf result (build-initial-state size cached-id id)))
-             (do (assoc! size->id size id)
-                 result)))))))
+        ([result] (rf result))
+        ([result {type :msg-type, id :id, size :data}]
+         (let [cached-id (get size->id size)]
+           (case type
+             :new (if (and cached-id (not= cached-id id))
+                    (do (dissoc! size->id size)
+                        (rf result (initial-state size cached-id id)))
+                    (do (assoc! size->id size id)
+                        result))
+             :drop (if (= cached-id id)
+                     (do (dissoc! size->id size)
+                         (>!! drop> (->Reply :drop id nil))
+                         result)
+                     (do
+                       (>!! drop> (->Reply :cant-drop id "must be already matched"))
+                       result)))))))))
 
-(def ^:private xform
-  (comp (filter #(-> % :msg-type (= :new)))
-        msg->game-by-size))
+(defn- xform [drop>]
+  (comp (filter (comp #{:new :drop} :msg-type))
+        (msg->game-by-size drop>)))
 
 (defn pipe-games!
   "takes chan in> contract/Message, returns chan out> contract/Game;
   out> will be closed when in> closed"
-  [in> out>]
-  (a-utils/pipe! out> xform in> true)
+  [in> out> drop> & [close?]]
+  (a-utils/pipe! out> (xform drop>) in> (boolean close?))
   out>)
-
-;; tests
-(comment
-
-  (do
-    (def in> (chan))
-    (def out> (chan))
-    (pipe-games! in> out>)
-    (go-loop [g (<! out>)]
-      (println g)
-      (when g (recur (<! out>)))))
-
-  (async/>!! in> (->Message :new "bobby" 3))
-  (async/>!! in> (->Message :new "regedar" 3))
-
-  (async/onto-chan in> [(->Message :new "bob" 3)
-                        (->Message :move "cat" 2)
-                        (->Message :new "john" 4)
-                        (->Message :new "regeda" 3)])
-
-  (clojure.core.async.impl.protocols/closed? out>)
-  )

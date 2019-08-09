@@ -1,16 +1,28 @@
 (ns plus-minus.components.common
   (:require [clojure.string :as str]
-            [plus-minus.app-db :as app-db]))
+            [plus-minus.app-db :as db]
+            [reagent.core :as r]))
 
 (defn modal [& {:keys [header body footer style]}]
   [:div.modal.is-active
    [:div.modal-background
-    {:on-click #(app-db/remove! :modal)}]
+    {:on-click #(db/remove! :modal)}]
    [:div.modal-card
     style
     [:header.modal-card-head header]
     [:section.modal-card-body body]
     [:footer.modal-card-foot footer]]])
+
+(defn info-modal [title body]
+  (fn []
+    [modal
+     :style  {:style {:width 400}}
+     :header [:div title]
+     :body   [:div [:label body]]
+     :footer [:div
+              [:a.button.is-primary
+               {:on-click #(db/remove! :modal)}
+               "Close"]]]))
 
 (defn do-or-close-footer [& {:keys [name on-do styles]}]
   [:div
@@ -19,7 +31,7 @@
      :on-click on-do}
     name]
    [:a.button.is-danger
-    {:on-click #(app-db/remove! :modal)}
+    {:on-click #(db/remove! :modal)}
     "Cancel"]])
 
 (defn input [& {:keys [type hint on-save on-stop id fields styles]
@@ -44,3 +56,9 @@
                           nil)}]
         [:p.is-medium {:style {:color "red"}}
          (get-in @styles [:errors id])]]])))
+
+(defn timer-comp [millis-remains label]
+  (fn []
+    (r/with-let [time (r/atom (quot (+ millis-remains 500) 1000))]
+      (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
+      [:div label @time])))
