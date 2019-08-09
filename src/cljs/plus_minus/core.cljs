@@ -10,7 +10,8 @@
    [plus-minus.game.bot :as bot]
    [plus-minus.game.online :as online]
    [reitit.core :as reitit]
-   [clojure.string :as string])
+   [clojure.string :as string]
+   [plus-minus.websockets :as ws])
   (:import goog.History))
 
 (defn nav-link [uri title page]
@@ -76,8 +77,17 @@
   [bot/game-component])
 
 (defn multiplayer-page []
-  (online/init-waiting-state!)
-  [online/game-component])
+  (if (db/get :identity)
+    (do
+      (online/initial-state!)
+      (ws/ensure-websocket!
+       (str "ws://" (.-host js/location) "/ws")
+       online/on-reply!
+       #(ws/send-transit-msg! {:msg-type :state, :id (db/get :identity)}))
+      [online/game-component])
+    [:section.section>div.container>div.content
+     [:div
+      [:label "Authenticate to play with other people"]]]))
 
 (def pages
   {:home        #'home-page
@@ -86,7 +96,7 @@
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
-    [session-modal (println "logged in")]))
+    [session-modal]))
 
 (defn page []
   [:div

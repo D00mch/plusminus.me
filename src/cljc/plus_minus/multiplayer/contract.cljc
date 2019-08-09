@@ -15,6 +15,9 @@
   ":turn-time will immediatelly return millis till the turn end"
   )
 
+(def ^:const ping-ms 5000)
+(def ^:const turn-ms 20000)
+
 (defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up :turn-time :drop})
 (s/def ::msg (s/and
@@ -60,7 +63,7 @@
 (s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop})
 (s/def ::outcome #{:draw :win :lose})
 (s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
-                  :game-with-yourself :invalid-msg :unknown})
+                  :invalid-msg :unknown})
 (s/def ::cause #{:give-up :time-out :no-moves})
 (s/def ::result (s/keys :req-un [::outcome ::validation/id ::cause]))
 (s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])

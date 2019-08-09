@@ -11,10 +11,11 @@
     (for [row-size (range b/row-count-min b/row-count-max)]
       [:option row-size])]])
 
-(defn scors [& {s :state h :usr-hrz}]
+(defn scors [& {s :state h :usr-hrz you :you he :he
+                :or {you "You: ", he "He: "}}]
   [:div.board.scors
-   [:div.scor (str "You: " (if h (:hrz-points s) (:vrt-points s)))]
-   [:div.scor (str "He: " (if h (:vrt-points s) (:hrz-points s)))]])
+   [:div.scor (str you (if h (:hrz-points s) (:vrt-points s)))]
+   [:div.scor (str he (if h (:vrt-points s) (:hrz-points s)))]])
 
 (defn matrix
   "on-click - fn [turn? state index]"

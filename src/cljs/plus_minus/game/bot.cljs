@@ -106,19 +106,18 @@
   (reset-watchers!))
 
 (defn alert-restart [row-size]
-  (let [styles (r/atom {:id {:auto-focus true}})]
-    (fn []
-     [c/modal
-      :style  {:style {:width 400}}
-      :header [:div "Admit defeat?"]
-      :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
-      :footer (c/do-or-close-footer
-               :styles styles
-               :name "Defeat"
-               :on-do (fn []
-                        (db/remove! :modal)
-                        (send-end-game (db/get :game-state) true)
-                        (change-state (s/state-template row-size))))])))
+  (fn []
+    [c/modal
+    :style  {:style {:width 400}}
+    :header [:div "Admit defeat?"]
+    :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
+    :footer (c/do-or-close-footer
+             :styles {:id {:auto-focus true}}
+             :name "Defeat"
+             :on-do (fn []
+                      (db/remove! :modal)
+                      (send-end-game (db/get :game-state) true)
+                      (change-state (s/state-template row-size))))]))
 
 (defn game-stats []
   (let [id    (db/get :identity)
@@ -145,7 +144,8 @@
                      (change-state (s/state-template row-size))))]
     [board/scors
      :state   (:game-state @db/state)
-     :usr-hrz usr-hrz]
+     :usr-hrz usr-hrz
+     :he      "Bot: "]
     [board/matrix
      :on-click  (fn [turn? state index]
                   (if turn?

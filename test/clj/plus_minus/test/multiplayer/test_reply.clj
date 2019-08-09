@@ -78,8 +78,7 @@
   (testing "no moves result"
     (let [[p1 p2] ["bob" "regeda"]
           game    (update (matcher/initial-state 3 p1 p2) :state game/play)
-          [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))
-          ]
+          [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))]
       (is (= (-> r1 :data :outcome)
              (game/on-game-end (:state game) (:player1-hrz game))))
       (is (= (-> r2 :data :outcome)
