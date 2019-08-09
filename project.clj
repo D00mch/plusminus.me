@@ -34,6 +34,7 @@
                  [reanimated "0.6.1"]
                  [org.clojure/test.check "0.9.0"] ;; for spec
                  [clojure-term-colors "0.1.0"] ;; to color game board in repl
+                 [org.clojure/core.async "0.4.500"]
                  [net.cgrand/xforms "0.18.2"] ;; transducers extension
                  [com.walmartlabs/cond-let "1.0.0"]
                  [ring-webjars "0.2.0"]
