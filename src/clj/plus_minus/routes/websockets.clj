@@ -37,7 +37,7 @@
 (defn ws-handler [request]
   (async/as-channel request websocket-callbacks))
 
-(def websocket-routes ["/ws" ws-handler])
+(def websocket-routes [["/ws" ws-handler]])
 
 (mount/defstate game-subscription>
   "subscribe messages and replies processing"

@@ -23,7 +23,7 @@
     (ring/ring-handler
       (ring/router
         [(home-routes)
-         ["/ws" ws/ws-handler]
+         websocket-routes
          (service-routes)
          (oauth-routes)])
       (ring/routes
