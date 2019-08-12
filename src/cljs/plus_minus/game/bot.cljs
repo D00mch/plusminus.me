@@ -112,7 +112,7 @@
     :header [:div "Admit defeat?"]
     :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
     :footer (c/do-or-close-footer
-             :styles {:id {:auto-focus true}}
+             :styles (r/atom {:id {:auto-focus true}})
              :name "Defeat"
              :on-do (fn []
                       (db/remove! :modal)
