@@ -1,14 +1,11 @@
 (ns plus-minus.routes.websockets
   (:require [clojure.tools.logging :as log]
-            [com.walmartlabs.cond-let :refer [cond-let]]
             [immutant.web.async :as async]
-            [clojure.core.async :refer [>! <! >!! chan alts! go-loop]]
+            [clojure.core.async :refer [<! chan go-loop close!]]
             [mount.core :as mount]
             [plus-minus.common.json :as parser]
             [plus-minus.multiplayer.contract :as contract :refer
-             [->Reply ->Message map->Message]]
-            [plus-minus.routes.multiplayer.matcher :as matcher]
-            [plus-minus.routes.multiplayer.reply :as room]
+             [->Message map->Message]]
             [plus-minus.routes.multiplayer.topics :as topics]
             [plus-minus.routes.multiplayer.game :as game])
   (:import java.io.ByteArrayOutputStream
@@ -44,24 +41,20 @@
   :start
   (do
     (game/listen!)
-    (let [exit>    (chan)
-          replies> (topics/tap! :reply (chan))]
+    (let [replies> (topics/tap! :reply (chan))]
       (go-loop []
-        (let [[v ch] (alts! [exit> replies>])]
-          (cond
-            (= ch exit>) (log/info "exit game-subscription loop")
-            v            (let [{:keys [reply-type id] :as reply} v]
-                           (println "about to send reply" (into {} reply))
-                           (when-let [ch (get @id->channel id)]
-                             (println "ch for reply found, sent - "
-                              (async/send! ch (parser/->json reply))))
-                           (when (= reply-type :end)
-                             (swap! id->channel dissoc id))
-                           (recur)))))
-      exit>))
+        (when-let [{:keys [reply-type id] :as reply} (<! replies>)]
+          (println "about to send reply" (into {} reply))
+          (when-let [ch (get @id->channel id)]
+            (println "ch for reply found, sent - "
+                     (async/send! ch (parser/->json reply))))
+          (when (= reply-type :end)
+            (swap! id->channel dissoc id))
+          (recur)))
+      replies>))
   :stop  (do (game/close!)
              (topics/reset-state!)
-             (>!! game-subscription> 0)))
+             (close! game-subscription>)))
 
 (comment
 
