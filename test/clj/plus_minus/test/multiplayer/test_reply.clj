@@ -47,7 +47,7 @@
       (>!! in> (->Message :turn-time "p1" nil))
       (let [{type :reply-type time :data} (get-with-timeout!! tt>)]
         (is (= type :turn-time))
-        (is (> time (- timer/turn-ms 2000)))))
+        (is (> time (- contract/turn-ms 2000)))))
 
     (testing "game ends after :give-up message"
       (>!! in> (->Message :give-up "p1" nil))
