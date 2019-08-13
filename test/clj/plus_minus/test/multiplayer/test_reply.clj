@@ -20,7 +20,7 @@
         out> (chan)
         mvs> (chan)
         st>  (chan 1 (drop 2)) ;; drop first 2 states from init
-        tt>  (chan)
+        tt>  (chan 1 (drop 1))
         _    (go-loop []
                (when-let [{type :reply-type :as reply} (<! out>)]
                  (case type
