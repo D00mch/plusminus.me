@@ -15,7 +15,7 @@
                         seq)]
     (if duplicate?
       (response/e-precondition "user with the selected ID already exists")
-      (response/e-internal "server error occured while adding the user"))))
+      (response/e-internal e "server error occured while adding the user"))))
 
 (defn register! [{session :session :as req} user]
   (pprint req)
@@ -30,7 +30,7 @@
           (assoc :session (assoc session :identity (:id user))))
       (catch Exception e (handle-reg-exc e)))))
 
-(str "Basic " (.encodeToString (java.util.Base64/getEncoder) 
+#_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) 
                                (.getBytes "dumch:1Q2w3epl")))
 
 (defn decode-auth [encoded]

@@ -1,13 +1,14 @@
 (ns plus-minus.core
   (:require
-    [plus-minus.handler :as handler]
-    [plus-minus.nrepl :as nrepl]
-    [luminus.http-server :as http]
-    [luminus-migrations.core :as migrations]
-    [plus-minus.config :refer [env]]
-    [clojure.tools.cli :refer [parse-opts]]
-    [clojure.tools.logging :as log]
-    [mount.core :as mount])
+   [plus-minus.handler :as handler]
+   [plus-minus.nrepl :as nrepl]
+   [luminus.http-server :as http]
+   [luminus-migrations.core :as migrations]
+   [plus-minus.config :refer [env]]
+   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.tools.logging :as log]
+   [mount.core :as mount]
+   [plus-minus.routes.multiplayer.persist :as persist])
   (:gen-class))
 
 (def cli-options
@@ -33,6 +34,9 @@
   (when repl-server
     (nrepl/stop repl-server)))
 
+(mount/defstate persist>
+  :start (persist/subscribe>)
+  :stop  (clojure.core.async/close! persist>))
 
 (defn stop-app []
   (doseq [component (:stopped (mount/stop))]

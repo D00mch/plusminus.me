@@ -51,12 +51,13 @@
     (make-websocket! url receive-handler on-open)))
 
 (comment
-  (def player "regeda")
-  (def ws (let [ch (js/WebSocket. (str "ws://" (.-host js/location) "/ws"))]
-            (set! (.-onmessage ch)
-                  (receive-transit-msg! #(println player "received :" %)))
-            (set! (.-onclose ch) (println player "closed"))
-            ch))
+  (do
+    (def player "regeda")
+    (def ws (let [ch (js/WebSocket. (str "ws://" (.-host js/location) "/ws"))]
+              (set! (.-onmessage ch)
+                    (receive-transit-msg! #(println player "received :" %)))
+              (set! (.-onclose ch) (println player "closed"))
+              ch)))
 
   (.close ws)
 

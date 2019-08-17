@@ -18,6 +18,7 @@
 (def ^:const ping-ms 5000)
 (def ^:const turn-ms 20000)
 
+;; USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up :turn-time :drop})
 (s/def ::msg (s/and
@@ -27,7 +28,7 @@
               #(if (= (:msg-type %) :move) (s/valid? ::b/index (:data %)) true)))
 ;;(s/explain ::msg (->Message :new "dumch" 3))
 
-;; matched: created games
+;; MATCHED: CREATED GAMES
 (defrecord Game [state game-id player1 player2 ^boolean player1-hrz
                  created updated])
 
@@ -48,16 +49,8 @@
 (s/def ::game (s/and (s/keys :req-un [::st/state ::game-id ::created ::updated
                                       ::player1 ::player2 ::player1-hrz])
                      #(not= (:player1 %) (:player2 %))))
-#_(s/explain ::game (map->Game
-                   {:state       (st/state-template 3)
-                    :game-id     9999999
-                    :created     (System/currentTimeMillis)
-                    :player1     "bob"
-                    :player2     "dumch"
-                    :player1-hrz true}))
 
-
-;; reply to user
+;; REPLY TO USER
 (defrecord Reply   [reply-type, ^String id, data])
 (defrecord Result  [outcome, cause]) ;; data for Reply
 (s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop})

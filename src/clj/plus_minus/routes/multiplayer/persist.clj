@@ -2,16 +2,25 @@
   (:require [plus-minus.db.core :as db]
             [plus-minus.routes.multiplayer.topics :as topics]
             [plus-minus.multiplayer.contract :refer [->Reply ->Result] :as c]
-            [mount.core :as mount]
             [clojure.core.async :refer [>! <! >!! chan alts! go-loop close!]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [plus-minus.common.response :as response]
+            [clojure.spec.alpha :as s]))
 
-(def ^:private initial-stats {:win  {:give-up  0,
-                                     :time-out 0,
-                                     :no-moves 0},
-                              :lose {:give-up  0,
-                                     :time-out 0,
-                                     :no-moves 0},
+(s/def ::count (s/or :n zero? :n pos-int?))
+(s/def ::give-up  ::count)
+(s/def ::time-out ::count)
+(s/def ::no-moves ::count)
+(s/def ::draw     ::count)
+
+(s/def ::stat (s/keys :req-un [::give-up ::time-out ::no-moves]))
+(s/def ::win  ::stat)
+(s/def ::lose ::stat)
+
+(s/def ::statistics (s/keys :req-un [::win ::lose ::draw]))
+
+(def ^:private initial-stats {:win  {:give-up 0, :time-out 0, :no-moves 0},
+                              :lose {:give-up 0, :time-out 0, :no-moves 0},
                               :draw 0})
 
 (def ^:private end-xform
@@ -39,9 +48,13 @@
         (recur)))
     ends>))
 
-(mount/defstate persist>
-  :start (subscribe>)
-  :stop  (close! persist>))
+(defn get-stats [id]
+  (response/try-with-wrap-internal-error
+  :fun #(-> {:id id} db/get-online-stats)
+  :msg "server error occured while getting online stats"))
 
-;; (>!! stats> 0)
-;; (topics/push! :reply (->Reply :end "bob" (->Result :win :no-moves)))
+(comment
+
+  (>!! stats> 0)
+  (topics/push! :reply (->Reply :end "bob" (->Result :win :no-moves)))
+  )
