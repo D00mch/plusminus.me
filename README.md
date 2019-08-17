@@ -6,7 +6,7 @@ check current web-version on [herokuapp][1] (multiplayer only works with http no
 
 check Android version on [Google play][2]
 
-[1]: https://plus-minus-game.herokuapp.com/
+[1]: http://plus-minus-game.herokuapp.com/
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
 
 
