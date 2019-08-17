@@ -2,7 +2,8 @@
   (:require [plus-minus.db.core :as db]
             [plus-minus.validation :as validate]
             [plus-minus.utils :as utils]
-            [ring.util.http-response :as response]
+            [plus-minus.common.response :as response]
+            [ring.util.http-response :as ring-response]
             [buddy.hashers :as hashers]
             [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]))
@@ -13,31 +14,24 @@
                         (filter #(.startsWith % "ERROR: duplicate key"))
                         seq)]
     (if duplicate?
-      (response/precondition-failed
-       {:result  :error
-        :message "user with the selected ID already exists"})
-      (do
-        (log/error e)
-        (response/internal-server-error
-         {:result  :error
-          :message "server error occured while adding the user"})))))
+      (response/e-precondition "user with the selected ID already exists")
+      (response/e-internal e "server error occured while adding the user"))))
 
 (defn register! [{session :session :as req} user]
   (pprint req)
   (if-let [errors (validate/registration-errors user)]
-    (response/precondition-failed {:result  :error
-                                   :message "precondition failed"
-                                   :validation errors})
+    (response/e-precondition "precondition failed" {:validation errors})
     (try
       (db/create-user! (-> user
                            (dissoc :pass-confirm)
                            (update :pass hashers/encrypt)))
       (-> {:result :ok}
-          (response/ok)
+          (ring-response/ok)
           (assoc :session (assoc session :identity (:id user))))
       (catch Exception e (handle-reg-exc e)))))
 
-#_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) (.getBytes "user:pass")))
+#_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) 
+                               (.getBytes "dumch:1Q2w3epl")))
 
 (defn decode-auth [encoded]
   (let [auth (second (.split encoded " "))]
@@ -54,20 +48,19 @@
   (pprint req)
   (if-let [id (authenticate (decode-auth auth))]
     (-> {:result :ok}
-        (response/ok)
+        (ring-response/ok)
         (assoc :session (assoc session :identity id)))
-    (response/unauthorized {:result :unauthorized
-                            :message "login failure"})))
-
+    (ring-response/unauthorized {:result :unauthorized
+                                 :message "login failure"})))
 
 (defn logout! [req]
   (pprint req)
   (-> {:result :ok}
-      (response/ok)
+      (ring-response/ok)
       (assoc :session nil)))
 
 (defn delete-account! [identity]
   (db/delete-user! {:id identity})
   (-> {:result :ok}
-      (response/ok)
+      (ring-response/ok)
       (assoc :session nil)))

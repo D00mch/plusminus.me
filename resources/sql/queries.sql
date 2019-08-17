@@ -49,3 +49,18 @@ SET statistics = :statistics
 -- :doc retrieves game statistics given the id
 SELECT * FROM game_statistics
 WHERE player_id = :id
+
+
+-- :name upsert-online-stats! :! :n
+-- :doc create or update online statistics given user id
+INSERT INTO online_statistics
+(player_id, statistics)
+VALUES (:id, :statistics)
+ON CONFLICT (player_id)
+DO UPDATE
+SET statistics = :statistics
+
+-- :name get-online-stats :? :1
+-- :doc retrieves online game statistics given the id
+SELECT * FROM online_statistics
+WHERE player_id = :id

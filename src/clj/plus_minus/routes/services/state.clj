@@ -6,6 +6,8 @@
             [com.walmartlabs.cond-let :refer [cond-let]]
             [clojure.spec.alpha :as spec]))
 
+;; current game state with bot
+
 (defn- get-or-generate [id]
   (or (-> {:id id} db/get-state :state) (s/state-template 4)))
 

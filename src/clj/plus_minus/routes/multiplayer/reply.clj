@@ -78,7 +78,7 @@
                (case type
                  :new          (do (log/error "get :new msg" msg) result)
                  :drop         result
-                 :turn-time    (filter #(-> % :id (= id)) (time-replies @vgame))
+                 :turn-time    (time-replies @vgame)
                  :state        (state-replies @vgame)
                  :give-up      (game-end-replies @vgame msg)
                  :move         (let [{:keys [game replies]}

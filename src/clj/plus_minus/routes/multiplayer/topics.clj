@@ -31,7 +31,7 @@
           false)
       (>!! chan val))))
 
-;; TODO: tmp for tests, remove
+;; TODO: tmp for tests, rewrite with mount
 (defn reset-state! []
   (async/close! (get-in channels [:msg :chan]))
   (async/close! (get-in channels [:reply :chan]))

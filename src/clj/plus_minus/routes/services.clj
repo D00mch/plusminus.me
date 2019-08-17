@@ -13,6 +13,7 @@
    [plus-minus.routes.services.auth :as auth]
    [plus-minus.game.state :as game-state]
    [plus-minus.routes.services.state :as state]
+   [plus-minus.routes.multiplayer.persist :as multiplayer-persist]
    [ring.util.http-response :as response]
    [clojure.spec.alpha :as spec]
    [clojure.java.io :as io]
@@ -27,21 +28,13 @@
    {:coercion spec-coercion/coercion
     :muuntaja formats/instance
     :swagger {:id ::api}
-    :middleware [;; query-params & form-params
-                 parameters/parameters-middleware
-                 ;; content-negotiation
+    :middleware [parameters/parameters-middleware ;; query-params & form-params
                  muuntaja/format-negotiate-middleware
-                 ;; encoding response body
                  muuntaja/format-response-middleware
-                 ;; exception handling
                  exception/exception-middleware
-                 ;; decoding request body
-                 muuntaja/format-request-middleware
-                 ;; coercing response bodys
+                 muuntaja/format-request-middleware ;; decoding request body
                  coercion/coerce-response-middleware
-                 ;; coercing request parameters
                  coercion/coerce-request-middleware
-                 ;; multipart
                  multipart/multipart-middleware]}
 
    ;; swagger documentation
@@ -131,7 +124,13 @@
     ["/delete-account"
      {:post {:summary "delete user profile from database"
              :responses {200 {:body {:result keyword?}}}
-             :handler (fn [{{id :identity} :session}] (auth/delete-account! id))}}]]
+             :handler (fn [{{id :identity} :session}] (auth/delete-account! id))}}]
+
+    ["/online-stats"
+     {:get {:summary "get user online-game statistics"
+            :responses {200 {:body {:statistics ::multiplayer-persist/statistics}}}
+            :handler (fn [{{id :identity} :session}]
+                       (multiplayer-persist/get-stats id))}}]]
 
    ["/math"
     {:swagger {:tags ["math"]}}

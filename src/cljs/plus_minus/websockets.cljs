@@ -50,38 +50,18 @@
       (when closed? (make-websocket! url receive-handler)))
     (make-websocket! url receive-handler on-open)))
 
-;; TODO: remove below, tmp for testing
-(defonce ws-id->chan (atom {}))
-
-(defn receive-transit-msg2!
-  [update-fn]
-  (fn [msg]
-    (update-fn
-     (->> msg .-data (t/read json-reader)))))
-
-(defn send-transit-msg2!
-  [{id :id :as msg}]
-  (if-let [chan (get @ws-id->chan id)]
-    (.send chan (t/write json-writer msg))
-    (throw (js/Error. "Websocket is not available!"))))
-
-(defn make-websocket2! [url receive-handler id]
-  (println "attempting to connect websocket")
-  (if-let [chan (js/WebSocket. url)]
-    (do
-      (set! (.-onmessage chan) (receive-transit-msg! receive-handler))
-      (set! (.-onclose chan) (swap! ws-id->chan dissoc id))
-      (swap! ws-id->chan assoc id chan)
-      (println "Websocket connection established with: " url))
-    (throw (js/Error. "Websocket connection failed!"))))
-
 (comment
-  (make-websocket2! (str "ws://" (.-host js/location) "/ws")
-                   #(println "received " %)
-                   "bob")
+  (do
+    (def player "regeda")
+    (def ws (let [ch (js/WebSocket. (str "ws://" (.-host js/location) "/ws"))]
+              (set! (.-onmessage ch)
+                    (receive-transit-msg! #(println player "received :" %)))
+              (set! (.-onclose ch) (println player "closed"))
+              ch)))
 
-  (send-transit-msg2! (into {} (->Message :new "bob" 3)))
-  (send-transit-msg2! (into {} (->Message :move "bob" 6)))
+  (.close ws)
 
-  (send-transit-msg2! (into {} (->Message :give-up "bob" nil)))
+  (.send ws (t/write json-writer (into {} (->Message :new player 3))))
+  (.send ws (t/write json-writer (into {} (->Message :move player 6))))
+  (.send ws (t/write json-writer (into {} (->Message :give-up player nil))))
  )

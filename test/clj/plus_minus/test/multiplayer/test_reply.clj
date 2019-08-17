@@ -20,7 +20,7 @@
         out> (chan)
         mvs> (chan)
         st>  (chan 1 (drop 2)) ;; drop first 2 states from init
-        tt>  (chan)
+        tt>  (chan 1 (drop 1))
         _    (go-loop []
                (when-let [{type :reply-type :as reply} (<! out>)]
                  (case type
@@ -47,7 +47,7 @@
       (>!! in> (->Message :turn-time "p1" nil))
       (let [{type :reply-type time :data} (get-with-timeout!! tt>)]
         (is (= type :turn-time))
-        (is (> time (- timer/turn-ms 2000)))))
+        (is (> time (- contract/turn-ms 2000)))))
 
     (testing "game ends after :give-up message"
       (>!! in> (->Message :give-up "p1" nil))
