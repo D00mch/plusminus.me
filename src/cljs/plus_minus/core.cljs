@@ -139,7 +139,6 @@
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (prn "initing")
   (ajax/load-interceptors!)
   #_(fetch-docs!)
   (hook-browser-navigation!)

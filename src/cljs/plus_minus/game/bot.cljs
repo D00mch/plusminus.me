@@ -150,7 +150,7 @@
      :on-click  (fn [turn? state index]
                   (if turn?
                     (move state index)
-                    (c/show-info-modal! "Can't make this move" "please consalt game rules")))
+                    (c/show-info-modal! "Can't make this move" "Please, check the game rules page")))
      :game-state (:game-state @db/state)
      :user-hrz   usr-hrz]
     [game-stats]]])
