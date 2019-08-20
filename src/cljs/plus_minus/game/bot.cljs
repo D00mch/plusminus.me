@@ -128,7 +128,7 @@
        [:div.scor (str "Lose: " (or (:lose stats) 0))]
        [:div.scor (str "Draw: " (or (:draw stats) 0))]]
       [:div.board.stats
-       [:label "Authorize to see statistics and play with other players"]])))
+       [:label "Authorize to see statistics and play with other users"]])))
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.content

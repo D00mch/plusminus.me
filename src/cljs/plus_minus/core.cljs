@@ -85,9 +85,10 @@
        online/on-reply!
        #(ws/send-transit-msg! {:msg-type :state, :id (db/get :identity)}))
       [online/game-component])
-    [:section.section>div.container>div.content
-     [:div
-      [:label "Authenticate to play with other people"]]]))
+    (do (ws/close!)
+        [:section.section>div.container>div.content
+         [:div
+          [:label "Authenticate to play with other people"]]])))
 
 (def pages
   {:home        #'home-page

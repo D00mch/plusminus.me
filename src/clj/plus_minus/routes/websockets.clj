@@ -21,10 +21,10 @@
 
 (defn- on-message! [ch json]
   (log/info "msg:" json)
-  (let [{id :id :as msg} (parser/read-json json)]
-    (swap! id->channel assoc id ch)
-    (println "pushed?"
-     (topics/push! :msg (map->Message msg)))))
+  (let [{id :id :as msg} (parser/read-json json)
+        _                (swap! id->channel assoc id ch)
+        pushed           (topics/push! :msg (map->Message msg))]
+    (log/debug "pushed?" pushed)))
 
 (def websocket-callbacks
   {:on-open connect!
@@ -34,7 +34,7 @@
 (defn ws-handler [request]
   (async/as-channel request websocket-callbacks))
 
-(def websocket-routes [["/ws" ws-handler]])
+(defn websocket-routes [] ["/ws" ws-handler])
 
 (mount/defstate game-subscription>
   "subscribe messages and replies processing"
@@ -44,10 +44,10 @@
     (let [replies> (topics/tap! :reply (chan))]
       (go-loop []
         (when-let [{:keys [reply-type id] :as reply} (<! replies>)]
-          (println "about to send reply" (into {} reply))
-          (when-let [ch (get @id->channel id)]
-            (println "ch for reply found, sent - "
-                     (async/send! ch (parser/->json reply))))
+          (if-let [ch (get @id->channel id)]
+            (log/debug "ch for reply found, sent - "
+                       (async/send! ch (parser/->json reply)))
+            (log/debug "can't find channel for reply" (into {} reply)))
           (when (= reply-type :end)
             (swap! id->channel dissoc id))
           (recur)))
