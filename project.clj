@@ -12,6 +12,7 @@
                  [com.cognitect/transit-clj "0.8.313"]
                  [conman "0.8.3"]
                  [cprop "0.1.13"]
+                 [expound "0.7.2"]
                  [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.5"]
                  [luminus-transit "0.1.1"]
@@ -21,8 +22,17 @@
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.6.0"]
+
+                 ;; to run shadow/repl you should first run lein shadow watch app
+                 ;; then you will have option, what repl to start after ,'
                  [org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520" :scope "provided"]
+                 [com.google.javascript/closure-compiler-unshaded "v20190618"
+                  :scope "provided"]
+                 [org.clojure/google-closure-library "0.0-20190213-2033d5d9"
+                  :scope "provided"]
+                 [thheller/shadow-cljs "2.8.39" :scope "provided"]
+
                  [org.clojure/tools.cli "0.4.2"]
                  [org.clojure/tools.logging "0.4.1"]
                  [org.postgresql/postgresql "42.2.5"]
@@ -50,37 +60,34 @@
   :target-path "target/%s/"
   :main ^:skip-aot plus-minus.core
 
-  :plugins [[lein-cljsbuild "1.1.7"]]
-  :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
-  :figwheel
-  {:http-server-root "public"
-   :server-logfile "log/figwheel-logfile.log"
-   :nrepl-port 7002
-   :css-dirs ["resources/public/css"]
-   :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
-  
+  :plugins [[lein-shadow "0.1.4"]]
+  :clean-targets ^{:protect false} [:target-path "target/cljsbuild"]
+  :shadow-cljs
+  {:nrepl {:port 7002}
+   :builds
+   {:app
+    {:target :browser
+     :output-dir "target/cljsbuild/public/js"
+     :asset-path "/js"
+     :modules {:app {:entries [plus-minus.app]}}
+     :devtools {:watch-dir "resources/public"}}
+    :test
+    {:target :node-test
+     :output-to "target/test/test.js"
+     :autorun true}}}
+
+  :npm-deps [[shadow-cljs "2.8.39"]
+             [create-react-class "15.6.3"]
+             [react "16.8.6"]
+             [react-dom "16.8.6"]]
 
   :profiles
   {:uberjar {:omit-source true
-             :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
-             :cljsbuild{:builds
-              {:min
-               {:source-paths ["src/cljc" "src/cljs" "env/prod/cljs"]
-                :compiler
-                {:output-dir "target/cljsbuild/public/js"
-                 :output-to "target/cljsbuild/public/js/app.js"
-                 :source-map "target/cljsbuild/public/js/app.js.map"
-                 :optimizations :advanced
-                 :pretty-print false
-                 :infer-externs true
-                 :closure-warnings
-                 {:externs-validation :off :non-standard-jsdoc :off}
-                 :externs ["react/externs/react.js"]}}}}
+             :prep-tasks ["compile" ["shadow" "release" "app"]]
              
              :aot :all
-             :uberjar-name "plus-minus.jar"
-             :source-paths ["env/prod/clj"]
+             :uberjar-name "script.jar"
+             :source-paths ["env/prod/clj" "env/prod/cljs"]
              :resource-paths ["env/prod/resources"]}
 
    :dev           [:project/dev :profiles/dev]
@@ -88,49 +95,18 @@
 
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
-                                 [cider/piggieback "0.4.0"]
-                                 [doo "0.1.11"]
-                                 [expound "0.7.2"]
-                                 [figwheel-sidecar "0.5.18"]
+                                 [cider/piggieback "0.4.1"]
                                  [pjstadig/humane-test-output "0.9.0"]
-                                 [prone "1.6.3"]
+                                 [prone "2019-07-08"]
                                  [ring/ring-devel "1.7.1"]
                                  [ring/ring-mock "0.4.0"]]
-                  :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
-                                 [lein-doo "0.1.11"]
-                                 [lein-figwheel "0.5.18"]]
-                  :cljsbuild{:builds
-                   {:app
-                    {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                     :figwheel {:on-jsload "plus-minus.core/mount-components"}
-                     :compiler
-                     {:main "plus-minus.app"
-                      :asset-path "/js/out"
-                      :output-to "target/cljsbuild/public/js/app.js"
-                      :output-dir "target/cljsbuild/public/js/out"
-                      :source-map true
-                      :optimizations :none
-                      :pretty-print true}}}}
-                  
-                  
-                  :doo {:build "test"}
-                  :source-paths ["env/dev/clj"]
+                  :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]]
+                  :source-paths ["env/dev/clj" "env/dev/cljs" "test/cljs"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user}
                   :injections [(require 'pjstadig.humane-test-output)
                                (pjstadig.humane-test-output/activate!)]}
    :project/test {:jvm-opts ["-Dconf=test-config.edn"]
-                  :resource-paths ["env/test/resources"]
-                  :cljsbuild 
-                  {:builds
-                   {:test
-                    {:source-paths ["src/cljc" "src/cljs" "test/cljs"]
-                     :compiler
-                     {:output-to "target/test.js"
-                      :main "plus-minus.doo-runner"
-                      :optimizations :whitespace
-                      :pretty-print true}}}}
-                  
-                  }
+                  :resource-paths ["env/test/resources"]}
    :profiles/dev {}
    :profiles/test {}})
