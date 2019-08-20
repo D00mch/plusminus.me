@@ -3,6 +3,9 @@
             [plus-minus.app-db :as db]
             [reagent.core :as r]))
 
+(defn- info-width []
+  (min (.-innerWidth js/window) 400))
+
 (defn modal [& {:keys [header body footer style]}]
   [:div.modal.is-active
    [:div.modal-background
@@ -16,13 +19,16 @@
 (defn info-modal [title body]
   (fn []
     [modal
-     :style  {:style {:width 400}}
+     :style  {:style {:width (info-width)}}
      :header [:div title]
      :body   [:div [:label body]]
      :footer [:div
               [:a.button.is-primary
                {:on-click #(db/remove! :modal)}
                "Close"]]]))
+
+(defn show-info-modal! [title body]
+  (db/put! :modal (info-modal title body)))
 
 (defn do-or-close-footer [& {:keys [name on-do styles]}]
   [:div

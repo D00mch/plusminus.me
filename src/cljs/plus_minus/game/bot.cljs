@@ -69,13 +69,13 @@
              reset-game #(change-state (s/state-template
                                         (or (:row-size board) 4)))]
          (cond (-> state s/valid-state? not)
-               (do (js/alert "Game resets due to ivalid game-state")
+               (do (c/show-info-modal! "Game resets" "due to ivalid game-state")
                    (reset-game))
 
                (-> state s/moves? not)
                (after-delay
                 #(do (reset-game)
-                     (js/alert (end-game-msg state))
+                     (c/show-info-modal! "Game end" (end-game-msg state))
                      (send-end-game state false)))
 
                (not (user-turn state))
@@ -150,7 +150,7 @@
      :on-click  (fn [turn? state index]
                   (if turn?
                     (move state index)
-                    (js/alert "Can't make this move")))
+                    (c/show-info-modal! "Can't make this move" "please consalt game rules")))
      :game-state (:game-state @db/state)
      :user-hrz   usr-hrz]
     [game-stats]]])
