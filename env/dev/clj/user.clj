@@ -5,7 +5,7 @@
     [clojure.spec.alpha :as s]
     [expound.alpha :as expound]
     [mount.core :as mount]
-    [shadow.cljs.devtools.api :as shadow]
+    [plus-minus.figwheel :refer [start-fw stop-fw cljs]]
     [plus-minus.core :refer [start-app]]
     [plus-minus.db.core]
     [conman.core :as conman]
@@ -14,8 +14,6 @@
 #_(set! *warn-on-reflection* true)
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
-
-(add-tap (bound-fn* clojure.pprint/pprint))
 
 (defn start
   "Starts application.
@@ -61,3 +59,5 @@
   "Create a new up and down migration file with a generated timestamp and `name`."
   [name]
   (migrations/create name (select-keys env [:database-url])))
+
+(defn sa "start all" [] (start) (start-fw) (cljs))
