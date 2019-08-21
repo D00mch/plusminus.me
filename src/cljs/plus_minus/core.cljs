@@ -11,12 +11,14 @@
    [plus-minus.game.online :as online]
    [reitit.core :as reitit]
    [clojure.string :as string]
-   [plus-minus.websockets :as ws])
+   [plus-minus.websockets :as ws]
+   [plus-minus.components.common :as c])
   (:import goog.History))
 
-(defn nav-link [uri title page]
+(defn nav-link [uri title page expanded?]
   [:a.navbar-item
    {:href   uri
+    :on-click #(reset! expanded? false)
     :active (when (= page (db/get :page)) "is-active")}
    title])
 
@@ -64,9 +66,9 @@
      [:div#nav-menu.navbar-menu
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]
-       [nav-link "#/multiplayer" "Multiplayer" :multiplayer]]
+       [nav-link "#/" "Home" :home expanded?]
+       [nav-link "#/about" "About" :about expanded?]
+       [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]]
       [user-menu]]]))
 
 (defn about-page []
