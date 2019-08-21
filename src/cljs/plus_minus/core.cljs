@@ -68,7 +68,8 @@
       [:div.navbar-start
        [nav-link "#/" "Home" :home expanded?]
        [nav-link "#/about" "About" :about expanded?]
-       [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]]
+       [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
+       [nav-link "#/statistics" "Statistics" :statistics expanded?]]
       [user-menu]]]))
 
 (defn about-page []
@@ -92,10 +93,14 @@
          [:div
           [:label "Authenticate to play with other people"]]])))
 
+(defn statistics-page []
+  [:section.section>div.container>div.content "some stats here"])
+
 (def pages
   {:home        #'home-page
    :about       #'about-page
-   :multiplayer #'multiplayer-page})
+   :multiplayer #'multiplayer-page
+   :statistics  #'statistics-page})
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
@@ -119,7 +124,8 @@
   (reitit/router
     [["/" :home]
      ["/about" :about]
-     ["/multiplayer" :multiplayer]]))
+     ["/multiplayer" :multiplayer]
+     ["/statistics" :statistics]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
