@@ -122,13 +122,13 @@
 (defn game-stats []
   (let [id    (db/get :identity)
         stats (db/get :game-statistics)
-        iq    (int (g/calc-iq stats))]
-    (if (and id stats)
-      [:div.tags.has-addons {:style {:margin 3}}
-       [:span.tag.is-dark "IQ"]
-       [:span.tag.is-info iq]]
-      [:div.board.stats
-       [:label "Authorize to see statistics and play with other users"]])))
+        iq    (g/calc-iq stats)]
+    (cond
+      (not id) [:div.stats
+                [:label "Authorize to see statistics"]]
+      (> iq 0) [:div.tags.has-addons {:style {:margin 3}}
+                [:span.tag.is-dark "IQ"]
+                [:span.tag.is-info iq]])))
 
 (defn game-settins []
   (board/game-settings
@@ -142,20 +142,18 @@
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section
    [:div.flex.center.column
-    #_[:div.board {:style {:display :flex
+    [:div.board {:style {:display :flex
                          :margin-top 20
-                         ;; :align-items :stretch
-                         :justify-content :flex-start
                          :flex-direction :column
-                         ;; :flex-wrap :wrap
                          }}
-     [game-stats]]
-    [:div.board [game-settins]]
-
+     [game-settins]
+     [game-stats]
+     ]
+    #_[:div.board [game-settins]]
     [board/scors
      :state   (:game-state @db/state)
      :usr-hrz usr-hrz
-     :he      "Bot"]
+     :he      "IQ rater"]
     [board/matrix
      :on-click  (fn [turn? state index]
                   (if turn?
