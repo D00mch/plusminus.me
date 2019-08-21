@@ -6,14 +6,13 @@
             [clojure.spec.alpha :as spec])
   #?(:cljs (:require-macros [cljs.core :refer [defrecord]])))
 
-(comment
-  "request new game with :new (Message :new id size),
-  when someone else requested :new with the same size, game will be matched"
-  "if you want to request a game with new size, you have to pass :drop msg first
-   or you will initiate two games at the same time."
+;; request new game with :new (Message :new id size),
+;; when someone else requested :new with the same size, game will be matched
 
-  ":turn-time will immediatelly return millis till the turn end"
-  )
+;; if you want to request a game with new size, you have to pass :drop msg first
+;; or you will initiate two games at the same time.
+
+;; :turn-time will immediatelly return millis till the turn end
 
 (def ^:const ping-ms 5000)
 (def ^:const turn-ms 20000)
@@ -26,7 +25,6 @@
               #(if (= (:msg-type %) :new) (s/valid?  ::b/row-size (:data %)) true)
               #(if (= (:msg-type %) :drop) (s/valid?  ::b/row-size (:data %)) true)
               #(if (= (:msg-type %) :move) (s/valid? ::b/index (:data %)) true)))
-;;(s/explain ::msg (->Message :new "dumch" 3))
 
 ;; MATCHED: CREATED GAMES
 (defrecord Game [state game-id player1 player2 ^boolean player1-hrz
@@ -64,4 +62,29 @@
                          :end   (s/valid? ::outcome (-> % :data :outcome))
                          :error (s/valid? ::errors (:data %))
                          (any? %))))
-;; (s/explain-data ::reply (->Reply :error "bob" :invalid-move))
+
+
+;; STATISTICS
+(s/def ::count (s/or :n zero? :n pos-int?))
+(s/def ::give-up  ::count)
+(s/def ::time-out ::count)
+(s/def ::no-moves ::count)
+(s/def ::draw     ::count)
+
+(s/def ::stat (s/keys :req-un [::give-up ::time-out ::no-moves]))
+(s/def ::win  ::stat)
+(s/def ::lose ::stat)
+
+(s/def ::statistics (s/keys :req-un [::win ::lose ::draw]))
+
+(def stats-initial {:win  {:give-up 0, :time-out 0, :no-moves 0},
+                    :lose {:give-up 0, :time-out 0, :no-moves 0},
+                    :draw 0})
+
+(defn stats-sum [stats key]
+  (->> (get stats key) (map second) (reduce +)))
+
+(defn stats-summed [{:keys [draw] :as stats}]
+  {:draw draw
+   :win  (stats-sum stats :win)
+   :lose (stats-sum stats :lose)})

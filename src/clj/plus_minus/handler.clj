@@ -17,6 +17,7 @@
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
+;; TODO: add pretty-printing https://metosin.github.io/reitit/ring/coercion.html
 (mount/defstate app
   :start
   (middleware/wrap-base

@@ -43,4 +43,4 @@
 (defn calc-iq [{:keys [win lose draw]}]
   (let [all     (+ win lose draw)
         win%    (-> (* 0.5 draw) (+ win) (/ all))]
-    (* 200 win%)))
+    (int (* 200 win%))))
