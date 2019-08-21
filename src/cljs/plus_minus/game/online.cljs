@@ -53,7 +53,7 @@
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
     (when-not (db/get :online-timer) (put-timer!))
-    (db/put! :online-he (str he ": "))
+    (db/put! :online-he he)
     (db/put! :online-status :playing)
     (db/put! :online-state state)
     (db/put! :online-hrz you-hrz)))
@@ -122,15 +122,13 @@
                 "start new game"]))
 
 (defn game-component []
-  [:section.section>div.container>div.content
-   [:div {:style {:display :flex
-                  :flex-direction :column
-                  :flex-wrap :wrap}}
-    [top-panel-component]
+  [:section
+   [:div.flex.center.column 
+    [:div.board [top-panel-component]]
     [board/scors
      :state   (db/get :online-state)
      :usr-hrz (db/get :online-hrz)
-     :he      (db/get :online-he "He: ")]
+     :he      (db/get :online-he "He")]
 
     [board/matrix
      :on-click  (fn [turn? _ index]

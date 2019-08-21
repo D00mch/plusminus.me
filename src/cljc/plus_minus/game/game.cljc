@@ -40,16 +40,7 @@
        last
        move-bot))
 
-(comment
-  (def game-state (atom (st/state-template 3)))
-
-  (add-watch game-state :bot
-             (fn [key atom old-state new-state]
-               (let [{:keys [hrz-turn] :as state} @atom]
-                 (st/state-print state)
-                 (cond (-> state st/moves? not) (do (remove-watch atom :bot)
-                                                    (println "the end")),
-                       (not hrz-turn) (reset! atom (move-bot state))))))
-
-  (remove-watch game-state :bot)
-  )
+(defn calc-iq [{:keys [win lose draw]}]
+  (let [all     (+ win lose draw)
+        win%    (-> (* 0.5 draw) (+ win) (/ all))]
+    (* 200 win%)))

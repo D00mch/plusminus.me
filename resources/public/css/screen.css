@@ -36,16 +36,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.flex {display: flex;}
+.flex.center {align-items: center;}
+.flex.column {flex-direction: column;}
+
 .board {
-    width: 70vw;
+    width: 86vw;
     max-width: 450px;
 }
 
 .board.grid {
     margin: 0 0;
-    height: 70vw;
+    height: 86vw;
     max-height: 450px;
-    font-size: 1rem;
 }
 
 .board.scors {
@@ -54,11 +57,13 @@ body {
     justify-content: space-between;
 }
 
-.board.stats {
-    margin: 70px 10px;
+.stats {
+    margin-left: 10px;
+    width: 40vw;
     display: flex;
-    justify-content: space-between;
+    height: 100%;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 /* multiplayer new-game button */
@@ -67,38 +72,51 @@ body {
     margin-top: 30px;
 }
 
-.scor {
-    margin: 5px;
-}
-
 .row {
     display: flex;
-    margin: 0px;
-    flex-direction: row;
-    align-items: flex-start;
 }
-.box {
+.cell {
     background: WhiteSmoke;
-    margin: 5px;
     color: white;
-    font-weight: bold;
     flex: 1 0 auto;
     position: relative;
+    /* border: 1px solid gray; */
+    border-radius: 3px;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
 }
-.box:after {
+.cell:after {
     content: "";
     float:left;
-    display: block;
     padding-top: 100%;
 }
-.box .inner {
+.cell .inner {
     position: absolute;
+    font-weight: bold;
     left: 0;
     right: 0;
     bottom: 0;
-    color: Gray;
     top: 0;
+    color: Gray;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* glowing text */
+.glow {
+    font-size: 15px;
+    color: #209cee;
+    -webkit-animation: glow 1s ease-in-out infinite alternate;
+    -moz-animation: glow 1s ease-in-out infinite alternate;
+    animation: glow 1s ease-in-out infinite alternate;
+}
+
+@-webkit-keyframes glow {
+    from {
+        text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 7px #e60073, 0 0 10px #e60073, 0 0 12px #e60073, 0 0 15px #e60073, 0 0 17px #e60073;
+    }
+    
+    to {
+        text-shadow: 0 0 5px #fff, 0 0 7px #ff4da6, 0 0 10px #ff4da6, 0 0 12px #ff4da6, 0 0 15px #ff4da6, 0 0 17px #ff4da6, 0 0 20px #ff4da6;
+    }
 }

@@ -99,9 +99,15 @@
   (when-let [session-modal (db/get :modal)]
     [session-modal]))
 
+(defn snack []
+  [:div {:style {:height 25}}
+   (when-let [snack (db/get :snack)]
+     [snack])])
+
 (defn page []
   [:div
    [modal]
+   [snack]
    [(pages (db/get :page))]])
 
 ;; -------------------------
