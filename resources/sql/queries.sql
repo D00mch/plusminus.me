@@ -68,4 +68,4 @@ WHERE id = :id
 -- :name get-all-online-stats :? :*
 -- :doc retrieves all online statistics records, ordered by iq
 SELECT * FROM online_statistics
-ORDER BY iq
+ORDER BY iq DESC
