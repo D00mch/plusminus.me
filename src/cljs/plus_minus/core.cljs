@@ -11,6 +11,7 @@
    [plus-minus.game.online :as online]
    [plus-minus.websockets :as ws]
    [plus-minus.components.common :as c]
+   [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
    [reitit.core :as reitit]
    [clojure.string :as string])
@@ -74,8 +75,11 @@
       [user-menu]]]))
 
 (defn about-page []
-  [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
+  [:div.column>div.columns
+   [:div.column.is-half
+    [about/component]]
+   [:div.column.is-half
+    [:img {:src "/img/warning_clojure.png"}]]])
 
 (defn home-page []
   [bot/game-component])
