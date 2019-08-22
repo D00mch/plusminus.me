@@ -54,16 +54,16 @@ WHERE player_id = :id
 -- :name upsert-online-stats! :! :n
 -- :doc create or update online statistics given user id
 INSERT INTO online_statistics
-(player_id, iq, statistics)
+(id, iq, statistics)
 VALUES (:id, :iq, :statistics)
-ON CONFLICT (player_id)
+ON CONFLICT (id)
 DO UPDATE
 SET statistics = :statistics, iq = :iq
 
 -- :name get-online-stats :? :1
 -- :doc retrieves online game statistics given the id
 SELECT * FROM online_statistics
-WHERE player_id = :id
+WHERE id = :id
 
 -- :name get-all-online-stats :? :*
 -- :doc retrieves all online statistics records, ordered by iq

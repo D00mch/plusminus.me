@@ -52,7 +52,7 @@
   ;; fill db with mock statistics
   (let [unique-users (-> (spec/gen ::validation/id) (gen/sample 100) distinct)]
     (doseq [user unique-users
-            :let [stats (-> (spec/gen ::statistics) gen/generate)]]
+            :let [stats (-> (spec/gen ::contract/statistics) gen/generate)]]
       (db/upsert-online-stats!
        #_println
        {:id user
