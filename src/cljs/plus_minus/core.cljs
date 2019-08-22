@@ -51,7 +51,7 @@
     [account-actions id]
     [:div.navbar-end
      [:div.buttons
-      (reg/registration-button)
+      (reg/registration-button #(bot/init-game-state!))
       (login/login-button #(bot/init-game-state!))]]))
 
 (defn navbar []
