@@ -50,22 +50,19 @@
 
 (defn stats-component []
   ;;(load-stats! stats error)
-  [:div
+  [:div.container>div.column
    [stats-table]
 
    ;; loading
    (when-not (db/get :online-stats)
-     [:progress.progress.is-small.is-dark.board.top-mar.left-mar
+     [:progress.progress.is-small.is-dark.board.top-mar
       {:max 100}])
 
    ;; error
    (when-let [err (db/get-in [:online-stats :error])]
-     [:div.notification.is-danger.board.left-mar
+     [:div.notification.is-danger.board
       [:button.delete {:on-click
                        (fn []
                          (db/remove! :online-stats)
                          (js/setTimeout #(init-stats!) 1000))}]
       (str "error occured while loading statistics: " err)])])
-
-
-
