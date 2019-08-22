@@ -24,36 +24,21 @@
     :active (when (= page (db/get :page)) "is-active")}
    title])
 
-(defn account-actions [id]
-  (r/with-let [expanded? (r/atom false)]
-    [:div.buttons>div.dropdown
-     {:class (when @expanded? "is-active")}
-     [:div.dropdown-trigger
-      [:button.button
-       {:on-click      #(swap! expanded? not)
-        :aria-haspopup "true"
-        :aria-controls "dropdown-menu"}
-       [:span "Sign Out"]
-       [:span.icon.is-small
-        [:i.fas.fa-angle-down
-         {:aria-hidden "true"}]]]
-      [:div#dropdown-menu.dropdown-menu
-       {:role "menu"}
-       [:div.dropdown-content
-        [:a.dropdown-item
-         {:on-click login/logout!}
-         "Logout"]
-        [:a.dropdown-item
-         {:on-click #(reg/delete-account! (db/get :identity))}
-         "Delete account"]]]]]))
+(defn account-actions []
+  [:div.navbar-item.has-dropdown.is-hoverable
+   [:a.navbar-link "Sign Out"]
+   [:div.navbar-dropdown
+    [:a.navbar-item {:on-click login/logout!}
+     "Logout"]
+    [:a.navbar-item {:on-click #(reg/delete-account! (db/get :identity))}
+     "Delete account!"]]])
 
 (defn user-menu []
-  (if-let [id (db/get :identity)]
-    [account-actions id]
-    [:div.navbar-end
-     [:div.buttons
-      (reg/registration-button #(bot/init-game-state!))
-      (login/login-button #(bot/init-game-state!))]]))
+  (if (db/get :identity)
+    [account-actions]
+    [:div.navbar-end>div.navbar-item>div.buttons
+     (reg/registration-button #(bot/init-game-state!))
+     (login/login-button #(bot/init-game-state!))]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
