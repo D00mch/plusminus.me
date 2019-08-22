@@ -36,9 +36,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.flex {display: flex;}
-.flex.center {align-items: center;}
-.flex.column {flex-direction: column;}
+.flex {display: flex}
+.flex.center {align-items: center}
+.flex.column {flex-direction: column}
+.flex.space-between {justify-content: space-between}
+
+.is-bold {font-weight: bold}
+.top-mar {margin-top: 20px}
+.left-mar {margin-left: 20px}
 
 .board {
     width: 86vw;

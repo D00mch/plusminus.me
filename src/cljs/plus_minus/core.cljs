@@ -9,10 +9,11 @@
    [plus-minus.app-db :as db]
    [plus-minus.game.bot :as bot]
    [plus-minus.game.online :as online]
-   [reitit.core :as reitit]
-   [clojure.string :as string]
    [plus-minus.websockets :as ws]
-   [plus-minus.components.common :as c])
+   [plus-minus.components.common :as c]
+   [plus-minus.game.statistics :as stats]
+   [reitit.core :as reitit]
+   [clojure.string :as string])
   (:import goog.History))
 
 (defn nav-link [uri title page expanded?]
@@ -94,7 +95,7 @@
           [:label "Authenticate to play with other people"]]])))
 
 (defn statistics-page []
-  [:section.section>div.container>div.content "some stats here"])
+  (stats/stats-component))
 
 (def pages
   {:home        #'home-page
@@ -158,4 +159,5 @@
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
   (bot/init-game-state!)
+  (stats/init-stats!)
   (mount-components))
