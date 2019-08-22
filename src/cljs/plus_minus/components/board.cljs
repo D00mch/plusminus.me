@@ -12,10 +12,16 @@
       [:option row-size])]])
 
 (defn scors [& {s :state h :usr-hrz you :you he :he
-                :or {you "You: ", he "He: "}}]
-  [:div.board.scors
-   [:div.scor (str you (if h (:hrz-points s) (:vrt-points s)))]
-   [:div.scor (str he (if h (:vrt-points s) (:hrz-points s)))]])
+                :or {you "You", he "He"}}]
+  (let [his-p  (if h (:vrt-points s) (:hrz-points s))
+        your-p (if h (:hrz-points s) (:vrt-points s))]
+    [:div.board.scors
+     [:div.tags.has-addons {:style {:margin 3}}
+      [:span.tag.is-light you]
+      [:span.tag {:class (if (> his-p your-p) "is-danger" "is-light")} your-p]]
+     [:div.tags.has-addons {:style {:margin 3}}
+      [:span.tag.is-light he]
+      [:span.tag.is-light his-p]]]))
 
 (defn matrix
   "on-click - fn [turn? state index]"
@@ -32,9 +38,9 @@
               valid  (s/valid-move? state i)
               turn   (and valid (= usr-hrz hrz-turn))
               hidden (some #{i} moves)]
-          [:div.box {:style {:margin 5
-                             :visibility (when hidden "hidden")
-                             :background (when valid (if turn "#209cee" "#ee1f1f"))}
-                     :on-click #(on-click turn state i)}
+          [:div.cell {:style {:margin 4
+                              :visibility (when hidden "hidden")
+                              :background (when valid (if turn "#209cee" "#ee1f1f"))}
+                      :on-click #(on-click turn state i)}
            [:div.inner {:style {:color (when valid "white")}}
             (nth cells i)]]))])])

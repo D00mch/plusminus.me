@@ -31,7 +31,6 @@
           styles (r/atom {:id {:auto-focus true}})]
       (fn []
         [c/modal
-         :style  {:style {:width 400}}
          :header [:div "Plus-minus login"]
          :body   [:div
                   [c/input

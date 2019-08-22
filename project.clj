@@ -15,7 +15,6 @@
                  [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.5"]
                  [luminus-transit "0.1.1"]
-                 [luminus/ring-ttl-session "0.3.2"]
                  [markdown-clj "1.10.0"]
                  [metosin/muuntaja "0.6.4"]
                  [metosin/reitit "0.3.9"]

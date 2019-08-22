@@ -17,13 +17,14 @@
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
+;; TODO: add pretty-printing https://metosin.github.io/reitit/ring/coercion.html
 (mount/defstate app
   :start
   (middleware/wrap-base
     (ring/ring-handler
       (ring/router
         [(home-routes)
-         websocket-routes
+         (websocket-routes)
          (service-routes)
          (oauth-routes)])
       (ring/routes

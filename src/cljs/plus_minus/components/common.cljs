@@ -8,7 +8,7 @@
    [:div.modal-background
     {:on-click #(db/remove! :modal)}]
    [:div.modal-card
-    style
+    (merge {:style {:width "95vw" :max-width "400px"}} style)
     [:header.modal-card-head header]
     [:section.modal-card-body body]
     [:footer.modal-card-foot footer]]])
@@ -16,13 +16,17 @@
 (defn info-modal [title body]
   (fn []
     [modal
-     :style  {:style {:width 400}}
+     :style  {:style {:width "95vw"
+                      :max-width "400px"}}
      :header [:div title]
      :body   [:div [:label body]]
      :footer [:div
               [:a.button.is-primary
                {:on-click #(db/remove! :modal)}
                "Close"]]]))
+
+(defn show-info-modal! [title body]
+  (db/put! :modal (info-modal title body)))
 
 (defn do-or-close-footer [& {:keys [name on-do styles]}]
   [:div
@@ -62,3 +66,12 @@
     (r/with-let [time (r/atom (quot (+ millis-remains 500) 1000))]
       (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
       [:div label @time])))
+
+(defn show-snack! [text]
+  (js/setTimeout #(db/remove! :snack) 3000)
+  (db/put! :snack
+           (fn [] [:div.flex.center.column
+                   {:style {:background "WhiteSmoke"}}
+                   [:div.board
+                    {:style {:color "#209cee", :font-size 15}}
+                    text]])))

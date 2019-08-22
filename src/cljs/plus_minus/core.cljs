@@ -9,47 +9,44 @@
    [plus-minus.app-db :as db]
    [plus-minus.game.bot :as bot]
    [plus-minus.game.online :as online]
+   [plus-minus.websockets :as ws]
+   [plus-minus.components.common :as c]
+   [plus-minus.game.about :as about]
+   [plus-minus.game.statistics :as stats]
    [reitit.core :as reitit]
-   [clojure.string :as string]
-   [plus-minus.websockets :as ws])
+   [clojure.string :as string])
   (:import goog.History))
 
-(defn nav-link [uri title page]
+(defn nav-link [uri title page expanded?]
   [:a.navbar-item
    {:href   uri
+    :on-click #(reset! expanded? false)
     :active (when (= page (db/get :page)) "is-active")}
    title])
 
-(defn account-actions [id]
-  (r/with-let [expanded? (r/atom false)]
-    [:div.buttons>div.dropdown
-     {:class (when @expanded? "is-active")}
-     [:div.dropdown-trigger
-      [:button.button
-       {:on-click      #(swap! expanded? not)
-        :aria-haspopup "true"
-        :aria-controls "dropdown-menu"}
-       [:span "Sign Out"]
-       [:span.icon.is-small
-        [:i.fas.fa-angle-down
-         {:aria-hidden "true"}]]]
-      [:div#dropdown-menu.dropdown-menu
-       {:role "menu"}
-       [:div.dropdown-content
-        [:a.dropdown-item
-         {:on-click login/logout!}
-         "Logout"]
-        [:a.dropdown-item
-         {:on-click #(reg/delete-account! (db/get :identity))}
-         "Delete account"]]]]]))
+(defn account-actions [expanded?]
+  [:div.navbar-item.has-dropdown.is-hoverable
+   [:a.navbar-link "Sign Out"]
+   [:div.navbar-dropdown
+    [:a.navbar-item
+     {:on-click #(do (reset! expanded? false)
+                     (login/logout!))}
+     "Logout"]
+    [:a.navbar-item
+     {:on-click #(do (reset! expanded? false)
+                     (reg/delete-account! (db/get :identity)))}
+     "Delete account!"]]])
 
-(defn user-menu []
-  (if-let [id (db/get :identity)]
-    [account-actions id]
-    [:div.navbar-end
-     [:div.buttons
-      (reg/registration-button)
-      (login/login-button #(bot/init-game-state!))]]))
+(defn- on-logged-in [expanded?]
+  (reset! expanded? false)
+  (bot/init-game-state!))
+
+(defn user-menu [expanded?]
+  (if (db/get :identity)
+    [account-actions expanded?]
+    [:div.navbar-end>div.navbar-item>div.buttons
+     (reg/registration-button #(on-logged-in expanded?))
+     (login/login-button #(on-logged-in expanded?))]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
@@ -64,14 +61,18 @@
      [:div#nav-menu.navbar-menu
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]
-       [nav-link "#/multiplayer" "Multiplayer" :multiplayer]]
-      [user-menu]]]))
+       [nav-link "#/" "Home" :home expanded?]
+       [nav-link "#/about" "About" :about expanded?]
+       [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
+       [nav-link "#/statistics" "Statistics" :statistics expanded?]]
+      [user-menu expanded?]]]))
 
 (defn about-page []
-  [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
+  [:div.column>div.columns
+   [:div.column.is-half
+    [about/component]]
+   [:div.column.is-half
+    [:img {:src "/img/warning_clojure.png"}]]])
 
 (defn home-page []
   [bot/game-component])
@@ -85,22 +86,33 @@
        online/on-reply!
        #(ws/send-transit-msg! {:msg-type :state, :id (db/get :identity)}))
       [online/game-component])
-    [:section.section>div.container>div.content
-     [:div
-      [:label "Authenticate to play with other people"]]]))
+    (do (ws/close!)
+        [:section.section>div.container>div.content
+         [:div
+          [:label "Authenticate to play with other people"]]])))
+
+(defn statistics-page []
+  (stats/stats-component))
 
 (def pages
   {:home        #'home-page
    :about       #'about-page
-   :multiplayer #'multiplayer-page})
+   :multiplayer #'multiplayer-page
+   :statistics  #'statistics-page})
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
     [session-modal]))
 
+(defn snack []
+  [:div {:style {:height 25}}
+   (when-let [snack (db/get :snack)]
+     [snack])])
+
 (defn page []
   [:div
    [modal]
+   [snack]
    [(pages (db/get :page))]])
 
 ;; -------------------------
@@ -110,7 +122,8 @@
   (reitit/router
     [["/" :home]
      ["/about" :about]
-     ["/multiplayer" :multiplayer]]))
+     ["/multiplayer" :multiplayer]
+     ["/statistics" :statistics]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
@@ -138,10 +151,10 @@
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (prn "initing")
   (ajax/load-interceptors!)
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
   (bot/init-game-state!)
+  (stats/init-stats!)
   (mount-components))

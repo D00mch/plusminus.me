@@ -14,12 +14,11 @@
    [plus-minus.game.state :as game-state]
    [plus-minus.routes.services.state :as state]
    [plus-minus.routes.multiplayer.persist :as multiplayer-persist]
+   [plus-minus.routes.services.statistics :as statistics]
    [ring.util.http-response :as response]
-   [clojure.spec.alpha :as spec]
-   [clojure.java.io :as io]
-   [plus-minus.middleware :as middleware]
-   [plus-minus.game.state :as st]
-   [plus-minus.game.board :as b]))
+   [plus-minus.game.board :as b]
+   [plus-minus.multiplayer.contract :as contract]
+   [plus-minus.validation :as validation]))
 
 ;; http://localhost:3000/swagger-ui/index.html#/
 
@@ -55,7 +54,7 @@
 
    ["/register"
     {:post {:summary "register a user, providing id and password"
-            :parameters {:body {:id string?
+            :parameters {:body {:id ::validation/id
                                 :pass string?
                                 :pass-confirm string?}}
             :responses {200 {:body {:result keyword?}}}
@@ -79,13 +78,13 @@
 
     ["/state"
      {:get {:summary "get last game state or new state"
-            :parameters {:query {:id string?}}
+            :parameters {:query {:id ::validation/id}}
             :responses {200 {:body {:state ::game-state/state}}}
             :handler (fn [{{{id :id} :query} :parameters}]
                        (state/get-state id))}
 
       :put {:summary "upsert game state"
-            :parameters {:body {:id    string?
+            :parameters {:body {:id ::validation/id
                                 :state ::game-state/state}}
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [{{{id :id, s :state} :body} :parameters}]
@@ -93,7 +92,7 @@
 
     ["/move"
      {:put {:summary "make move and update current game-state"
-            :parameters {:query {:id   string?
+            :parameters {:query {:id   ::validation/id
                                  :move ::b/index}}
             :responses {200 {:body {:result keyword?}}}
             :handler (fn [{{{id :id, mv :move} :query} :parameters}]
@@ -101,7 +100,7 @@
 
     ["/end"
      {:put {:summary "update user game statistics"
-            :parameters {:body {:id      string?
+            :parameters {:body {:id      ::validation/id
                                 :state   ::game-state/state
                                 :usr-hrz boolean?
                                 :give-up boolean?}}
@@ -111,11 +110,23 @@
 
     ["/statistics"
      {:get {:summary "get user game statistics"
-            :parameters {:query {:id string?}}
+            :parameters {:query {:id ::validation/id}}
             :responses {200 {:body {:statistics ::state/statistics}}}
             :handler (fn [{{{id :id} :query} :parameters}]
-                       (state/get-stats id))}}
-     ]]
+                       (state/get-stats id))}}]
+    ]
+
+   ["/online"
+    {:swagger {:tags ["online-game"]}}
+
+    ["/statistics"
+     {:get {:summary "get all players statistiscs"
+            :responses {200 {:body
+                             {:data [{:id ::validation/id
+                                      :iq int?
+                                      :statistics ::contract/statistics}]}}}
+            :handler (fn [_]
+                       (statistics/get-all-online-stats))}}]]
 
    ["/restricted"
     {:swagger {:tags ["restricted"]}
@@ -128,23 +139,7 @@
 
     ["/online-stats"
      {:get {:summary "get user online-game statistics"
-            :responses {200 {:body {:statistics ::multiplayer-persist/statistics}}}
+            :responses {200 {:body {:statistics ::contract/statistics}}}
             :handler (fn [{{id :identity} :session}]
                        (multiplayer-persist/get-stats id))}}]]
-
-   ["/math"
-    {:swagger {:tags ["math"]}}
-
-    ["/plus"
-     {:get {:summary "plus with spec query parameters"
-            :parameters {:query {:x int?, :y int?}}
-            :responses {200 {:body {:total pos-int?}}}
-            :handler (fn [{{{:keys [x y]} :query} :parameters}]
-                       {:status 200
-                        :body {:total (+ x y)}})}
-      :post {:summary "plus with spec body parameters"
-             :parameters {:body {:x int?, :y int?}}
-             :responses {200 {:body {:total pos-int?}}}
-             :handler (fn [{{{:keys [x y]} :body} :parameters}]
-                        {:status 200
-                         :body {:total (+ x y)}})}}]]])
+   ])

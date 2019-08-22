@@ -8,7 +8,7 @@
 (defn- register!
   "fields - r/atom with map with edit-texts fields;
   styles - r/atom with styles for this edit-texts"
-  [fields styles]
+  [fields styles on-reg]
   (swap! styles assoc :errors (validation/registration-errors @fields))
   (when-not (:errors @styles)
     (swap! styles assoc :loading :loading)
@@ -18,18 +18,18 @@
                 :handler #(do (app-db/put! :identity (:id @fields))
                               (swap! styles dissoc :loading)
                               (reset! fields {})
-                              (app-db/remove! :modal))
+                              (app-db/remove! :modal)
+                              (on-reg))
                 :error-handler
                 #(let [resp (:response %)]
                    (swap! styles dissoc :loading)
                    (swap! styles assoc-in [:errors :id] (:message resp)))})))
 
-(defn- registration-form []
+(defn- registration-form [on-reg]
   (let [fields (r/atom {})
         styles (r/atom {:id {:auto-focus true}})]
     (fn []
       [c/modal
-       :style  {:style {:width 400}}
        :header [:div  "Plus-minus registration"]
        :body   [:div
                 [c/input
@@ -49,15 +49,15 @@
                  :hint   "confirm the password"
                  :fields fields
                  :styles styles
-                 :on-save (fn [_] (register! fields styles))]]
+                 :on-save (fn [_] (register! fields styles on-reg))]]
        :footer (c/do-or-close-footer
                 :name   "Register"
-                :on-do  #(register! fields styles)
+                :on-do  #(register! fields styles on-reg)
                 :styles styles)])))
 
-(defn registration-button []
+(defn registration-button [on-reg]
   [:a.button.is-light
-   {:on-click #(app-db/put! :modal registration-form)}
+   {:on-click #(app-db/put! :modal (registration-form on-reg))}
    "Register"])
 
 (defn delete-account! [id]

@@ -2,7 +2,8 @@
   (:require [cognitect.transit :as t]
             [plus-minus.multiplayer.contract :as contract :refer
              [->Message ->Reply]]
-            [plus-minus.app-db :as db]))
+            [plus-minus.app-db :as db]
+            [plus-minus.components.common :as c]))
 
 (defonce ws-chan (atom nil))
 (def json-reader (t/reader :json))
@@ -32,12 +33,16 @@
   (if-let [chan (js/WebSocket. url)]
     (do
       (set! (.-onmessage chan) (receive-transit-msg! receive-handler))
-      (set! (.-onclose chan) (fn [_] (reset! ws-chan nil)))
+      (set! (.-onclose chan)
+            (fn [_]
+              (c/show-snack! "multiplayer disconnected!")
+              (reset! ws-chan nil)))
       (set! (.-onerror chan)
             (fn [_]
               (receive-handler (->Reply :error (db/get :identity) :unknown))))
       (set! (.-onopen chan)
             (fn [_]
+              (c/show-snack! "multiplayer connection established!")
               (reset! ws-chan chan)
               (on-open)
               (println "Websocket connection established with: " url))))

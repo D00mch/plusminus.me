@@ -6,7 +6,8 @@
             [plus-minus.components.board :as board]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [clojure.string :as str]))
 
 (defn- change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
@@ -69,13 +70,13 @@
              reset-game #(change-state (s/state-template
                                         (or (:row-size board) 4)))]
          (cond (-> state s/valid-state? not)
-               (do (js/alert "Game resets due to ivalid game-state")
+               (do (c/show-info-modal! "Game resets" "due to ivalid game-state")
                    (reset-game))
 
                (-> state s/moves? not)
                (after-delay
                 #(do (reset-game)
-                     (js/alert (end-game-msg state))
+                     (c/show-info-modal! "Game end" (end-game-msg state))
                      (send-end-game state false)))
 
                (not (user-turn state))
@@ -108,49 +109,58 @@
 (defn alert-restart [row-size]
   (fn []
     [c/modal
-    :style  {:style {:width 400}}
-    :header [:div "Admit defeat?"]
-    :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
-    :footer (c/do-or-close-footer
-             :styles (r/atom {:id {:auto-focus true}})
-             :name "Defeat"
-             :on-do (fn []
-                      (db/remove! :modal)
-                      (send-end-game (db/get :game-state) true)
-                      (change-state (s/state-template row-size))))]))
+     :header [:div "Admit defeat?"]
+     :body [:div [:label "You started the game and there are free moves to make, so if you restart the game it will count as defeat."]]
+     :footer (c/do-or-close-footer
+              :styles (r/atom {:id {:auto-focus true}})
+              :name "Defeat"
+              :on-do (fn []
+                       (db/remove! :modal)
+                       (send-end-game (db/get :game-state) true)
+                       (change-state (s/state-template row-size))))]))
 
 (defn game-stats []
   (let [id    (db/get :identity)
-        stats (db/get :game-statistics)]
-    (if (and id stats)
-      [:div.board.stats
-       [:div.scor (str "Win: "  (or (:win stats) 0))]
-       [:div.scor (str "Lose: " (or (:lose stats) 0))]
-       [:div.scor (str "Draw: " (or (:draw stats) 0))]]
-      [:div.board.stats
-       [:label "Authorize to see statistics and play with other players"]])))
+        stats (db/get :game-statistics)
+        iq    (g/calc-iq stats)]
+    (cond
+      (not id) [:div {:style {:margin-left 5
+                              :margin-bottom 5}}
+                [:label "Authorize to rate your IQ"]]
+      (> iq 0) [:div.tags.has-addons {:style {:margin 3}}
+                [:span.tag.is-dark "IQ"]
+                [:span.tag.is-info iq]])))
+
+(defn game-settins []
+  (board/game-settings
+   :state     (:game-state @db/state)
+   :on-change #(let [row-size %
+                     moves    (-> :game-state db/get :moves seq)]
+                 (if moves
+                   (db/put! :modal (alert-restart row-size))
+                   (change-state (s/state-template row-size))))))
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
-  [:section.section>div.container>div.content
-   [:div {:style {:display :flex
-                  :flex-direction :column
-                  :flex-wrap :wrap}}
-    [board/game-settings
-     :state     (:game-state @db/state)
-     :on-change #(let [row-size %
-                       moves    (-> :game-state db/get :moves seq)]
-                   (if moves
-                     (db/put! :modal (alert-restart row-size))
-                     (change-state (s/state-template row-size))))]
+  [:section
+   [:div.flex.center.column
+    [:div.board {:style {:display :flex
+                         :margin-top 20
+                         :flex-direction :column
+                         }}
+     [game-settins]
+     [game-stats]
+     ]
+    #_[:div.board [game-settins]]
     [board/scors
      :state   (:game-state @db/state)
      :usr-hrz usr-hrz
-     :he      "Bot: "]
+     :he      "IQ rater"]
     [board/matrix
      :on-click  (fn [turn? state index]
                   (if turn?
                     (move state index)
-                    (js/alert "Can't make this move")))
+                    (c/show-info-modal! "Can't make this move"
+                                        "Please, check the game rules page")))
      :game-state (:game-state @db/state)
      :user-hrz   usr-hrz]
-    [game-stats]]])
+    ]])

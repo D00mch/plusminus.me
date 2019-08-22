@@ -13,10 +13,12 @@ check Android version on [Google play][2]
 ## Status: in progress 
 
 ### TODOS
-- multiplayer statistics;
 - animation;
 - design;
 - event driven database;
+- server to publish it;
+- SSL for secure websockets;
+- PWA;
 
 ## Prerequisites
 
