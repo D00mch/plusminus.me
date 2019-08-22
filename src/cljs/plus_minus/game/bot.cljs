@@ -124,8 +124,9 @@
         stats (db/get :game-statistics)
         iq    (g/calc-iq stats)]
     (cond
-      (not id) [:div.stats
-                [:label "Authorize to see statistics"]]
+      (not id) [:div {:style {:margin-left 5
+                              :margin-bottom 5}}
+                [:label "Authorize to rate your IQ"]]
       (> iq 0) [:div.tags.has-addons {:style {:margin 3}}
                 [:span.tag.is-dark "IQ"]
                 [:span.tag.is-info iq]])))

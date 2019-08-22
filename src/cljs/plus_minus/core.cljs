@@ -24,21 +24,29 @@
     :active (when (= page (db/get :page)) "is-active")}
    title])
 
-(defn account-actions []
+(defn account-actions [expanded?]
   [:div.navbar-item.has-dropdown.is-hoverable
    [:a.navbar-link "Sign Out"]
    [:div.navbar-dropdown
-    [:a.navbar-item {:on-click login/logout!}
+    [:a.navbar-item
+     {:on-click #(do (reset! expanded? false)
+                     (login/logout!))}
      "Logout"]
-    [:a.navbar-item {:on-click #(reg/delete-account! (db/get :identity))}
+    [:a.navbar-item
+     {:on-click #(do (reset! expanded? false)
+                     (reg/delete-account! (db/get :identity)))}
      "Delete account!"]]])
 
-(defn user-menu []
+(defn- on-logged-in [expanded?]
+  (reset! expanded? false)
+  (bot/init-game-state!))
+
+(defn user-menu [expanded?]
   (if (db/get :identity)
-    [account-actions]
+    [account-actions expanded?]
     [:div.navbar-end>div.navbar-item>div.buttons
-     (reg/registration-button #(bot/init-game-state!))
-     (login/login-button #(bot/init-game-state!))]))
+     (reg/registration-button #(on-logged-in expanded?))
+     (login/login-button #(on-logged-in expanded?))]))
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
@@ -57,7 +65,7 @@
        [nav-link "#/about" "About" :about expanded?]
        [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
        [nav-link "#/statistics" "Statistics" :statistics expanded?]]
-      [user-menu]]]))
+      [user-menu expanded?]]]))
 
 (defn about-page []
   [:div.column>div.columns
