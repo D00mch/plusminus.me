@@ -6,5 +6,5 @@
 
 (defn get-all-online-stats []
   (resp/try-with-wrap-internal-error
-   :fun #(db/get-all-online-stats)
+   :fun #(array-map :data (db/get-all-online-stats))
    :msg "server error occured while getting all onlne statistics"))

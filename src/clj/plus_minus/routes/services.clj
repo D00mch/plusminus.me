@@ -121,9 +121,10 @@
 
     ["/statistics"
      {:get {:summary "get all players statistiscs"
-            :responses {200 {:body [{:id ::validation/id
-                                     :iq int?
-                                     :statistics ::contract/statistics}]}}
+            :responses {200 {:body
+                             {:data [{:id ::validation/id
+                                      :iq int?
+                                      :statistics ::contract/statistics}]}}}
             :handler (fn [_]
                        (statistics/get-all-online-stats))}}]]
 
