@@ -30,24 +30,33 @@
 (defn push-message! [type & [data]]
   (send-transit-msg! (message type data)))
 
+(defn- try-drop-searching! []
+  (push-message! :drop (db/get :online-row)))
+
 (defn close!
   "returns true if there is a ws-chan to close"
   []
   (if-let [c @ws-chan]
     (do
-      ;; try drop searching to prevent game with leaver
-      (push-message! :drop (db/get :online-row))
+      (try-drop-searching!)
       (.close c)
       true)
     false))
 
+(defn add-close-handler! []
+  (js/window.addEventListener
+   "beforeunload"
+   try-drop-searching!))
+
 (defn make-websocket! [url receive-handler & [on-open]]
   (println "attempting to connect websocket")
+  (add-close-handler!)
   (if-let [chan (js/WebSocket. url)]
     (do
       (set! (.-onmessage chan) (receive-transit-msg! receive-handler))
       (set! (.-onclose chan)
             (fn [_]
+              (js/window.removeEventListener "beforeunload" #())
               (c/show-snack! "multiplayer disconnected!")
               (db/put! :websocket-connected false)
               (reset! ws-chan nil)))
