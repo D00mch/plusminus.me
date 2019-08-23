@@ -17,28 +17,41 @@
    [clojure.string :as string])
   (:import goog.History))
 
+(defn- close-expanded! [expanded?] (reset! expanded? false))
+
 (defn nav-link [uri title page expanded?]
   [:a.navbar-item
    {:href   uri
-    :on-click #(reset! expanded? false)
+    :on-click #(close-expanded! expanded?)
     :active (when (= page (db/get :page)) "is-active")}
    title])
+
+(defn- init-online-state! []
+  (when (db/get :identity)
+    (ws/ensure-websocket!
+     online/on-reply!
+     #(do
+        (online/initial-state!)
+        (ws/push-message! :state)))))
 
 (defn account-actions [expanded?]
   [:div.navbar-item.has-dropdown.is-hoverable
    [:a.navbar-link "Sign Out"]
    [:div.navbar-dropdown
     [:a.navbar-item
-     {:on-click #(do (reset! expanded? false)
+     {:on-click #(do (close-expanded! expanded?)
+                     (ws/close!)
                      (login/logout!))}
      "Logout"]
     [:a.navbar-item
-     {:on-click #(do (reset! expanded? false)
+     {:on-click #(do (close-expanded! expanded?)
+                     (ws/close!)
                      (reg/delete-account! (db/get :identity)))}
      "Delete account!"]]])
 
 (defn- on-logged-in [expanded?]
-  (reset! expanded? false)
+  (init-online-state!)
+  (close-expanded! expanded?)
   (bot/init-game-state!))
 
 (defn user-menu [expanded?]
@@ -78,17 +91,13 @@
   [bot/game-component])
 
 (defn multiplayer-page []
-  (if (db/get :identity)
-    (do
-      (online/initial-state!)
-      (ws/ensure-websocket!
-       online/on-reply!
-       #(ws/send-transit-msg! {:msg-type :state, :id (db/get :identity)}))
-      [online/game-component])
-    (do (ws/close!)
-        [:section.section>div.container>div.content
-         [:div
-          [:label "Authenticate to play with other people"]]])))
+
+  (cond
+    (not (db/get :identity))      [:section.section>div.container>div.content
+                                   [:label "Authenticate to play with other people"]]
+    (db/get :websocket-connected) [online/game-component]
+    :else                         [:section.section>div.container>div.content
+                                   [:div "Loading multiplayer state..."]]))
 
 (defn statistics-page []
   (stats/stats-component))
@@ -149,11 +158,13 @@
   (r/render [#'navbar] (.getElementById js/document "navbar"))
   (r/render [#'page] (.getElementById js/document "app")))
 
-(defn init! []
+(defn init! [dev?]
+  (db/put! :dev? dev?)
   (ajax/load-interceptors!)
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
+  (init-online-state!)
   (bot/init-game-state!)
   (stats/init-stats!)
   (mount-components))
