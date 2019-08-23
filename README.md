@@ -9,7 +9,6 @@ check Android version on [Google play][2]
 [1]: https://plusminus.me
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
 
-
 ## Status: in progress 
 
 ### TODOS
