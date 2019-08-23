@@ -97,7 +97,10 @@
                                    [:label "Authenticate to play with other people"]]
     (db/get :websocket-connected) [online/game-component]
     :else                         [:section.section>div.container>div.content
-                                   [:div "Loading multiplayer state..."]]))
+                                   [:p
+                                    "Loading multiplayer state..."
+                                    [:br]
+                                    "Try to reload the page if it's taking too long"]]))
 
 (defn statistics-page []
   (stats/stats-component))
