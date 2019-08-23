@@ -45,8 +45,8 @@
       (go-loop []
         (when-let [{:keys [reply-type id] :as reply} (<! replies>)]
           (if-let [ch (get @id->channel id)]
-            (log/debug "ch for reply found, sent - "
-                       (async/send! ch (parser/->json reply)))
+            (let [sent (async/send! ch (parser/->json reply))]
+              (log/debug "ch for reply found, sent: " sent))
             (log/debug "can't find channel for reply" (into {} reply)))
           (when (= reply-type :end)
             (swap! id->channel dissoc id))

@@ -5,6 +5,8 @@
     [plus-minus.oauth :as oauth]
     [clojure.tools.logging :as log]))
 
+;; https://coderwall.com/p/y9w4-g/google-oauth2-in-clojure
+
 (defn oauth-init
   "Initiates the Twitter OAuth"
   [request]
