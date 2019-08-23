@@ -8,6 +8,7 @@
 (defonce ws-chan (atom nil))
 (def json-reader (t/reader :json))
 (def json-writer (t/writer :json))
+(def url (str "wss://" (.-host js/location) "/ws"))
 
 (defn receive-transit-msg!
   [update-fn]
@@ -48,7 +49,7 @@
               (println "Websocket connection established with: " url))))
     (throw (js/Error. "Websocket connection failed!"))))
 
-(defn ensure-websocket! [url receive-handler & [on-open]]
+(defn ensure-websocket! [receive-handler & [on-open]]
   (if-let [chan   @ws-chan]
     (let [state   (.-readyState chan)
           closed? (or (= state 2) (= state 3))]

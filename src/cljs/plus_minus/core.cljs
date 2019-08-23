@@ -82,7 +82,6 @@
     (do
       (online/initial-state!)
       (ws/ensure-websocket!
-       (str "ws://" (.-host js/location) "/ws")
        online/on-reply!
        #(ws/send-transit-msg! {:msg-type :state, :id (db/get :identity)}))
       [online/game-component])
