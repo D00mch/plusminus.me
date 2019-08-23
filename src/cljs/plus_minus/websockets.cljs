@@ -8,34 +8,57 @@
 (defonce ws-chan (atom nil))
 (def json-reader (t/reader :json))
 (def json-writer (t/writer :json))
+(defn url []
+  ;; it's not def because it can be initialized before setting :dev property
+  (str (if (db/get :dev?) "ws" "wss") "://" (.-host js/location) "/ws"))
 
-(defn receive-transit-msg!
+(defn- receive-transit-msg!
   [update-fn]
   (fn [msg]
     (update-fn
      (->> msg .-data (t/read json-reader)))))
 
-(defn close!
-  "returns true if there is a ws-chan to close"
-  []
-  (if-let [c @ws-chan]
-    (do (.close c) true)
-    false))
-
-(defn send-transit-msg!
+(defn- send-transit-msg!
   [msg]
   (if @ws-chan
     (.send @ws-chan (t/write json-writer msg))
     (throw (js/Error. "Websocket is not available!"))))
 
+(defn message [type & [data]]
+  (into {} (->Message type (db/get :identity) data)))
+
+(defn push-message! [type & [data]]
+  (send-transit-msg! (message type data)))
+
+(defn- try-drop-searching! []
+  (push-message! :drop (db/get :online-row)))
+
+(defn close!
+  "returns true if there is a ws-chan to close"
+  []
+  (if-let [c @ws-chan]
+    (do
+      (try-drop-searching!)
+      (.close c)
+      true)
+    false))
+
+(defn add-close-handler! []
+  (js/window.addEventListener
+   "beforeunload"
+   try-drop-searching!))
+
 (defn make-websocket! [url receive-handler & [on-open]]
   (println "attempting to connect websocket")
+  (add-close-handler!)
   (if-let [chan (js/WebSocket. url)]
     (do
       (set! (.-onmessage chan) (receive-transit-msg! receive-handler))
       (set! (.-onclose chan)
             (fn [_]
+              (js/window.removeEventListener "beforeunload" #())
               (c/show-snack! "multiplayer disconnected!")
+              (db/put! :websocket-connected false)
               (reset! ws-chan nil)))
       (set! (.-onerror chan)
             (fn [_]
@@ -43,17 +66,18 @@
       (set! (.-onopen chan)
             (fn [_]
               (c/show-snack! "multiplayer connection established!")
+              (db/put! :websocket-connected true)
               (reset! ws-chan chan)
               (on-open)
               (println "Websocket connection established with: " url))))
     (throw (js/Error. "Websocket connection failed!"))))
 
-(defn ensure-websocket! [url receive-handler & [on-open]]
+(defn ensure-websocket! [receive-handler & [on-open]]
   (if-let [chan   @ws-chan]
     (let [state   (.-readyState chan)
           closed? (or (= state 2) (= state 3))]
-      (when closed? (make-websocket! url receive-handler)))
-    (make-websocket! url receive-handler on-open)))
+      (when closed? (make-websocket! (url) receive-handler)))
+    (make-websocket! (url) receive-handler on-open)))
 
 (comment
   (do

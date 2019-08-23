@@ -9,12 +9,6 @@
 
 (def statuses #{:playing :searching :idle})
 
-(defn- message [type & [data]]
-  (into {} (contract/->Message type (db/get :identity) data)))
-
-(defn- push-message! [type & [data]]
-  (ws/send-transit-msg! (message type data)))
-
 (defn initial-state! []
   (db/put! :online-row (db/get :online-row 3))
   (db/put! :online-state
@@ -73,7 +67,7 @@
   (let [state (db/get :online-state)]
     (if (st/valid-move? state mv)
       (db/update! :online-state st/move mv)
-      (push-message! :state))))
+      (ws/push-message! :state))))
 
 (defn on-reply! [{type :reply-type, id :id, data :data}]
   (case type
@@ -98,16 +92,16 @@
                   (db/put! :online-row row-size))]))
 
 (defn- start-new-game! []
-  (push-message! :new (db/get :online-row))
+  (ws/push-message! :new (db/get :online-row))
   (db/put! :online-status :searching))
 
 (defn- drop-searching-game! []
-  (push-message! :drop (db/get :online-row)))
+  (ws/push-message! :drop (db/get :online-row)))
 
 (defn- bottom-panel-component []
   (case (db/get :online-status)
     :playing   [:a.board.play.button.is-danger
-                {:on-click #(push-message! :give-up)}
+                {:on-click #(ws/push-message! :give-up)}
                 "give up"]
     :searching [:div
                 {:style {:display :flex
@@ -133,7 +127,7 @@
     [board/matrix
      :on-click  (fn [turn? _ index]
                   (if turn?
-                    (push-message! :move index)
+                    (ws/push-message! :move index)
                     (c/info-modal "Mind your manners" "it's not your turn")))
      :game-state (db/get :online-state)
      :user-hrz   (db/get :online-hrz)]

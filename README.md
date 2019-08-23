@@ -2,13 +2,12 @@
 
 Math game.
 
-check current web-version on [herokuapp][1] (multiplayer only works with http now)
+check current web-version on [herokuapp][1]
 
 check Android version on [Google play][2]
 
-[1]: http://plus-minus-game.herokuapp.com/
+[1]: https://plusminus.me
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
-
 
 ## Status: in progress 
 
@@ -16,9 +15,8 @@ check Android version on [Google play][2]
 - animation;
 - design;
 - event driven database;
-- server to publish it;
-- SSL for secure websockets;
 - PWA;
+- google oauth;
 
 ## Prerequisites
 
