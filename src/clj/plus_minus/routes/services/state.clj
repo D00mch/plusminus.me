@@ -41,16 +41,18 @@
 (spec/def ::draw (spec/or :n zero? :n pos-int?))
 (spec/def ::statistics (spec/keys :req-un [::win ::lose ::draw]))
 
+(def ^:private empty-stats {:win 0 :lose 0 :draw 0})
+
 (defn get-stats [id]
   (response/try-with-wrap-internal-error
-   :fun #(-> {:id id} db/get-statistics (dissoc :player_id))
+   :fun #(-> {:id id} db/get-statistics (dissoc :player_id) (or empty-stats))
    :msg "server error occured while getting stats"))
 
 (defn game-end [id state usr-hrz usr-give-up]
   (if (and (s/moves? state) (not usr-give-up))
     (response/e-precondition "can't end the game with free moves and not giving-up")
     (let [stats     (or (-> {:id id} db/get-statistics :statistics)
-                        {:win 0 :lose 0 :draw 0})
+                        empty-stats)
           result    (if usr-give-up :lose (g/on-game-end state usr-hrz))
           new-stats (update stats result inc)]
       (response/try-with-wrap-internal-error
