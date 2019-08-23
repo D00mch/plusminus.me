@@ -2,7 +2,7 @@
 
 Math game.
 
-check current web-version on [herokuapp][1]
+check current web-version on [plusminus.me][1]
 
 check Android version on [Google play][2]
 
