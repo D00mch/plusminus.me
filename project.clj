@@ -86,6 +86,7 @@
    :dev           [:project/dev :profiles/dev]
    :test          [:project/dev :project/test :profiles/test]
 
+   ;; java  -Dconf=dev-config.edn -cp target/uberjar/plus-minus.jar clojure.main -m plus-minus.core
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
                                  [cider/piggieback "0.4.0"]
