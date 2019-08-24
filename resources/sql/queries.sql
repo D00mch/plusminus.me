@@ -6,8 +6,11 @@ VALUES (:id, :pass)
 
 -- :name update-user! :! :n
 -- :doc updates an existing user record
-UPDATE users
-SET pass = :pass, email = :email
+UPDATE users SET
+--~ (if (contains? params :pass) "pass = :pass" "pass = pass")
+--~ (when (contains? params :email) ",email = :email")
+--~ (when (contains? params :last_login) ",last_login = :last_login")
+--~ (when (contains? params :features) ",features = :features")
 WHERE id = :id
 
 -- :name get-user :? :1

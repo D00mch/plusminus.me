@@ -39,14 +39,24 @@
         (String. (java.nio.charset.Charset/forName "UTF-8"))
         (.split ":"))))
 
-(defn- authenticate [[id pass]]
+(defn update-last-login!
+  "non blocking; logs on error"
+  [id]
+  (future
+    (try
+      (db/update-user! {:id id :last_login (java.time.LocalDateTime/now)})
+      (catch Exception e
+        (log/error "can't update last_login for id" id e)))))
+
+(defn- authenticate! [[id pass]]
   (when-let [user (db/get-user {:id id})]
     (when (hashers/check pass (:pass user))
+      (update-last-login! id)
       id)))
 
 (defn login! [{:keys [session] :as req} auth]
   (pprint req)
-  (if-let [id (authenticate (decode-auth auth))]
+  (if-let [id (authenticate! (decode-auth auth))]
     (-> {:result :ok}
         (ring-response/ok)
         (assoc :session (assoc session :identity id)))
