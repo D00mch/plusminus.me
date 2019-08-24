@@ -91,16 +91,20 @@
   [bot/game-component])
 
 (defn multiplayer-page []
-
-  (cond
-    (not (db/get :identity))      [:section.section>div.container>div.content
-                                   [:label "Authenticate to play with other people"]]
-    (db/get :websocket-connected) [online/game-component]
-    :else                         [:section.section>div.container>div.content
-                                   [:p
-                                    "Loading multiplayer state..."
-                                    [:br]
-                                    "Try to reload the page if it's taking too long"]]))
+  (fn []
+    (let [anonim        (not (db/get :identity))
+          connected (db/get :websocket-connected)]
+      (cond
+        anonim    [:section.section>div.container>div.content
+                   [:label "Authenticate to play with other people"]]
+        connected (do
+                    (init-online-state!)
+                    [online/game-component])
+        :else     [:section.section>div.container>div.content
+                   [:p
+                    "Loading multiplayer state..."
+                    [:br]
+                    "Try to reload the page if it's taking too long"]]))))
 
 (defn statistics-page []
   (stats/stats-component))

@@ -14,8 +14,8 @@
 
 ;; :turn-time will immediatelly return millis till the turn end
 
-(def ^:const ping-ms 5000)
-(def ^:const turn-ms 20000)
+(def ^:const ping-ms 7000)
+(def ^:const turn-ms 45000)
 
 ;; USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
