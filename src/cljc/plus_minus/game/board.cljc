@@ -14,7 +14,7 @@
 
   represented in code as {:row-size n, :board [...]})
 
-(def row-count-min 3)
+(def row-count-min 5)
 (def row-count-max 9)
 
 (def row-count-max-excl   (inc row-count-max))
