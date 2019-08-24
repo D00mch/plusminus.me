@@ -1,19 +1,19 @@
 (ns plus-minus.game.online
   (:require [plus-minus.game.state :as st]
             [plus-minus.app-db :as db]
+            [plus-minus.game.board :as b]
             [plus-minus.components.board :as board]
             [plus-minus.multiplayer.contract :as contract]
             [plus-minus.websockets :as ws]
-            [reagent.core :as r]
             [plus-minus.components.common :as c]))
 
 (def statuses #{:playing :searching :idle})
 
 (defn initial-state! []
-  (db/put! :online-row (db/get :online-row 3))
+  (db/put! :online-row (db/get :online-row b/row-count-min))
   (db/put! :online-state
            (update-in
-            (st/state-template (db/get :online-row 3))
+            (st/state-template (db/get :online-row))
             [:board :cells]
             #(mapv (fn [_] "X") %)))
   (db/put! :online-timer nil)
@@ -89,7 +89,8 @@
     [board/game-settings
      :state     (:online-state @db/state)
      :on-change (fn [row-size]
-                  (db/put! :online-row row-size))]))
+                  (db/put! :online-row row-size)
+                  (initial-state!))]))
 
 (defn- start-new-game! []
   (ws/push-message! :new (db/get :online-row))
