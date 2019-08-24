@@ -6,3 +6,5 @@ CREATE TABLE users
  admin      BOOLEAN,
  is_active  BOOLEAN,
  features   JSON);
+--;;
+CREATE INDEX ON users USING hash(email);
