@@ -171,6 +171,9 @@
   #_(fetch-docs!)
   (hook-browser-navigation!)
   (db/put! :identity js/identity)
+
+  ;; init states
+  (js/window.addEventListener "online" #(init-online-state!))
   (init-online-state!)
   (bot/init-game-state!)
   (stats/init-stats!)
