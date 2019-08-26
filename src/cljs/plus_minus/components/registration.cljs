@@ -60,8 +60,23 @@
    {:on-click #(app-db/put! :modal (registration-form on-reg))}
    "Register"])
 
-(defn delete-account! [id]
-  (ajax/POST "/api/restricted/delete-account"
-             {:handler #(do
-                          (app-db/remove! :identity)
-                          (app-db/put! :page :home))}))
+(defn- alert-delete [on-delete]
+  (fn []
+    (c/modal
+     :header [:div "Warning!"]
+     :body   [:div [:label "Are you sure you want to completelly wipe out all your data?"]]
+     :footer (c/do-or-close-footer
+              :styles (r/atom {:id {:auto-focus true}})
+              :name   "Delete!"
+              :on-do  (fn []
+                        (app-db/remove! :modal)
+                        (on-delete))))))
+
+(defn delete-account! [on-delete]
+  (app-db/put!
+   :modal
+   (alert-delete #(ajax/POST "/api/restricted/delete-account"
+                             {:handler (fn []
+                                         (on-delete)
+                                         (app-db/remove! :identity)
+                                         (app-db/put! :page :home))}))))

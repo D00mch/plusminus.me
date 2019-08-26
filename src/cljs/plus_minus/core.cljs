@@ -45,10 +45,10 @@
                      (login/logout!))}
      "Logout"]
     [:a.navbar-item
-     {:on-click #(do (close-expanded! expanded?)
-                     (ws/close!)
-                     (reg/delete-account! (db/get :identity)))}
-     "Delete account!"]]])
+     {:on-click #(reg/delete-account!
+                  (fn []
+                    (close-expanded! expanded?)
+                    (ws/close!)))} "Delete account!"]]])
 
 (defn- on-logged-in [expanded?]
   (init-online-state!)
