@@ -14,6 +14,7 @@
    [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
    [reitit.core :as reitit]
+   [ajax.core :as a]
    [clojure.string :as string])
   (:import goog.History))
 
@@ -44,10 +45,10 @@
                      (login/logout!))}
      "Logout"]
     [:a.navbar-item
-     {:on-click #(do (close-expanded! expanded?)
-                     (ws/close!)
-                     (reg/delete-account! (db/get :identity)))}
-     "Delete account!"]]])
+     {:on-click #(reg/delete-account!
+                  (fn []
+                    (close-expanded! expanded?)
+                    (ws/close!)))} "Delete account!"]]])
 
 (defn- on-logged-in [expanded?]
   (init-online-state!)
@@ -58,6 +59,11 @@
   (if (db/get :identity)
     [account-actions expanded?]
     [:div.navbar-end>div.navbar-item>div.buttons
+     [:a.button {:href "/oauth/init"}
+      [:span.icon>img {:width 20
+                       :alt "Google &quot;G&quot; Logo"
+                       :src "/img/google.png"}]
+      [:span "Google"]]
      (reg/registration-button #(on-logged-in expanded?))
      (login/login-button #(on-logged-in expanded?))]))
 

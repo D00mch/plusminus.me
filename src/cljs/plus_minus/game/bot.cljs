@@ -152,8 +152,9 @@
      ]
     #_[:div.board [game-settins]]
     [board/scors
-     :state   (:game-state @db/state)
+     :state   (db/get :game-state)
      :usr-hrz usr-hrz
+     :you     (db/get :identity)
      :he      "IQ rater"]
     [board/matrix
      :on-click  (fn [turn? state index]
@@ -161,6 +162,6 @@
                     (move state index)
                     (c/show-info-modal! "Can't make this move"
                                         "Please, check the game rules page")))
-     :game-state (:game-state @db/state)
+     :game-state (db/get :game-state)
      :user-hrz   usr-hrz]
     ]])

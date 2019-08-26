@@ -26,7 +26,7 @@
   (reset! (var-get #'game/id->msgs>) {}))
 
 ;; tests are now implemented as go-loops, so it's impossible to have > 1024 players
-(def players-num 1000)
+(def players-num 400)
 (def log? false) ;; for testing with repl
 
 (defn- log [& args] (when log? (log/info (str/join " " args)) #_(apply println args)))
@@ -68,8 +68,8 @@
         replies2> (topics/tap! :reply (chan 1 (filter #(= (:id %) player2))))]
     (imitate-player! replies1> player1 :move-fn move-fn)
     (imitate-player! replies2> player2 :move-fn move-fn)
-    (push! :new player1 3)
-    (push! :new player2 3)))
+    (push! :new player1 b/row-count-min)
+    (push! :new player2 b/row-count-min)))
 
 (defn print-replies! []
   (let [replies> (topics/tap! :reply (chan))]

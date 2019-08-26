@@ -4,7 +4,8 @@
             [plus-minus.game.state :as s]
             [plus-minus.game.game :as g]
             [com.walmartlabs.cond-let :refer [cond-let]]
-            [clojure.spec.alpha :as spec]))
+            [clojure.spec.alpha :as spec]
+            [plus-minus.routes.services.auth :as auth]))
 
 ;; current game state with bot
 
@@ -13,7 +14,9 @@
 
 (defn get-state [id]
   (response/try-with-wrap-internal-error
-   :fun (fn [] {:state (get-or-generate id)})
+   :fun (fn []
+          (auth/update-last-login! id)
+          {:state (get-or-generate id)})
    :msg  "server error occured while getting state"))
 
 (defn upsert-state [id state]

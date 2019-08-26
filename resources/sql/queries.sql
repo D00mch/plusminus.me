@@ -1,19 +1,22 @@
 -- :name create-user! :! :n
 -- :doc creates a new user record
 INSERT INTO users
-(id, pass)
-VALUES (:id, :pass)
+(id, pass, email)
+VALUES (:id, :pass, :email)
 
 -- :name update-user! :! :n
 -- :doc updates an existing user record
-UPDATE users
-SET pass = :pass, email = :email
+UPDATE users SET
+--~ (if (contains? params :pass) "pass = :pass" "pass = pass")
+--~ (when (contains? params :email) ",email = :email")
+--~ (when (contains? params :last_login) ",last_login = :last_login")
+--~ (when (contains? params :features) ",features = :features")
 WHERE id = :id
 
 -- :name get-user :? :1
--- :doc retrieves a user record given the id
-SELECT * FROM users
-WHERE id = :id
+-- :doc retrieves a user record given the id or email
+SELECT * FROM users WHERE
+--~ (if (contains? params :id) "id = :id" "email = :email")
 
 -- :name delete-user! :! :n
 -- :doc deletes a user record given the id

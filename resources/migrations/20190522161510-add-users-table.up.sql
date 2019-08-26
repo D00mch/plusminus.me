@@ -1,7 +1,10 @@
 CREATE TABLE users
 (id         VARCHAR(20) PRIMARY KEY NOT NULL,
+ pass       VARCHAR(300) NOT NULL,
+ last_login TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
  email      VARCHAR(30),
  admin      BOOLEAN,
- last_login TIMESTAMP,
  is_active  BOOLEAN,
- pass       VARCHAR(300) NOT NULL);
+ features   JSON);
+--;;
+CREATE INDEX ON users USING hash(email);
