@@ -23,6 +23,7 @@
     (response/e-precondition "precondition failed" {:validation errors})
     (try
       (db/create-user! (-> user
+                           (assoc  :email nil)
                            (dissoc :pass-confirm)
                            (update :pass hashers/encrypt)))
       (-> {:result :ok}

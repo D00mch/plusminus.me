@@ -14,6 +14,7 @@
    [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
    [reitit.core :as reitit]
+   [ajax.core :as a]
    [clojure.string :as string])
   (:import goog.History))
 
@@ -58,6 +59,11 @@
   (if (db/get :identity)
     [account-actions expanded?]
     [:div.navbar-end>div.navbar-item>div.buttons
+     [:a.button {:href "/oauth/init"}
+      [:span.icon>img {:width 20
+                       :alt "Google &quot;G&quot; Logo"
+                       :src "/img/google.png"}]
+      [:span "Google"]]
      (reg/registration-button #(on-logged-in expanded?))
      (login/login-button #(on-logged-in expanded?))]))
 
