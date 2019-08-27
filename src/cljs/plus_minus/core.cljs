@@ -18,6 +18,10 @@
    [clojure.string :as string])
   (:import goog.History))
 
+(defonce worker (js/Worker. (if js/goog.DEBUG
+                              "js/bootstrap_worker.js"
+                              "js/worker.js")))
+
 (defn- close-expanded! [expanded?] (reset! expanded? false))
 
 (defn nav-link [uri title page expanded?]

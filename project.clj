@@ -1,7 +1,7 @@
 (defproject plus-minus "0.1.0-SNAPSHOT"
 
   :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :url "https://plusminus.me"
 
   :dependencies [[buddy "2.0.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
@@ -43,7 +43,7 @@
 
   :min-lein-version "2.0.0"
 
-  :source-paths ["src/clj" "src/cljs" "src/cljc"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/cljs_worker"]
   :test-paths ["test/clj"]
   :monkeypatch-clojure-test false ;; https://github.com/technomancy/leiningen/issues/2524
   :resource-paths ["resources" "target/cljsbuild"]
@@ -52,7 +52,11 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]]
   :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path
+   [:cljsbuild :builds :app :compiler :output-dir]
+   [:cljsbuild :builds :app :compiler :output-to]
+   [:cljsbuild :builds :dev-worker :compiler :output-dir]
+   [:cljsbuild :builds :dev-worker :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :server-logfile "log/figwheel-logfile.log"
@@ -100,7 +104,8 @@
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
                                  [lein-doo "0.1.11"]
                                  [lein-figwheel "0.5.18"]]
-                  :cljsbuild{:builds
+                  :cljsbuild
+                  {:builds
                    {:app
                     {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
                      :figwheel {:on-jsload "plus-minus.core/mount-components"}
@@ -111,9 +116,21 @@
                       :output-dir "target/cljsbuild/public/js/out"
                       :source-map true
                       :optimizations :none
+                      :pretty-print true
+                      :preloads [devtools.preload]
+                      :closure-defines {goog.DEBUG true}}}
+
+                    :dev-worker
+                    {:source-paths ["src/cljs_worker"]
+                     :figwheel {:on-jsload "plus-minus.worker/on-js-reload"}
+                     :compiler
+                     {:output-to "target/cljsbuild/public/js/worker.js"
+                      :output-dir "target/cljsbuild/public/js/out_worker"
+                      :source-map-timestamp true
+                      :optimizations :none
                       :pretty-print true}}}}
-                  
-                  
+
+
                   :doo {:build "test"}
                   :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
