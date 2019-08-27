@@ -22,7 +22,7 @@
 (deftest matching-game
   (let [[u1 u2]    (-> id-gen (gen/sample 3) distinct)
         [in> out>] (in-out-matcher-channels)
-        size       5]
+        size       (+ 1 b/row-count-min)]
     (testing "right users matched and game with right size created"
       (>!! in> (->Message :new u1 size))
       (>!! in> (->Message :new "regedar" b/row-count-min))
