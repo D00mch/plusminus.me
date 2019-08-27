@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
   <head>
       <meta charset="UTF-8"/>
@@ -27,6 +26,16 @@
         var csrfToken = "{{csrf-token}}";
         var identity = {{identity|json|safe}};
     </script>
+
+    <script>
+     if('serviceWorker' in navigator) {
+         navigator.serviceWorker.register('js/sw.js')
+                  .then(function() {
+                      console.log('Service Worker Registered');
+                  });
+     }
+    </script>
+
     {% script "/js/app.js" %}
   </body>
 </html>
