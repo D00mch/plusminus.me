@@ -7,7 +7,8 @@
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [plus-minus.game.board :as b]))
 
 (defn- change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
@@ -68,7 +69,8 @@
      (when-not (= (:game-state old-state) (:game-state new-state))
        (let [{:keys [board] :as state} (:game-state @atom)
              reset-game #(change-state (s/state-template
-                                        (or (:row-size board) 4)))]
+                                        (or (:row-size board)
+                                            (b/row-count-min))))]
          (cond (-> state s/valid-state? not)
                (do (c/show-info-modal! "Game resets" "due to ivalid game-state")
                    (reset-game))
