@@ -6,6 +6,7 @@
             [plus-minus.validation :as validation]
             [plus-minus.multiplayer.contract :refer [->Message]]
             [plus-minus.routes.multiplayer.matcher :as matcher]
+            [plus-minus.game.board :as b]
             [clojure.test :refer [deftest is testing]])
   (:import [plus_minus.multiplayer.contract Game]))
 
@@ -24,7 +25,7 @@
         size       5]
     (testing "right users matched and game with right size created"
       (>!! in> (->Message :new u1 size))
-      (>!! in> (->Message :new "regedar" 3))
+      (>!! in> (->Message :new "regedar" b/row-count-min))
       (>!! in> (->Message :new u2 size))
       (let [{{{r :row-size} :board} :state p1 :player1 p2 :player2 :as game}
             (get-with-timeout!! out>)]
@@ -44,14 +45,14 @@
           (>! finish> v)
           (recur)))
       (doseq [user users]
-        (>!! in> (->Message :new user 3)))
+        (>!! in> (->Message :new user b/row-count-min)))
       (is (instance? Game (get-with-timeout!! finish>))))
     (close! in>)))
 
 (deftest dropping-game
   (let [[u1 u2 leaver]   ["u1" "u2" "leaver"]
         [in> out> drop>] (in-out-matcher-channels)
-        size             3]
+        size             b/row-count-min]
     #_(go-loop []
       (when-let [r (<! drop>)]
         (println r)
@@ -78,7 +79,7 @@
         (is (and (= p1 u1) (= p2 u2)))))
 
     (testing "matched when dropped previous game"
-      (let [size2 (if (= size 3) 4 3)]
+      (let [size2 (if (= size b/row-count-min) 5 b/row-count-min)]
         (>!! in> (->Message :new u1 size2))
         (>!! in> (->Message :drop u1 size2))
         (>!! in> (->Message :new u1 size))
