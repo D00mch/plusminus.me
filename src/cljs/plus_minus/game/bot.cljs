@@ -13,9 +13,7 @@
 (defn- change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
   (cookies/set! :game-state state)
-  (prn "about to sync fucking state")
   (when (and sync (db/get :identity))
-    (prn "syncing")
     (ajax/PUT "api/game/state"
               {:params {:id (db/get :identity)
                         :state state}
