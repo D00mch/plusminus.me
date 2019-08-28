@@ -68,7 +68,7 @@
        (let [{:keys [board] :as state} (:game-state @atom)
              reset-game #(change-state (s/state-template
                                         (or (:row-size board)
-                                            (b/row-count-min))))]
+                                            b/row-count-min)))]
          (cond (-> state s/valid-state? not)
                (do (c/show-info-modal! "Game resets" "due to ivalid game-state")
                    (reset-game))
@@ -91,7 +91,8 @@
 
 (defn- load-game-state! []
   (let [id    (db/get :identity)
-        state (or (cookies/get :game-state) (s/state-template 4))]
+        state (or (cookies/get :game-state)
+                  (s/state-template b/row-count-min))]
     (if id
       (ajax/GET "api/game/state"
                 {:handler #(-> % :state change-state)

@@ -2,6 +2,7 @@ var cacheName = 'plusminuscache'; // change name to update cache in browser
 var filesToCache = [
     '/',
     'app.js',
+    // 'out',
     '/html/home.html',
     '/html/error.html',
     '/css/screen.css',
