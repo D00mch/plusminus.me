@@ -42,6 +42,7 @@
                               :visibility (when hidden "hidden")
                               :background (when valid (if turn "#209cee" "#ee1f1f"))}
                       :key i
-                      :on-click #(on-click turn state i)}
+                      :on-click #(on-click turn state i)
+                      :class (when valid "pulse")}
            [:div.inner.disable-selection {:style {:color (when valid "white")}}
             (nth cells i)]]))])])
