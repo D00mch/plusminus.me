@@ -8,7 +8,7 @@
   [:div.control>div.select {:style {:margin-bottom 16}}
    [:select {:on-change #(on-change (int (.. % -target -value)))
              :value (get-in state [:board :row-size] 4)}
-    (for [row-size (range b/row-count-min b/row-count-max)]
+    (for [row-size (range b/row-count-min b/row-count-max-excl)]
       [:option {:key row-size} row-size])]])
 
 (defn scors [& {s :state h :usr-hrz you :you he :he

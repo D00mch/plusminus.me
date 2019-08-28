@@ -7,11 +7,10 @@
             [plus-minus.multiplayer.contract :as contract :refer
              [->Message map->Message]]
             [plus-minus.routes.multiplayer.topics :as topics]
-            [plus-minus.routes.multiplayer.game :as game])
+            [plus-minus.routes.multiplayer.game :as game]
+            [plus-minus.routes.multiplayer.connection :as multiplayer])
   (:import java.io.ByteArrayOutputStream
            [java.util.concurrent Executors Future TimeUnit]))
-
-;; https://gist.github.com/mattly/217eb6f26cb5d728a6cc88b4d6b926bb
 
 (defonce id->channel (atom {}))
 
@@ -23,7 +22,7 @@
   (log/info "msg:" json)
   (let [{id :id :as msg} (parser/read-json json)
         _                (swap! id->channel assoc id ch)
-        pushed           (topics/push! :msg (map->Message msg))]
+        pushed           (multiplayer/message msg)]
     (log/debug "pushed?" pushed)))
 
 (def websocket-callbacks
@@ -38,25 +37,14 @@
   [["/ws" ws-handler]
    ["/wss" ws-handler]])
 
-(mount/defstate game-subscription>
-  "subscribe messages and replies processing"
-  :start
-  (do
-    (game/listen!)
-    (let [replies> (topics/tap! :reply (chan))]
-      (go-loop []
-        (when-let [{:keys [reply-type id] :as reply} (<! replies>)]
-          (if-let [ch (get @id->channel id)]
-            (let [sent (async/send! ch (parser/->json reply))]
-              (log/debug "ch for reply found, sent: " sent))
-            (log/debug "can't find channel for reply" (into {} reply)))
-          (when (= reply-type :end)
-            (swap! id->channel dissoc id))
-          (recur)))
-      replies>))
-  :stop  (do (game/close!)
-             (topics/reset-state!)
-             (close! game-subscription>)))
+(defmethod multiplayer/on-reply :default
+  [{:keys [reply-type id] :as reply}]
+  (if-let [ch (get @id->channel id)]
+    (let [sent (async/send! ch (parser/->json reply))]
+      (log/debug "ch for reply found, sent: " sent))
+    (log/debug "can't find channel for reply" (into {} reply)))
+  (when (= reply-type :end)
+    (swap! id->channel dissoc id)))
 
 (comment
 
