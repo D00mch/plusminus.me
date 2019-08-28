@@ -11,11 +11,12 @@
             [clojure.test :refer [deftest is testing]]
             [plus-minus.game.state :as st]
             [plus-minus.routes.multiplayer.timer :as timer]
-            [plus-minus.game.game :as game])
+            [plus-minus.game.game :as game]
+            [plus-minus.game.board :as b])
   (:import [plus_minus.multiplayer.contract Game Reply]))
 
 (deftest basic-replies
-  (let [game (matcher/initial-state 3 "p1" "p2")
+  (let [game (matcher/initial-state b/row-count-min "p1" "p2")
         in>  (chan)
         out> (chan)
         mvs> (chan)
@@ -59,7 +60,7 @@
 (deftest results
   (testing "give-up results"
     (let [[p1 p2] ["bob" "regeda"]
-          game    (matcher/initial-state 3 p1 p2)
+          game    (matcher/initial-state b/row-count-min p1 p2)
           [r1 r2] (#'reply/game-end-replies game (->Message :give-up p1 nil))]
       (is (= (-> r1 :data :outcome) :lose))
       (is (= (-> r2 :data :outcome) :win))
@@ -67,7 +68,7 @@
 
   (testing "timeout results"
     (let [[p1 p2] ["bob" "regeda"]
-          game    (matcher/initial-state 3 p1 p2)
+          game    (matcher/initial-state b/row-count-min p1 p2)
           [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))
           mover   (contract/turn-id game)
           winner  (contract/other-id game mover)]
@@ -77,7 +78,8 @@
 
   (testing "no moves result"
     (let [[p1 p2] ["bob" "regeda"]
-          game    (update (matcher/initial-state 3 p1 p2) :state game/play)
+          game    (update (matcher/initial-state b/row-count-min p1 p2)
+                          :state game/play)
           [r1 r2] (#'reply/game-end-replies game (->Message :ping nil nil))]
       (is (= (-> r1 :data :outcome)
              (game/on-game-end (:state game) (:player1-hrz game))))
@@ -89,7 +91,8 @@
 
   (do
     (def game
-      {:state {:board {:row-size 3,:cells [4 2 -5 9 -8 -7 -5 -5 8]},
+      {:state {:board {:row-size b/row-count-min,
+                       :cells [4 2 -5 9 -8 -7 -5 -5 8]},
                :start 6,:moves [],:hrz-points 0,:vrt-points 0,:hrz-turn true},
        :game-id 0,
        :created (System/currentTimeMillis),

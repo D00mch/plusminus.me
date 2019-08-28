@@ -21,12 +21,13 @@
     (jdbc/db-set-rollback-only! t-conn)
     (is (= 1 (db/create-user!
                t-conn
-               {:id         "1"
-                :pass       "pass"})))
+               {:id    "1"
+                :pass  "pass"
+                :email  nil})))
     (is (= {:id        "1",
             :email      nil,
             :admin      nil,
-            :last_login nil,
             :is_active  nil,
+            :features   nil,
             :pass      "pass"}
-           (db/get-user t-conn {:id "1"})))))
+           (dissoc (db/get-user t-conn {:id "1"}) :last_login)))))
