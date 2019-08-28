@@ -3,11 +3,17 @@
 Math game.
 
 check current web-version on [plusminus.me][1]
+(currently banned in Russia by Roskomnadzor, use proxy)
+
+<img src="https://github.com/Liverm0r/Plus-Minus-Fullstack/blob/dev/resources/public/img/gif/demo.gif" alt="alt text" width="284" height="335">
+
+published with [digitalocean.com][3]
 
 check Android version on [Google play][2]
 
 [1]: https://plusminus.me
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
+[3]: https://m.do.co/c/edb551a6bfca
 
 ## Status: in progress 
 
@@ -16,7 +22,7 @@ check Android version on [Google play][2]
 - design;
 - event driven database;
 - PWA;
-- google oauth;
+- chat
 
 ## Prerequisites
 
@@ -26,6 +32,29 @@ You will need [Leiningen][3] 2.0 or above installed.
 
 ## Running
 
+To start it in dev you need to provide dev-config.edn file (put it in project root): 
+```clojure
+{
+ ;; mandatory (remember to change your dbname, login and passowrd)
+ ;; ----------------------
+ :database-url "jdbc:postgresql://localhost/dbname?user=login&password=password"
+ :dev  true
+
+ ;; optional params below
+ ;; ----------------------
+ :port 3000
+ ;; when :nrepl-port is set the application starts the nREPL server on load
+ :nrepl-port 7000
+
+ ;; for oauth
+ :oauth-consumer-key    "your google oauth key"
+ :oauth-consumer-secret "your google oauth secret"
+ :domain                "http://localhost:3000"
+
+ ;; key for your session cookie
+ :session-store-key "some_16chars_key"
+}
+```
 To start a web server for the application, run:
 
     lein run 
