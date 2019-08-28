@@ -18,8 +18,8 @@
                    (map #(predict % (dec turns-ahead)))
                    (apply max-key #(points-diff (:hrz-turn state) %)))))
 
-(defn move-bot [{mvs :moves :as state}] ;; TODO: spec that state have moves
-  (let [{pmvs :moves} (predict state 3)
+(defn move-bot [{mvs :moves :as state} & [prediction]]
+  (let [{pmvs :moves} (predict state (or prediction 3))
         mv (->> mvs count (nth pmvs))]
     (st/move state mv)))
 

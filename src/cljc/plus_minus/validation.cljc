@@ -11,12 +11,12 @@
          (swap! spec-msgs assoc ~name
                 (str/replace ~human-msg #"\s{2}" " ")))))
 
-(defspec ::range-2-12
-  #(<= 2 (count %) 12)
-  "Entity must be between 2 and 12 symbols")
+(defspec ::range-2-20
+  #(<= 2 (count %) 20)
+  "Entity must be between 2 and 20 symbols")
 
 (defspec ::id
-  (s/and string? ::range-2-12 #(re-matches #"^[a-zA-Z0-9.\-_%+1]+" %))
+  (s/and string? ::range-2-20 #(re-matches #"^[a-zA-Z0-9.\-_%+1]+" %))
   "Login must consist of Latin characters and symbols: - _ % +")
 
 (defspec ::pass

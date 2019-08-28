@@ -8,7 +8,8 @@
    [clojure.tools.cli :refer [parse-opts]]
    [clojure.tools.logging :as log]
    [mount.core :as mount]
-   [plus-minus.routes.multiplayer.persist :as persist])
+   [plus-minus.routes.multiplayer.persist :as persist]
+   [plus-minus.routes.multiplayer.bots]) ;; to mount the state
   (:gen-class))
 
 (def cli-options
