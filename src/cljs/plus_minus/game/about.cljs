@@ -14,5 +14,6 @@
     "Feel free to contact me if you have any issues or propositions"]
    [:a {:href "mailto:arturdumchev@gmail.com"} "arturdumchev@gmail.com"]
    [:br]
-   [:a {:href "https://github.com/liverm0r/Plus-Minus-Fullstack/"}
-    "github"]])
+   [:a {:href "https://github.com/liverm0r/Plus-Minus-Fullstack/"} "github"]
+   [:p "published with "
+    [:a {:href "https://m.do.co/c/edb551a6bfca"} "digitalocean.com"]]])
