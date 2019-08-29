@@ -3,6 +3,7 @@
              :refer [map->Game ->Reply]]
             [plus-minus.common.async :as a-utils]
             [plus-minus.game.state :as st]
+            [plus-minus.routes.admin :as admin]
             [clojure.core.async :refer [>!!] :as async])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
@@ -33,11 +34,18 @@
         ([result {type :msg-type, id :id, size :data}]
          (let [cached-id (get size->id size)]
            (case type
-             :new (if (and cached-id (not= cached-id id))
+             :new (cond
+                    (admin/maintanance?)
+                    (>!! drop> (->Reply :drop id "server is on maintanance"))
+
+                    (and cached-id (not= cached-id id))
                     (do (dissoc! size->id size)
                         (rf result (initial-state size cached-id id)))
+
+                    :else
                     (do (assoc! size->id size id)
                         result))
+
              :drop (if (= cached-id id)
                      (do (dissoc! size->id size)
                          (>!! drop> (->Reply :drop id nil))
