@@ -13,7 +13,8 @@
    [ring.middleware.session.cookie :refer [cookie-store]]
    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [buddy.auth.backends.session :refer [session-backend]]
-   [ring.util.http-response :as response]))
+   [ring.util.http-response :as response]
+   [clojure.set :as set]))
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -49,6 +50,14 @@
                (response/unauthorized
                 {:error "You are not authorized to perform that action."}))))})
 
+(defn wrap-roles [needed-roles]
+  {:name :wrap-roles
+   :wrap (fn wrap-roles [handler]
+           (fn [{{roles :roles} :session, :as req}]
+             (if (set/subset? needed-roles roles)
+               (handler req)
+               (response/unauthorized
+                {:error "You are not authorized for this url"}))))})
 
 (defn wrap-auth [handler]
   (let [backend (session-backend)]

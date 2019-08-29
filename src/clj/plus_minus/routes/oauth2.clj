@@ -11,7 +11,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [clojure.string :as str]
             [buddy.hashers :as hashers]
-            [plus-minus.validation :as validation]))
+            [plus-minus.validation :as validation]
+            [plus-minus.routes.services.auth :as auth]))
 
 ;; For now just getting user email and generating user from it.
 ;; Need to rewrite all the auth to fit oauth2 standard.
@@ -59,9 +60,8 @@
         token-info (http/get "https://www.googleapis.com/oauth2/v1/tokeninfo"
                              {:query-params {:access_token (:access-token token)}
                               :as :json})
-        user-id    (-> token-info :body :email email->user! :id)
-        session    (assoc session :identity user-id)]
-    (assoc (redirect "/") :session session)))
+        user       (-> token-info :body :email email->user!)]
+    (auth/enrich-session (redirect "/") session user)))
 
 (defn routes []
   ["/oauth"
