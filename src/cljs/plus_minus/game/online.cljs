@@ -78,7 +78,9 @@
     :turn-time (put-timer! :remains data)
     :drop      (do
                  (initial-state!)
-                 (db/put! :modal (c/info-modal "Success!" "search canceled")))
+                 (db/put! :modal (c/info-modal
+                                  "Search canceled"
+                                  (or data "may be next time..."))))
     :cant-drop (db/put!
                 :modal
                 (c/info-modal "Fail" "Game is already matched or never exist"))))

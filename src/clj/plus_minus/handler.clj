@@ -5,6 +5,7 @@
     [plus-minus.routes.home :refer [home-routes]]
     [plus-minus.routes.services :refer [service-routes]]
     [plus-minus.routes.oauth2 :refer [routes]]
+    [plus-minus.routes.admin :refer [admin-routes]]
     [plus-minus.routes.websockets :refer [websocket-routes] :as ws]
     [reitit.swagger-ui :as swagger-ui]
     [reitit.ring :as ring]
@@ -24,6 +25,7 @@
     (ring/ring-handler
       (ring/router
         [(home-routes)
+         (admin-routes)
          (websocket-routes)
          (service-routes)
          (routes)])

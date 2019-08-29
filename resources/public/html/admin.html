@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>admin</title>
+    </head>
+    <body>
+        {% block maintanance %}
+        <div id="admin-panel">
+            <label>
+                Maintenance mode:
+                {% if turn %} <font color="green">on</font>
+                {% else %} <font color="red">off</font>
+                {% endif %}
+            </label>
+            <br/>
+            <form action="/sudo/maintanence" method="POST">
+                <input name="turn" value="true" type="submit">
+                <input name="turn" value="false" type="submit">
+            </form>
+        </div>
+        {% endblock %}
+    </body>
+
+</html>

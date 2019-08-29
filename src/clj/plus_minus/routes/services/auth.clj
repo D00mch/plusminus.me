@@ -17,6 +17,10 @@
       (response/e-precondition "user with the selected ID already exists")
       (response/e-internal e "server error occured while adding the user"))))
 
+(defn enrich-session [response session {id :id admin :admin}]
+  (assoc response :session
+         (assoc session :identity id, :roles (when admin #{:admin}))))
+
 (defn register! [{session :session :as req} user]
   (pprint req)
   (if-let [errors (validate/registration-errors user)]
@@ -28,7 +32,7 @@
                            (update :pass hashers/encrypt)))
       (-> {:result :ok}
           (ring-response/ok)
-          (assoc :session (assoc session :identity (:id user))))
+          (enrich-session session user))
       (catch Exception e (handle-reg-exc e)))))
 
 #_(str "Basic " (.encodeToString (java.util.Base64/getEncoder) 
@@ -53,14 +57,14 @@
   (when-let [user (db/get-user {:id id})]
     (when (hashers/check pass (:pass user))
       (update-last-login! id)
-      id)))
+      user)))
 
 (defn login! [{:keys [session] :as req} auth]
   (pprint req)
-  (if-let [id (authenticate! (decode-auth auth))]
+  (if-let [user (authenticate! (decode-auth auth))]
     (-> {:result :ok}
         (ring-response/ok)
-        (assoc :session (assoc session :identity id)))
+        (enrich-session session user))
     (ring-response/unauthorized {:result :unauthorized
                                  :message "login failure"})))
 
