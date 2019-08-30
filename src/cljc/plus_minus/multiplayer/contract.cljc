@@ -25,7 +25,7 @@
 (s/def ::remain$ ::count)
 (s/def ::mock-type #{:board-pink
                      :board-small
-                     :alert-goog-luck
+                     :alert-good-luck
                      :alert-you-gonna-lose
                      :laughter})
 (s/def ::prey ::validation/id)
@@ -35,7 +35,7 @@
   (case type
     :board-pink  10
     :board-small 15
-    :alert-goog-luck 20
+    :alert-good-luck 20
     :alert-you-gonna-lose 20
     :laughter 5))
 
@@ -80,21 +80,32 @@
    :lose (stats-sum stats :lose)})
 
 ;; ************************  MATCHED: CREATED GAMES
-(defrecord UsersStats [user1-stats user2-stats])
-(s/def ::user1-stats ::statistics)
-(s/def ::user2-stats ::statistics)
-(s/def ::users-stats (s/keys :req-un [::user1-stats ::user2-stats]))
+(defrecord UsersStats [stats1 stats2])
+(s/def ::stats1 ::statistics)
+(s/def ::stats2 ::statistics)
+(s/def ::users-stats (s/keys :req-un [::stats1 ::stats2]))
 
 (defrecord Game [state game-id player1 player2 ^boolean player1-hrz
                  users-stats
                  created updated])
 
 (defn stats-key [{p1 :player1 p2 :player2, :as game} id]
-  (case id
-    p1 :user1-stats
-    p2 :user2-stats))
+  (condp = id
+    p1 :stats1
+    p2 :stats2))
 
 (defn stats [game id] ((stats-key game id) (:users-stats game)))
+
+(def ^:const influence-on-win 20)
+
+(defn influence-game-path [game id]
+  [:users-stats (stats-key game id) :statistics :influence])
+
+(defn influence-get [game id]
+  (get-in game (influence-game-path game id)))
+
+(defn influence++ [game winner]
+  (update-in game (influence-game-path game winner) + influence-on-win))
 
 (defn turn-id [game]
   (if (= (-> game :state :hrz-turn) (:player1-hrz game))

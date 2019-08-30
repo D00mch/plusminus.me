@@ -24,7 +24,6 @@
         stats (if (= outcome :draw)
                  (update stats :draw inc)
                  (update-in stats [outcome cause] inc))
-        stats (when (= outcome :win) (update stats :influence + 20))
         iq    (game/calc-iq (contract/stats-summed stats))
         data  {:id id, :iq iq, :statistics stats}]
     (if connection

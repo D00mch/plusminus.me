@@ -3,23 +3,32 @@
             [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as spec]
             [clojure.spec.gen.alpha :as gen]
-            [clojure.spec.test.alpha :as stest]
-            [clojure.test :refer [deftest is testing]]
+            [clojure.test :refer [deftest is testing use-fixtures]]
             [clojure.tools.logging :as log]
             [plus-minus.game.board :as b]
             [plus-minus.game.game :as g]
             [plus-minus.game.state :as st]
+            [mount.core :as mount]
+            [luminus-migrations.core :as migrations]
+            [plus-minus.db.core]
+            [plus-minus.config :refer [env]]
             [plus-minus.multiplayer.contract
              :as contract :refer [->Message ->Reply map->Game]]
             [plus-minus.routes.multiplayer.game :as game]
-            [plus-minus.routes.multiplayer.matcher :as matcher]
-            [plus-minus.routes.multiplayer.reply :as room]
             [plus-minus.routes.multiplayer.topics :as topics]
             [plus-minus.validation :as validation]
             [clojure.string :as str])
   (:import [plus_minus.multiplayer.contract Game Message]))
 
 ;; MULTIPLAYER INTEGRATION TEST
+
+(use-fixtures
+  :once (fn [f]
+          (mount/start
+           #'plus-minus.config/env
+           #'plus-minus.db.core/*db*)
+          (migrations/migrate ["migrate"] (select-keys env [:database-url]))
+          (f)))
 
 (defn- reset-state! []
   (topics/reset-state!)

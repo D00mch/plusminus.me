@@ -19,30 +19,21 @@
   (list (->Reply reply-type (:player1 game) data)
         (->Reply reply-type (:player2 game) data)))
 
-(defn- end-results [{p1 :player1 p2 :player2 :as game} p1-outcome p2-outcome cause]
-  (list (->Reply :end p1 (->Result p1-outcome cause game))
-        (->Reply :end p2 (->Result p2-outcome cause game))))
+(defn- end-results [{p1 :player1 p2 :player2 :as game} outcome1 cause]
+  (letfn [(->replies [game p1-outcome p2-outcome cause]
+            (list (->Reply :end p1 (->Result p1-outcome cause game))
+                  (->Reply :end p2 (->Result p2-outcome cause game))))]
+    (case outcome1
+      :draw (->replies game :draw :draw cause)
+      :win  (->replies (c/influence++ game p1) :win :lose cause)
+      :lose (->replies (c/influence++ game p2) :lose :win cause))))
 
-(defn- calc-end-results [game]
-  (let [result (-> game :state (game/on-game-end (:player1-hrz game)))]
-    (case result
-      :draw (end-results game :draw :draw :no-moves)
-      :win  (end-results game :win :lose :no-moves)
-      :lose (end-results game :lose :win :no-moves))))
-
-(defn- winner-results [{p1 :player1 p2 :player2 :as game} winner cause]
-  (end-results game
-               (if (= p1 winner) :win :lose)
-               (if (= p2 winner) :win :lose)
-               cause))
-
-(defn- game-end-replies [game {id :id type :msg-type}]
+(defn- game-end-replies [{p1 :player1 h1 :player1-hrz :as game} {id :id type :msg-type}]
   (let [moves  (-> game :state st/moves?)]
     (cond
-      (= type
-         :give-up) (winner-results game (c/other-id game id) :give-up)
-      moves        (winner-results game (c/other-id game (c/turn-id game)) :time-out)
-      :else        (calc-end-results game))))
+      (= type :give-up) (end-results game (if (= p1 id) :lose :win) :give-up)
+      moves (end-results game (if (= p1 (c/turn-id game)) :lose :win) :time-out)
+      :else (end-results game (-> game :state (game/on-game-end h1)) :no-moves))))
 
 (defrecord GR [game replies])
 
@@ -53,11 +44,10 @@
 (defn- mock-replies! [vgame {agressor :id, mock-type :data, :as msg}]
   (let [game      @vgame
         prey      (c/other-id game agressor)
-        stats-key (c/stats-key game agressor)
-        infl-path [:users-stats stats-key :influence]
+        infl-path (c/influence-game-path game agressor)
         price     (c/mock-price mock-type)
         remains   (- (get-in game infl-path) price)
-        enough?   (> remains 0)]
+        enough?   (>= remains 0)]
     (if enough?
       (do
         (vswap! vgame assoc-in infl-path remains)
@@ -100,7 +90,7 @@
                                      (move->game-replies @vgame msg)]
                                  (vreset! vgame game)
                                  replies)
-                 :mock         (mock-replies! game msg)
+                 :mock         (mock-replies! vgame msg)
 
                  (time-replies @vgame)))))))))
 
