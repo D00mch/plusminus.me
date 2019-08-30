@@ -36,7 +36,7 @@
            (case type
              :new (cond
                     (admin/maintanance?)
-                    (>!! drop> (->Reply :drop id "server is on maintanance"))
+                    (>!! drop> (->Reply :drop id "server is on maintanance, it may take serveral minutes"))
 
                     (and cached-id (not= cached-id id))
                     (do (dissoc! size->id size)
