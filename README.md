@@ -61,7 +61,7 @@ To start a web server for the application, run:
 
 ## License
 ```
-Copyright [2019] [Artur Dumchev]
+Copyright 2019 Artur Dumchev
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
