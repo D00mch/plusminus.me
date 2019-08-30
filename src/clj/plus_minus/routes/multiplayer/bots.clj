@@ -9,6 +9,7 @@
             [clojure.tools.logging :as log]
             [plus-minus.game.game :as game]
             [plus-minus.game.state :as st]
+            [plus-minus.config :refer [env]]
             [mount.core :as mount]))
 
 (def ^:const bot-name "AggressiveBot") ;; name reserved in database
@@ -17,7 +18,7 @@
   (multiplayer/message (->Message type bot-name data)))
 
 (defn- new! []
-  (message! :new (gen/generate (s/gen ::b/row-size))))
+  (message! :new (if (:dev env) 5 (gen/generate (s/gen ::b/row-size)))))
 
 (mount/defstate agressive-bot
   :start

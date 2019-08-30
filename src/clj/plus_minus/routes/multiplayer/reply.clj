@@ -20,8 +20,8 @@
         (->Reply reply-type (:player2 game) data)))
 
 (defn- end-results [{p1 :player1 p2 :player2 :as game} p1-outcome p2-outcome cause]
-  (list (->Reply :end p1 (->Result p1-outcome cause))
-        (->Reply :end p2 (->Result p2-outcome cause))))
+  (list (->Reply :end p1 (->Result p1-outcome cause game))
+        (->Reply :end p2 (->Result p2-outcome cause game))))
 
 (defn- calc-end-results [game]
   (let [result (-> game :state (game/on-game-end (:player1-hrz game)))]

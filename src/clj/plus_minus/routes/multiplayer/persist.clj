@@ -4,7 +4,6 @@
             [plus-minus.multiplayer.contract :refer [->Reply ->Result] :as c]
             [clojure.core.async :refer [>! <! >!! chan alts! go-loop close!]]
             [clojure.tools.logging :as log]
-            [plus-minus.common.response :as response]
             [clojure.spec.alpha :as s]
             [clojure.spec.alpha :as spec]
             [plus-minus.validation :as validation]
@@ -15,9 +14,13 @@
 (def ^:private end-xform
   (filter #(= (:reply-type %) :end)))
 
-(defn- upsert [{id :id {:keys [outcome cause]} :data} & [connection]]
+(defn get-stats [id]
+  (or (db/get-online-stats {:id id})
+      {:id id, :iq 100, :statistics contract/stats-initial}))
+
+(defn- upsert [{id :id {:keys [outcome cause game]} :data} & [connection]]
   (println "about to upsert" id outcome cause)
-  (let [stats (or (-> {:id id} db/get-online-stats :statistics) contract/stats-initial)
+  (let [stats (c/stats game id)
         stats (if (= outcome :draw)
                  (update stats :draw inc)
                  (update-in stats [outcome cause] inc))
@@ -39,15 +42,7 @@
         (recur)))
     ends>))
 
-(defn get-stats [id]
-  (response/try-with-wrap-internal-error
-  :fun #(-> {:id id} db/get-online-stats)
-  :msg "server error occured while getting online stats"))
-
 (comment
-
-  (>!! stats> 0)
-  (topics/push! :reply (->Reply :end "bob" (->Result :win :no-moves)))
 
   ;; fill db with mock statistics
   (let [unique-users (-> (spec/gen ::validation/id) (gen/sample 100) distinct)]
@@ -58,5 +53,4 @@
        {:id user
         :iq (game/calc-iq (contract/stats-summed stats))
         :statistics stats})))
-
   )

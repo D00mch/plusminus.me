@@ -17,18 +17,84 @@
 (def ^:const ping-ms 7000)
 (def ^:const turn-ms 45000)
 
-;; USER MESSAGES
+;; ************************  COMMON
+(s/def ::count (s/or :n zero? :n pos-int?))
+
+;; ************************  MOCKS
+(defrecord MockReply [mock-type remain$ prey]) ;; how match influence agressor has
+(s/def ::remain$ ::count)
+(s/def ::mock-type #{:board-pink
+                     :board-small
+                     :alert-goog-luck
+                     :alert-you-gonna-lose
+                     :laughter})
+(s/def ::prey ::validation/id)
+(s/def ::mock (s/keys :req-un [::mock-type ::remain$ ::prey]))
+
+(defn mock-price [type]
+  (case type
+    :board-pink  10
+    :board-small 15
+    :alert-goog-luck 20
+    :alert-you-gonna-lose 20
+    :laughter 5))
+
+;; ************************  USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
-(s/def ::msg-type #{:new :state :move :give-up :turn-time :drop})
+(s/def ::msg-type #{:new :state :move :give-up :turn-time :drop :mock})
 (s/def ::msg (s/and
               (s/keys :req-un [::msg-type ::validation/id])
-              #(if (= (:msg-type %) :new) (s/valid?  ::b/row-size (:data %)) true)
-              #(if (= (:msg-type %) :drop) (s/valid?  ::b/row-size (:data %)) true)
-              #(if (= (:msg-type %) :move) (s/valid? ::b/index (:data %)) true)))
+              #(case (:msg-type %)
+                 :new  (s/valid? ::b/row-size (:data %))
+                 :drop (s/valid? ::b/row-size (:data %))
+                 :move (s/valid? ::b/index (:data %))
+                 :mock (s/valid? ::mock-type (:data %))
+                 true)))
 
-;; MATCHED: CREATED GAMES
+#_(s/valid? ::msg (->Message :mock "bob" :board-pink))
+
+;; ************************  STATISTICS
+(s/def ::give-up  ::count)
+(s/def ::time-out ::count)
+(s/def ::no-moves ::count)
+(s/def ::draw     ::count)
+
+(s/def ::stat (s/keys :req-un [::give-up ::time-out ::no-moves]))
+(s/def ::win  ::stat)
+(s/def ::lose ::stat)
+(s/def ::influence ::count)
+
+(s/def ::statistics (s/keys :req-un [::win ::lose ::draw ::influence]))
+
+(def stats-initial {:win       {:give-up 0, :time-out 0, :no-moves 0},
+                    :lose      {:give-up 0, :time-out 0, :no-moves 0},
+                    :draw      0
+                    :influence 0})
+
+(defn stats-sum [stats key]
+  (->> (get stats key) (map second) (reduce +)))
+
+(defn stats-summed [{:keys [draw] :as stats}]
+  {:draw draw
+   :win  (stats-sum stats :win)
+   :lose (stats-sum stats :lose)})
+
+;; ************************  MATCHED: CREATED GAMES
+(defrecord UsersStats [user1-stats user2-stats])
+(s/def ::user1-stats ::statistics)
+(s/def ::user2-stats ::statistics)
+(s/def ::users-stats (s/keys :req-un [::user1-stats ::user2-stats]))
+
 (defrecord Game [state game-id player1 player2 ^boolean player1-hrz
+                 users-stats
                  created updated])
+
+(defn stats-key [{p1 :player1 p2 :player2, :as game} id]
+  (case id
+    p1 :user1-stats
+    p2 :user2-stats))
+
+(defn stats [game id] ((stats-key game id) (:users-stats game)))
 
 (defn turn-id [game]
   (if (= (-> game :state :hrz-turn) (:player1-hrz game))
@@ -45,46 +111,24 @@
 (s/def ::created pos?)
 (s/def ::updated pos?)
 (s/def ::game (s/and (s/keys :req-un [::st/state ::game-id ::created ::updated
-                                      ::player1 ::player2 ::player1-hrz])
+                                      ::player1 ::player2 ::player1-hrz
+                                      ::usesrs-stats])
                      #(not= (:player1 %) (:player2 %))))
 
-;; REPLY TO USER
-(defrecord Reply   [reply-type, ^String id, data])
-(defrecord Result  [outcome, cause]) ;; data for Reply
-(s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop})
+;; ************************ REPLY TO USER
+
+(defrecord Result [outcome, cause, game])
 (s/def ::outcome #{:draw :win :lose})
-(s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
-                  :invalid-msg :unknown})
 (s/def ::cause #{:give-up :time-out :no-moves})
-(s/def ::result (s/keys :req-un [::outcome ::validation/id ::cause]))
+(s/def ::result (s/keys :req-un [::outcome ::validation/id ::cause ::game]))
+
+(defrecord Reply [reply-type, ^String id, data])
+(s/def ::reply-type #{:state :move :end :error :turn-time :drop :cant-drop :mock})
+(s/def ::errors #{:invalid-move :not-your-turn :game-doesnt-exist
+                  :invalid-msg :unknown :not-enough-influence})
 (s/def ::reply (s/and (s/keys :req-un [::reply-type ::validation/id ::data])
                       #(case (:reply-type %)
                          :end   (s/valid? ::outcome (-> % :data :outcome))
                          :error (s/valid? ::errors (:data %))
+                         :mock  (s/valid? ::mock (:data %))
                          (any? %))))
-
-
-;; STATISTICS
-(s/def ::count (s/or :n zero? :n pos-int?))
-(s/def ::give-up  ::count)
-(s/def ::time-out ::count)
-(s/def ::no-moves ::count)
-(s/def ::draw     ::count)
-
-(s/def ::stat (s/keys :req-un [::give-up ::time-out ::no-moves]))
-(s/def ::win  ::stat)
-(s/def ::lose ::stat)
-
-(s/def ::statistics (s/keys :req-un [::win ::lose ::draw]))
-
-(def stats-initial {:win  {:give-up 0, :time-out 0, :no-moves 0},
-                    :lose {:give-up 0, :time-out 0, :no-moves 0},
-                    :draw 0})
-
-(defn stats-sum [stats key]
-  (->> (get stats key) (map second) (reduce +)))
-
-(defn stats-summed [{:keys [draw] :as stats}]
-  {:draw draw
-   :win  (stats-sum stats :win)
-   :lose (stats-sum stats :lose)})

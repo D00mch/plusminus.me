@@ -1,10 +1,11 @@
 (ns plus-minus.routes.multiplayer.matcher
   (:require [plus-minus.multiplayer.contract :as contract
-             :refer [map->Game ->Reply]]
+             :refer [map->Game ->Reply ->UsersStats]]
             [plus-minus.common.async :as a-utils]
             [plus-minus.game.state :as st]
             [plus-minus.routes.admin :as admin]
-            [clojure.core.async :refer [>!!] :as async])
+            [clojure.core.async :refer [>!!] :as async]
+            [plus-minus.routes.multiplayer.persist :as persist])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
@@ -22,6 +23,8 @@
       :updated     (System/currentTimeMillis)
       :player1     player1
       :player2     player2
+      :users-stats (->UsersStats (persist/get-stats player1)
+                                 (persist/get-stats player2))
       :player1-hrz (.nextBoolean ^Random random)})))
 
 (defn- msg->game-by-size
