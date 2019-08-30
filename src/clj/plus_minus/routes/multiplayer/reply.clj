@@ -1,6 +1,6 @@
 (ns plus-minus.routes.multiplayer.reply
   (:require [plus-minus.multiplayer.contract :as c
-             :refer [->Reply ->Result ->Message]]
+             :refer [->Reply ->Result ->Message ->MockReply]]
             [clojure.core.async :refer [>!! <!! <! go-loop chan]
              :as async]
             [plus-minus.routes.multiplayer.timer :as timer]
@@ -50,6 +50,21 @@
 
 (defn- state-replies [game] (replies game :state game))
 
+(defn- mock-replies! [vgame {agressor :id, mock-type :data, :as msg}]
+  (let [game      @vgame
+        prey      (c/other-id game agressor)
+        stats-key (c/stats-key game agressor)
+        infl-path [:users-stats stats-key :influence]
+        price     (c/mock-price mock-type)
+        remains   (- (get-in game infl-path) price)
+        enough?   (> remains 0)]
+    (if enough?
+      (do
+        (vswap! vgame assoc-in infl-path remains)
+        (replies game :mock (->MockReply mock-type remains prey)))
+      (error-replies agressor :not-enough-influence))))
+
+
 (defn- move->game-replies
   [game {type :msg-type, id :id, move :data :as msg}]
   {:pre [(= type :move)]}
@@ -85,6 +100,7 @@
                                      (move->game-replies @vgame msg)]
                                  (vreset! vgame game)
                                  replies)
+                 :mock         (mock-replies! game msg)
 
                  (time-replies @vgame)))))))))
 
