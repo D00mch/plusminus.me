@@ -36,10 +36,10 @@
 (s/def ::mock (s/keys :req-un [::mock-type ::remain$ ::prey]))
 
 (defonce mock-info
-  {:board-pink           {:price 10 :name "color board in pink"}
+  {:board-pink           {:price 20 :name "color board in pink"}
    :board-small          {:price 15 :name "decrease board size"}
-   :alert-good-luck      {:price 20 :name "wish good luck"}
-   :alert-you-gonna-lose {:price 20 :name "warn about near lose"}
+   :alert-good-luck      {:price 10 :name "wish good luck"}
+   :alert-you-gonna-lose {:price 10 :name "warn about near lose"}
    :laughter             {:price 5  :name "turn on laughter"}})
 
 (defn mock-price [type] (get-in mock-info [type :price]))
