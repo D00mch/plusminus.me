@@ -67,8 +67,8 @@
       (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
       [:div label @time])))
 
-(defn show-snack! [text]
-  (js/setTimeout #(db/remove! :snack) 3000)
+(defn show-snack! [text & [time]]
+  (js/setTimeout #(db/remove! :snack) (or time 3000))
   (db/put! :snack
            (fn [] [:div.flex.center.column
                    {:style {:background "WhiteSmoke"}}
