@@ -103,7 +103,7 @@
 
 (defn stats [game id] ((stats-key game id) (:users-stats game)))
 
-(def ^:const influence-on-win 20)
+(def ^:const influence-on-win 50)
 
 (defn influence-game-path [game id]
   [:users-stats (stats-key game id) :statistics :influence])
