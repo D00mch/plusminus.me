@@ -50,7 +50,8 @@
 
 (defn listen! []
   (let [all-msgs>  (topics/tap! :msg (chan 1 nil))
-        new-games> (matcher/pipe-games! all-msgs> (chan) (topics/in-chan :reply))
+        new-games> (matcher/pipe-games!
+                    all-msgs> (chan) (topics/in-chan :reply) id->msgs>)
         moves>     (topics/tap! :msg (chan))
         ex1>       (chan)
         ex2>       (chan)]

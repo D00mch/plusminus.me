@@ -28,8 +28,9 @@
       :player1-hrz (.nextBoolean ^Random random)})))
 
 (defn- msg->game-by-size
-  "drop> - channel for :drop feedback"
-  [drop>]
+  "drop> - channel for :drop feedback
+  active-games - atom; to prevent more than one simulteneous games"
+  [drop> active-games]
   (fn [rf]
     (let [size->id (transient {})]
       (fn ([] (rf))
@@ -41,6 +42,10 @@
                     (admin/maintenance?)
                     (>!! drop> (->Reply :drop id "server is on maintenance,
                     it may take several minutes"))
+
+                    (get @active-games cached-id) ;; already matched
+                    (do (dissoc! size->id size)
+                        result)
 
                     (and cached-id (not= cached-id id))
                     (do (dissoc! size->id size)
@@ -58,13 +63,14 @@
                        (>!! drop> (->Reply :cant-drop id "must be already matched"))
                        result)))))))))
 
-(defn- xform [drop>]
+(defn- xform [drop> active-games]
   (comp (filter (comp #{:new :drop} :msg-type))
-        (msg->game-by-size drop>)))
+        (msg->game-by-size drop> active-games)))
 
 (defn pipe-games!
   "takes chan in> contract/Message, returns chan out> contract/Game;
-  out> will be closed when in> closed"
-  [in> out> drop> & [close?]]
-  (a-utils/pipe! out> (xform drop>) in> (boolean close?))
+  out> will be closed when in> closed
+  active-games - atom with map<id, value> to prevent multiple games"
+  [in> out> drop> active-games & [close?]]
+  (a-utils/pipe! out> (xform drop> active-games) in> (boolean close?))
   out>)

@@ -61,7 +61,7 @@
       (mock! mock-reply)
       (do
         (db/assoc-in! [:online-user-stats :influence] remains)
-        (c/show-snack! (str "your mock " (name type) " applied"))))))
+        (c/show-snack! (str "your mock " (name type) " applied") 4500)))))
 
 (defmethod mock! :alert-good-luck [_]
   (c/show-info-modal! "Oppenent's mesage" "You oppenent wishes you good luck!"))
@@ -70,17 +70,17 @@
   (c/show-info-modal! "Oppenent says:" "Prepare to lose with grace!"))
 
 (defmethod mock! :board-pink [_]
-  (c/show-snack! "Opponent tease you with colors!")
+  (c/show-snack! "Opponent tease you with colors!" 5000)
   (db/put! :online-cell-color "deeppink")
   (js/setTimeout #(db/remove! :online-cell-color) 5000))
 
 (defmethod mock! :board-small [_]
-  (c/show-snack! "Opponent tease you with sizes!")
+  (c/show-snack! "Opponent tease you with sizes!" 5000)
   (db/put! :online-board-width "250px")
   (js/setTimeout #(db/remove! :online-board-width) 7000))
 
 (defmethod mock! :laughter [_]
-  (c/show-snack! "Opponent tease you with laughter!")
+  (c/show-snack! "Opponent tease you with laughter!" 5000)
   (let [file-num (int (+ 1 (rand 5)))]
     (def audio (js/Audio. (str "sound/child-laugh" file-num ".wav")))
     (.play audio)))

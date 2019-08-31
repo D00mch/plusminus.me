@@ -16,7 +16,7 @@
             {:handler (fn [r]
                         (println {:result r})
                         (db/put! :online-user-stats (-> r :statistics)))
-             :error-handler (c/show-snack! "can't load your influence, sorry")}))
+             :error-handler nil #_(c/show-snack! "can't load your influence, sorry")}))
 
 (defn initial-state! []
   (load-user-stats!)
