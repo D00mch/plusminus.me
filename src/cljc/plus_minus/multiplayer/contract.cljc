@@ -31,7 +31,7 @@
 (s/def ::prey ::validation/id)
 (s/def ::mock (s/keys :req-un [::mock-type ::remain$ ::prey]))
 
-(defonce ^:private mock-info
+(defonce mock-info
   {:board-pink           {:price 10 :name "color board in pink"}
    :board-small          {:price 15 :name "decrease board size"}
    :alert-good-luck      {:price 20 :name "wish good luck"}
