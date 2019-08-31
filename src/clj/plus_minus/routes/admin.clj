@@ -1,18 +1,17 @@
 (ns plus-minus.routes.admin
   (:require [plus-minus.middleware :as middleware]
             [plus-minus.layout :as layout]
-            [ring.util.http-response :as response]
-            [mount.core :as mount]))
+            [ring.util.http-response :as response]))
 
-(def ^:private maintanance (volatile! false))
+(def ^:private maintenance (volatile! false))
 
-(defn maintanance? [] @maintanance)
+(defn maintenance? [] @maintenance)
 
 (defn- admin-page [request]
-  (layout/render request "admin.html" {:turn (maintanance?)}))
+  (layout/render request "admin.html" {:turn (maintenance?)}))
 
-(defn- switch-maintanence! [{params :params, {id :identity} :session}]
-  (vreset! maintanance (Boolean/parseBoolean (:turn params)))
+(defn- switch-maintenance! [{params :params}]
+  (vreset! maintenance (Boolean/parseBoolean (:turn params)))
   (response/found "/sudo/home"))
 
 (defn admin-routes []
@@ -20,4 +19,4 @@
    {:middleware [middleware/wrap-formats
                  (middleware/wrap-roles #{:admin})]}
    ["/home" {:get admin-page}]
-   ["/maintanence" {:post switch-maintanence!}]])
+   ["/maintenance" {:post switch-maintenance!}]])

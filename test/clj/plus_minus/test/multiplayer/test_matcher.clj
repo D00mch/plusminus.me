@@ -7,10 +7,22 @@
             [plus-minus.multiplayer.contract :refer [->Message]]
             [plus-minus.routes.multiplayer.matcher :as matcher]
             [plus-minus.game.board :as b]
-            [clojure.test :refer [deftest is testing]])
+            [clojure.test :refer [deftest is testing use-fixtures]]
+            [mount.core :as mount]
+            [plus-minus.db.core]
+            [plus-minus.config :refer [env]]
+            [luminus-migrations.core :as migrations])
   (:import [plus_minus.multiplayer.contract Game]))
 
 (def ^:private id-gen (spec/gen ::validation/id))
+
+(use-fixtures
+  :once (fn [f]
+          (mount/start
+           #'plus-minus.config/env
+           #'plus-minus.db.core/*db*)
+          (migrations/migrate ["migrate"] (select-keys env [:database-url]))
+          (f)))
 
 (defn- in-out-matcher-channels []
   (let [in>     (chan)

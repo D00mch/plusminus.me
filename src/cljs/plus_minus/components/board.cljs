@@ -29,8 +29,11 @@
       usr-hrz                            :user-hrz
       {{r :row-size,cells :cells} :board
        moves :moves
-       hrz-turn :hrz-turn :as state}     :game-state}]
+       hrz-turn :hrz-turn :as state}     :game-state
+      cell-bg                            :cell-bg
+      board-width                        :board-width}]
   [:div.board.grid
+   {:style {:max-width (or board-width "450px")}}
    (for [y (range r)]
      [:div.row {:key y}
       (for [x (range r)]
@@ -40,7 +43,11 @@
               hidden (some #{i} moves)]
           [:div.cell {:style {:margin 4
                               :visibility (when hidden "hidden")
-                              :background (when valid (if turn "#209cee" "#ee1f1f"))}
+                              :background (cond
+                                            (and valid turn) "#209cee"
+                                            valid            "#ee1f1f"
+                                            cell-bg          cell-bg
+                                            :else            "WhiteSmoke")}
                       :key i
                       :on-click #(on-click turn state i)
                       :class (when valid "pulse")}

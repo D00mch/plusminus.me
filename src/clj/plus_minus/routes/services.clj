@@ -13,7 +13,6 @@
    [plus-minus.routes.services.auth :as auth]
    [plus-minus.game.state :as game-state]
    [plus-minus.routes.services.state :as state]
-   [plus-minus.routes.multiplayer.persist :as multiplayer-persist]
    [plus-minus.routes.services.statistics :as statistics]
    [ring.util.http-response :as response]
    [plus-minus.game.board :as b]
@@ -137,9 +136,9 @@
              :responses {200 {:body {:result keyword?}}}
              :handler (fn [{{id :identity} :session}] (auth/delete-account! id))}}]
 
-    ["/online-stats"
+    ["/user-stats"
      {:get {:summary "get user online-game statistics"
             :responses {200 {:body {:statistics ::contract/statistics}}}
             :handler (fn [{{id :identity} :session}]
-                       (multiplayer-persist/get-stats id))}}]]
+                       (statistics/get-stats id))}}]]
    ])
