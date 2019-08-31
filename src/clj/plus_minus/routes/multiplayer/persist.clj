@@ -37,7 +37,10 @@
   (let [ends> (topics/tap! :reply (chan 1 end-xform))]
     (go-loop []
       (when-let [end-reply (<! ends>)]
-        (upsert end-reply connection)
+        (try
+          (upsert end-reply connection)
+          (catch Exception e
+            (log/error "while saving game end result" e)))
         (recur)))
     ends>))
 
