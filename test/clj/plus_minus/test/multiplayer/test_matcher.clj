@@ -24,16 +24,17 @@
           (migrations/migrate ["migrate"] (select-keys env [:database-url]))
           (f)))
 
-(defn- in-out-matcher-channels []
+(defn- in-out-matcher-channels [active-games]
   (let [in>     (chan)
         out>    (chan)
         drop>   (chan 10)
-        _       (matcher/pipe-games! in> out> drop> true)]
+        _       (matcher/pipe-games! in> out> drop> active-games true)]
     [in> out> drop>]))
 
 (deftest matching-game
   (let [[u1 u2]    (-> id-gen (gen/sample 3) distinct)
-        [in> out>] (in-out-matcher-channels)
+        games      (atom {})
+        [in> out>] (in-out-matcher-channels games)
         size       (+ 1 b/row-count-min)]
     (testing "right users matched and game with right size created"
       (>!! in> (->Message :new u1 size))
@@ -41,14 +42,20 @@
       (>!! in> (->Message :new u2 size))
       (let [{{{r :row-size} :board} :state p1 :player1 p2 :player2 :as game}
             (get-with-timeout!! out>)]
+        (swap! games assoc p1 game, p2 game)
         (is (= p1 u1))
         (is (= p2 u2))
         (is (= size r))))
+    (testing "new request while playing should be ignored"
+      (>!! in> (->Message :new u2 size))
+      (>!! in> (->Message :new "regedar" size))
+      (>!! in> (->Message :new u2 size))
+      (let [game (get-with-timeout!! out>)] (is (nil? game))))
     (close! in>)))
 
 (deftest matching-games
   (let [users          (-> (spec/gen ::validation/id) (gen/sample 2000) distinct)
-        [in> out>]     (in-out-matcher-channels)
+        [in> out>]     (in-out-matcher-channels (atom {}))
         games-expected (quot (count users) 2)
         finish>        (chan 1 (drop (- games-expected 1)))]
     (testing (str "as match as " games-expected " games created")
@@ -63,7 +70,7 @@
 
 (deftest dropping-game
   (let [[u1 u2 leaver]   ["u1" "u2" "leaver"]
-        [in> out> drop>] (in-out-matcher-channels)
+        [in> out> drop>] (in-out-matcher-channels (atom {}))
         size             b/row-count-min]
     #_(go-loop []
       (when-let [r (<! drop>)]
