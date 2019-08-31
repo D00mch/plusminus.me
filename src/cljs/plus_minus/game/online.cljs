@@ -11,6 +11,8 @@
 
 (def statuses #{:playing :searching :idle})
 
+(defmulti has-reply! :reply-type)
+
 (defn- load-user-stats! []
   (ajax/GET "api/restricted/user-stats"
             {:handler (fn [r]
@@ -38,7 +40,7 @@
 (defn- update-user-stats! [game]
   (db/put! :online-user-stats (:statistics (contract/stats game (db/get :identity)))))
 
-(defn- on-end! [{outcome :outcome cause :cause game :game}]
+(defmethod has-reply! :end [{{outcome :outcome cause :cause game :game} :data}]
   (initial-state!)
   (update-user-stats! game)
   (let [[title body]
@@ -54,10 +56,8 @@
                               "By having less points in the end of the game")])]
     (db/put! :modal (c/info-modal title body))))
 
-(defn- on-state! [{p1h :player1-hrz,
-                  p1  :player1, p2 :player2,
-                  state :state :as game}]
-  (prn "gotstate")
+(defmethod has-reply! :state
+  [{{p1h :player1-hrz,p1  :player1, p2 :player2,state :state :as game} :data}]
   (let [you     (db/get :identity)
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
@@ -68,7 +68,16 @@
     (db/put! :online-state state)
     (db/put! :online-hrz you-hrz)))
 
-(defn- show-error! [error]
+(defmethod has-reply! :move [{mv :data}]
+  (put-timer!)
+  (let [state (db/get :online-state)]
+      (if (st/valid-move? state mv)
+        (db/update! :online-state st/move mv)
+        (ws/push-message! :state))))
+
+(defmethod has-reply! :mock [mock] (mock/on-reply! mock))
+
+(defmethod has-reply! :error [{error :data}]
   (let [info (case error
                :invalid-move "Can't move here"
                :not-your-turn "Not your turn"
@@ -78,29 +87,18 @@
                :unknown "Something terrbly bad has happend, and noone knows what")]
     (db/put! :modal (c/info-modal "Error" info))))
 
-(defn- on-move! [mv]
-  (put-timer!)
-  (let [state (db/get :online-state)]
-    (if (st/valid-move? state mv)
-      (db/update! :online-state st/move mv)
-      (ws/push-message! :state))))
+(defmethod has-reply! :turn-time [{data :data}]
+  (ws/ensure-websocket! #(has-reply! %) #(ws/push-message! :state))
+  (put-timer! :remains data))
 
-(defn on-reply! [{type :reply-type, id :id, data :data}]
-  (case type
-    :state     (on-state! data)
-    :move      (on-move! data)
-    :end       (on-end! data)
-    :mock      (mock/on-reply! data)
-    :error     (show-error! data)
-    :turn-time (put-timer! :remains data)
-    :drop      (do
-                 (initial-state!)
-                 (db/put! :modal (c/info-modal
-                                  "Search canceled"
-                                  (or data "may be next time..."))))
-    :cant-drop (db/put!
-                :modal
-                (c/info-modal "Fail" "Game is already matched or never exist"))))
+(defmethod has-reply! :drop [{data :data}]
+  (initial-state!)
+  (db/put! :modal (c/info-modal "Search canceled" (or data "may be next time..."))))
+
+(defmethod has-reply! :cant-drop [_]
+  (initial-state!)
+  (db/put! :modal (c/info-modal "Fail" "Game is already matched or never exist")))
+
 
 (defn- top-panel-component []
   [:div.flex.board.space-between
