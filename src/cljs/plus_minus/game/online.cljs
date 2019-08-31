@@ -31,8 +31,9 @@
   (db/put! :online-hrz (= 1 (rand-int 2)))
   (swap! db/state dissoc :online-he))
 
-(defn- put-timer! [& {remains :remains :or {remains contract/turn-ms}}]
-  (db/put! :online-timer (c/timer-comp remains "Turn timer: ")))
+(defn- put-timer! [& {remains :remains}]
+  (let [remains (or remains (contract/calc-turn-ms (db/get :online-row)))]
+    (db/put! :online-timer (c/timer-comp remains "Turn timer: "))))
 
 (defn- update-user-stats! [game]
   (db/put! :online-user-stats (:statistics (contract/stats game (db/get :identity)))))

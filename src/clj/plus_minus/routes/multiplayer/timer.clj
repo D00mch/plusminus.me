@@ -8,13 +8,13 @@
 (defn updated [game] (assoc game :updated (millis)))
 
 (defn elapsed? [{old :updated :as game}]
-  (> (- (millis) old) c/turn-ms))
+  (> (- (millis) old) (c/game->time game)))
 
 (defn turn-ends-after [{old :updated :as game}]
   (let [passed (- (millis) old)]
-    (if (> passed c/turn-ms)
+    (if (> passed (c/game->time game))
       0
-      (- c/turn-ms passed))))
+      (- (c/game->time game) passed))))
 
 (defn pipe-with-move-timer!
   "takes to> & from> channels and pipes messages with xf xform;

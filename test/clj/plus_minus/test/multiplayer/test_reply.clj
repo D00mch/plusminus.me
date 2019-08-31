@@ -59,7 +59,7 @@
       (>!! in> (->Message :turn-time "p1" nil))
       (let [{type :reply-type time :data} (get-with-timeout!! tt>)]
         (is (= type :turn-time))
-        (is (> time (- c/turn-ms 2000)))))
+        (is (> time (- (c/game->time game) 2000)))))
 
     (>!! in> (->Message :mock "p1" mock))
 

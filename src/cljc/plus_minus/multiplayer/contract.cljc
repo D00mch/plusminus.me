@@ -15,7 +15,11 @@
 ;; :turn-time will immediatelly return millis till the turn end
 
 (def ^:const ping-ms 7000)
-(def ^:const turn-ms 45000)
+(def ^:const turn-ms 15000)
+(def ^:const size-multiplier 0.2) ;; 15 sec for row 5, 27 - for 9
+
+(defn calc-turn-ms [row-size]
+  (int (* turn-ms row-size size-multiplier)))
 
 ;; ************************  COMMON
 (s/def ::count (s/or :n zero? :n pos-int?))
@@ -117,6 +121,12 @@
 
 (defn other-id [{p1 :player1 p2 :player2 :as game} p]
   (if (= p1 p) p2 p1))
+
+(defn row-size [game]
+  (-> game :state :board :row-size))
+
+(defn game->time [game]
+  (calc-turn-ms (row-size game)))
 
 (s/def ::game-id number?)
 (s/def ::player1 ::validation/id)
