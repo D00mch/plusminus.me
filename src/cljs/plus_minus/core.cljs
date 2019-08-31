@@ -30,7 +30,7 @@
 (defn- init-online-state! []
   (when (db/get :identity)
     (ws/ensure-websocket!
-     #(online/has-reply! %)
+     online/has-reply!
      #(do
         (online/initial-state!)
         (ws/push-message! :state)))))

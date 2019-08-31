@@ -88,7 +88,7 @@
     (db/put! :modal (c/info-modal "Error" info))))
 
 (defmethod has-reply! :turn-time [{data :data}]
-  (ws/ensure-websocket! #(has-reply! %) #(ws/push-message! :state))
+  (ws/ensure-websocket! has-reply! #(ws/push-message! :state))
   (put-timer! :remains data))
 
 (defmethod has-reply! :drop [{data :data}]
