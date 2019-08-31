@@ -19,8 +19,7 @@
       {:id id, :iq 100, :statistics contract/stats-initial}))
 
 (defn- upsert [{id :id {:keys [outcome cause game]} :data} & [connection]]
-  (println "about to upsert" id outcome cause)
-  (let [stats (c/stats game id)
+  (let [stats (:statistics (c/stats game id))
         stats (if (= outcome :draw)
                  (update stats :draw inc)
                  (update-in stats [outcome cause] inc))
