@@ -6,7 +6,7 @@
         <title>admin</title>
     </head>
     <body>
-        {% block maintanance %}
+        {% block maintenance %}
         <div id="admin-panel">
             <label>
                 Maintenance mode:
@@ -15,7 +15,7 @@
                 {% endif %}
             </label>
             <br/>
-            <form action="/sudo/maintanence" method="POST">
+            <form action="/sudo/maintenance" method="POST">
                 <input name="turn" value="true" type="submit">
                 <input name="turn" value="false" type="submit">
             </form>

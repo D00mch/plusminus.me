@@ -87,7 +87,7 @@
       [user-menu expanded?]]]))
 
 (defn about-page []
-  [:session.session>div.container>div.column>div.columns
+  [:div.container>div.column>div.columns
    [:div.column.is-half
     [about/component]]
    [:div.column.is-half

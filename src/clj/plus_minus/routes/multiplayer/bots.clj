@@ -9,15 +9,27 @@
             [clojure.tools.logging :as log]
             [plus-minus.game.game :as game]
             [plus-minus.game.state :as st]
-            [mount.core :as mount]))
+            [plus-minus.config :refer [env]]
+            [mount.core :as mount]
+            [plus-minus.multiplayer.contract :as c]))
 
 (def ^:const bot-name "AggressiveBot") ;; name reserved in database
+(def ^:private mocks (seq c/mock-info))
 
 (defn- message! [type data]
   (multiplayer/message (->Message type bot-name data)))
 
 (defn- new! []
-  (message! :new (gen/generate (s/gen ::b/row-size))))
+  (message! :new (if (:dev env) 5 (gen/generate (s/gen ::b/row-size)))))
+
+(defn- mock! [game]
+  (let [{{influence :influence} :statistics} (c/stats game bot-name)
+        [type {:keys [price name]}]          (->> mocks count rand int (nth mocks))]
+    (when (>= influence price)
+      (message! :mock type))))
+
+(defn- consider-mock! [game]
+  (when (> 1 (rand 10)) (mock! game)))
 
 (mount/defstate agressive-bot
   :start
@@ -33,12 +45,12 @@
           :move  (swap! game-state update :state st/move data)
           :end   (new!)
           nil)
-        (when (and (not= type :end)
-                   (= (contract/turn-id @game-state) bot-name))
-          (log/debug "my turn" bot-name)
-          (let [move (-> @game-state :state (game/move-bot 3) :moves last)]
-            (log/debug "about to move with" move)
-            (message! :move move)))
+        (when (not= type :end)
+          (if (= (contract/turn-id @game-state) bot-name)
+            (let [move (-> @game-state :state (game/move-bot 3) :moves last)]
+              (log/debug "about to move with" move)
+              (message! :move move))
+            (consider-mock! @game-state)))
         (recur)))
     ch)
   :stop (async/close! agressive-bot))
