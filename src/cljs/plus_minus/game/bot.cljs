@@ -142,16 +142,11 @@
                    (change-state (s/state-template row-size))))))
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
-  [:section
-   [:div.flex.center.column
-    [:div.board {:style {:display :flex
-                         :margin-top 20
-                         :flex-direction :column
-                         }}
+  [:section.section>div.container>div.columns
+   [:div.flex.column
+    [:div.board {:style {:display :flex :flex-direction :column}}
      [game-settins]
-     [game-stats]
-     ]
-    #_[:div.board [game-settins]]
+     [game-stats]]
     [board/scors
      :state   (db/get :game-state)
      :usr-hrz usr-hrz
@@ -164,5 +159,4 @@
                     (c/show-info-modal! "Can't make this move"
                                         "Please, check the game rules page")))
      :game-state (db/get :game-state)
-     :user-hrz   usr-hrz]
-    ]])
+     :user-hrz   usr-hrz]]])

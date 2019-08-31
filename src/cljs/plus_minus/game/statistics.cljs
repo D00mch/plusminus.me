@@ -9,6 +9,12 @@
 ;; (db/get-in [:online-stats :error])
 ;; (db/get-in [:online-stats :data])
 
+(def ^{:private true, :const true} tname "Name")
+(def ^{:private true, :const true} win "Win")
+(def ^{:private true, :const true} lose "Lose")
+(def ^{:private true, :const true} draw "Draw")
+(def ^{:private true, :const true} infl "Influence, $")
+
 (defn- sum-stats [stats]
   (map #(update % :statistics contract/stats-summed) stats))
 
@@ -30,23 +36,27 @@
      [:table.table.is-striped.is-narrow
       [:thead
        [:tr
-        [:th [:abbr {:title "best players on the top"} "Name"]]
-        [:th "Win"]
-        [:th "Lose"]
-        [:th "Draw"]]]
+        [:th tname]
+        [:th win ]
+        [:th lose]
+        [:th draw]
+        [:th infl]]]
       [:tfoot
        [:tr
-        [:th "name"]
-        [:th "win"]
-        [:th "lose"]
-        [:th "draw"]]]
+        [:th tname]
+        [:th win ]
+        [:th lose]
+        [:th draw]
+        [:th infl]]]
       [:tbody
-       (for [{id :id {:keys [win lose draw]} :statistics} data]
-         [:tr {:class (when (= id (db/get :identity)) "is-selected")}
+       (for [{id :id {:keys [win lose draw influence]} :statistics} data]
+         [:tr {:class (when (= id (db/get :identity)) "is-selected")
+               :key id}
           [:td id]
           [:td win]
           [:td lose]
-          [:td draw]])]])])
+          [:td draw]
+          [:td influence]])]])])
 
 (defn stats-component []
   ;;(load-stats! stats error)

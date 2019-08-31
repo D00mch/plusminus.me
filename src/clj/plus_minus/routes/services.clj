@@ -136,7 +136,7 @@
              :responses {200 {:body {:result keyword?}}}
              :handler (fn [{{id :identity} :session}] (auth/delete-account! id))}}]
 
-    ["/online-stats"
+    ["/user-stats"
      {:get {:summary "get user online-game statistics"
             :responses {200 {:body {:statistics ::contract/statistics}}}
             :handler (fn [{{id :identity} :session}]

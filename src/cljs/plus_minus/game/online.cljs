@@ -5,11 +5,21 @@
             [plus-minus.components.board :as board]
             [plus-minus.multiplayer.contract :as contract]
             [plus-minus.websockets :as ws]
-            [plus-minus.components.common :as c]))
+            [plus-minus.game.mock :as mock]
+            [plus-minus.components.common :as c]
+            [ajax.core :as ajax]))
 
 (def statuses #{:playing :searching :idle})
 
+(defn- load-user-stats! []
+  (ajax/GET "api/restricted/user-stats"
+            {:handler (fn [r]
+                        (println {:result r})
+                        (db/put! :online-user-stats (-> r :statistics)))
+             :error-handler (c/show-snack! "can't load your influence, sorry")}))
+
 (defn initial-state! []
+  (load-user-stats!)
   (db/put! :online-row (db/get :online-row b/row-count-min))
   (db/put! :online-state
            (update-in
@@ -24,8 +34,12 @@
 (defn- put-timer! [& {remains :remains :or {remains contract/turn-ms}}]
   (db/put! :online-timer (c/timer-comp remains "Turn timer: ")))
 
-(defn- on-end! [{outcome :outcome cause :cause}]
+(defn- update-user-stats! [game]
+  (db/put! :online-user-stats (:statistics (contract/stats game (db/get :identity)))))
+
+(defn- on-end! [{outcome :outcome cause :cause game :game}]
   (initial-state!)
+  (update-user-stats! game)
   (let [[title body]
         (case outcome
           :win ["You win!" (case cause
@@ -47,6 +61,7 @@
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
     (when-not (db/get :online-timer) (put-timer!))
+    (update-user-stats! game)
     (db/put! :online-he he)
     (db/put! :online-status :playing)
     (db/put! :online-state state)
@@ -74,6 +89,7 @@
     :state     (on-state! data)
     :move      (on-move! data)
     :end       (on-end! data)
+    :mock      (mock/on-reply! data)
     :error     (show-error! data)
     :turn-time (put-timer! :remains data)
     :drop      (do
@@ -86,13 +102,19 @@
                 (c/info-modal "Fail" "Game is already matched or never exist"))))
 
 (defn- top-panel-component []
-  (if (= :playing (db/get :online-status))
-    [(db/get :online-timer)]
-    [board/game-settings
-     :state     (:online-state @db/state)
-     :on-change (fn [row-size]
-                  (db/put! :online-row row-size)
-                  (initial-state!))]))
+  [:div.flex.board.space-between
+   [:div
+    (if (= :playing (db/get :online-status))
+      [(db/get :online-timer)]
+      [board/game-settings
+       :state     (:online-state @db/state)
+       :on-change (fn [row-size]
+                    (db/put! :online-row row-size)
+                    (initial-state!))])]
+   [:div.tags.has-addons {:style {:margin 3}}
+    [:span.tag.is-medium "influence$"]
+    [:span.tag.is-info.is-medium {:class "is-light"}
+     (db/get-in [:online-user-stats :influence])]]])
 
 (defn- start-new-game! []
   (ws/push-message! :new (db/get :online-row))
@@ -101,7 +123,7 @@
 (defn- drop-searching-game! []
   (ws/push-message! :drop (db/get :online-row)))
 
-(defn- bottom-panel-component []
+(defn- new-game-panel-component []
   (case (db/get :online-status)
     :playing   [:a.board.play.button.is-danger
                 {:on-click #(ws/push-message! :give-up)}
@@ -113,29 +135,34 @@
                  {:on-click drop-searching-game!}
                  "cancel search"]
                 [:progress.board.progress.is-small.is-dark
-                 {:max 100}]]
+                 {:max 100
+                  :style {:margin-bottom "10px"}}]]
     :idle      [:a.board.play.button.is-light
                 {:on-click start-new-game!}
                 "start new game"]))
 
 (defn game-component []
-  [:section
-   [:div.flex.center.column 
-    [:div.board [top-panel-component]]
+  [:section.section>div.container>div.columns
+   [:div.flex.column
     [board/scors
      :state   (db/get :online-state)
      :usr-hrz (db/get :online-hrz)
      :he      (db/get :online-he "He")]
-
     [board/matrix
-     :on-click  (fn [turn? _ index]
-                  (if turn?
-                    (ws/push-message! :move index)
-                    (c/info-modal "Mind your manners" "it's not your turn")))
-     :game-state (db/get :online-state)
-     :user-hrz   (db/get :online-hrz)]
+     :on-click    (fn [turn? _ index]
+                    (if turn?
+                      (ws/push-message! :move index)
+                      (c/info-modal "Mind your manners" "it's not your turn")))
+     :game-state  (db/get :online-state)
+     :cell-bg     (db/get :online-cell-color)
+     :board-width (db/get :online-board-width)
+     :user-hrz    (db/get :online-hrz)]]
 
-    [bottom-panel-component]]])
+   [:div.flex.column
+    [top-panel-component]
+    [new-game-panel-component]
+    [mock/mock-buttons]
+    [mock/mock-explained]]])
 
 (comment
   (def game

@@ -31,13 +31,15 @@
 (s/def ::prey ::validation/id)
 (s/def ::mock (s/keys :req-un [::mock-type ::remain$ ::prey]))
 
-(defn mock-price [type]
-  (case type
-    :board-pink  10
-    :board-small 15
-    :alert-good-luck 20
-    :alert-you-gonna-lose 20
-    :laughter 5))
+(defonce ^:private mock-info
+  {:board-pink           {:price 10 :name "color board in pink"}
+   :board-small          {:price 15 :name "decrease board size"}
+   :alert-good-luck      {:price 20 :name "wish good luck"}
+   :alert-you-gonna-lose {:price 20 :name "warn about near lose"}
+   :laughter             {:price 5  :name "turn on laughter"}})
+
+(defn mock-price [type] (get-in mock-info [type :price]))
+(defn mock-name  [type] (get-in mock-info [type :name]))
 
 ;; ************************  USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
@@ -75,9 +77,10 @@
   (->> (get stats key) (map second) (reduce +)))
 
 (defn stats-summed [{:keys [draw] :as stats}]
-  {:draw draw
-   :win  (stats-sum stats :win)
-   :lose (stats-sum stats :lose)})
+  (merge stats
+         {:draw draw
+          :win  (stats-sum stats :win)
+          :lose (stats-sum stats :lose)}))
 
 ;; ************************  MATCHED: CREATED GAMES
 (defrecord UsersStats [stats1 stats2])
