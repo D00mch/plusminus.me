@@ -5,7 +5,8 @@
             [plus-minus.game.state :as st]
             [plus-minus.routes.admin :as admin]
             [clojure.core.async :refer [>!!] :as async]
-            [plus-minus.routes.multiplayer.persist :as persist])
+            [plus-minus.routes.multiplayer.persist :as persist]
+            [plus-minus.game.board :as b])
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util Random]))
 
@@ -48,8 +49,12 @@
                         result)
 
                     (and cached-id (not= cached-id id))
-                    (do (dissoc! size->id size)
-                        (rf result (initial-state size cached-id id)))
+                    (do
+                      (doseq [s (range b/row-count-min b/row-count-max)
+                              :let [i (get size->id s)]]
+                        (when (or (= cached-id i) (= id i))
+                          (dissoc! size->id s)))
+                      (rf result (initial-state size cached-id id)))
 
                     :else
                     (do (assoc! size->id size id)
