@@ -37,6 +37,7 @@
         [in> out>] (in-out-matcher-channels games)
         size       (+ 1 b/row-count-min)]
     (testing "right users matched and game with right size created"
+      (>!! in> (->Message :new u1 b/row-count-max))
       (>!! in> (->Message :new u1 size))
       (>!! in> (->Message :new "regedar" b/row-count-min))
       (>!! in> (->Message :new u2 size))
@@ -47,6 +48,7 @@
         (is (= p2 u2))
         (is (= size r))))
     (testing "new request while playing should be ignored"
+      (>!! in> (->Message :new "regedar" b/row-count-max)) ;; try match first u1:new
       (>!! in> (->Message :new u2 size))
       (>!! in> (->Message :new "regedar" size))
       (>!! in> (->Message :new u2 size))
