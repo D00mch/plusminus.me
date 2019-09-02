@@ -29,7 +29,7 @@
       (message! :mock type))))
 
 (defn- consider-mock! [game]
-  (when (> 1 (rand 10)) (mock! game)))
+  (when (> 2 (rand 10)) (mock! game)))
 
 (mount/defstate agressive-bot
   :start
