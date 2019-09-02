@@ -34,7 +34,14 @@
   (swap! db/state dissoc :online-he))
 
 (defn- put-timer! [& {remains :remains}]
-  (let [remains (or remains (contract/calc-turn-ms (db/get :online-row)))]
+  (let [remains      (or remains (contract/calc-turn-ms (db/get :online-row)))
+        warn-timer   (db/get :online-warn-timer)
+        timeout-warn 5000]
+    (when (> remains timeout-warn)
+      (js/clearTimeout warn-timer)
+      (db/put! :online-warn-timer
+               (js/setTimeout #(c/play-sound "sound/time_warn.flac")
+                              (- remains timeout-warn))))
     (db/put! :online-timer (c/timer-comp remains "Turn timer: "))))
 
 (defn- update-user-stats! [game]
