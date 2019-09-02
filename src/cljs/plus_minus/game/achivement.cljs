@@ -23,8 +23,10 @@
         :style {:margin-top 10}}
        [:div.dropdown-trigger
         [:button.button {:aria-haspopup "true", :aria-controls "dropdown-menu2"}
+         (when done [:span.icon.is-small>i {:class icon-done}])
          [:span n]
-         [:span.left-mar (if done "✔" "v")]]]
+         [:span.icon.is-small
+          [:i {:class icon-hover}]]]]
        [:div {:class "dropdown-menu", :id "dropdown-menu2", :role "menu"}
         [:div.dropdown-content
          [:div.dropdown-item [:p earn]]
