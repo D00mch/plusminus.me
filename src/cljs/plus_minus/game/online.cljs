@@ -40,7 +40,7 @@
     (when (> remains timeout-warn)
       (js/clearTimeout warn-timer)
       (db/put! :online-warn-timer
-               (js/setTimeout #(c/play-sound "sound/time_warn.flac")
+               (js/setTimeout #(c/play-sound "sound/time-warn.flac")
                               (- remains timeout-warn))))
     (db/put! :online-timer (c/timer-comp remains "Turn timer: "))))
 
@@ -61,7 +61,8 @@
                               :give-up "Sometimes it's better to give up"
                               :time-out "Unfortunately, turn time elapsed"
                               "By having less points in the end of the game")])]
-    (db/put! :modal (c/info-modal title body))))
+    (db/put! :modal (c/info-modal title body))
+    (js/clearTimeout (db/get :online-warn-timer))))
 
 (defmethod has-reply! :state
   [{{p1h :player1-hrz,p1  :player1, p2 :player2,state :state :as game} :data}]
@@ -69,6 +70,7 @@
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
     (when-not (db/get :online-timer) (put-timer!))
+    (when (st/start? state) (c/play-sound "sound/ring-bell.wav"))
     (update-user-stats! game)
     (db/put! :online-he he)
     (db/put! :online-status :playing)
