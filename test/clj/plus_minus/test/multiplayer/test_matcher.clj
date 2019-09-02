@@ -32,7 +32,7 @@
     [in> out> drop>]))
 
 (deftest matching-game
-  (let [[u1 u2]    (-> id-gen (gen/sample 3) distinct)
+  (let [[u1 u2]    ["u1" "u2"]
         games      (atom {})
         [in> out>] (in-out-matcher-channels games)
         size       (+ 1 b/row-count-min)]
@@ -48,10 +48,13 @@
         (is (= p2 u2))
         (is (= size r))))
     (testing "new request while playing should be ignored"
-      (>!! in> (->Message :new "regedar" b/row-count-max)) ;; try match first u1:new
       (>!! in> (->Message :new u2 size))
       (>!! in> (->Message :new "regedar" size))
       (>!! in> (->Message :new u2 size))
+      (let [game (get-with-timeout!! out>)] (is (nil? game))))
+    (testing "old request cleared on new game"
+      (swap! games dissoc u1 u2)
+      (>!! in> (->Message :new "regedar" b/row-count-max)) ;; try match first u1:new
       (let [game (get-with-timeout!! out>)] (is (nil? game))))
     (close! in>)))
 

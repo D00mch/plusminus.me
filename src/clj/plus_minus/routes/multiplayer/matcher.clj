@@ -50,7 +50,7 @@
 
                     (and cached-id (not= cached-id id))
                     (do
-                      (doseq [s (range b/row-count-min b/row-count-max)
+                      (doseq [s (range b/row-count-min (+ 1 b/row-count-max))
                               :let [i (get size->id s)]]
                         (when (or (= cached-id i) (= id i))
                           (dissoc! size->id s)))
