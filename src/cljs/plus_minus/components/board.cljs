@@ -7,12 +7,13 @@
   "on-change - fn [game-size]"
   [& {}]
   (let [active (r/atom false)]
-    (fn [& {state :state on-change :on-change size-range :size-range}]
+    (fn [& {state :state on-change :on-change size-range :size-range
+            label :label :or {label (str "Board size: " (s/rows state))}}]
       [:div.dropdown
        {:class (when @active "is-active") :on-click #(reset! active (not @active))}
        [:div.dropdown-trigger
         [:button.button {:aria-haspopup "true", :aria-controls "dropdown1"}
-         [:span "Board size: " (s/rows state)]
+         [:span label]
          [:span.icon.is-small
           [:i {:class "fas fa-angle-down", :aria-hidden "true"}]]]]
        [:div {:class "dropdown-menu", :id "dropdown1", :role "menu"}

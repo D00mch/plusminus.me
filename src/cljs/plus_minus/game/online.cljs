@@ -7,7 +7,8 @@
             [plus-minus.websockets :as ws]
             [plus-minus.game.mock :as mock]
             [plus-minus.components.common :as c]
-            [ajax.core :as ajax]))
+            [ajax.core :as ajax]
+            [clojure.string :as str]))
 
 (def statuses #{:playing :searching :idle})
 
@@ -20,21 +21,26 @@
                         (db/put! :online-user-stats (-> r :statistics)))
              :error-handler nil #_(c/show-snack! "can't load your influence, sorry")}))
 
+(defn- generate-state! []
+  (let [row (contract/row-number (db/get :online-row))]
+    (db/put! :online-state
+             (update-in
+              (st/state-template row)
+              [:board :cells]
+              #(mapv (fn [_] "?") %)))))
+
 (defn initial-state! []
   (load-user-stats!)
   (db/put! :online-row (db/get :online-row b/row-count-min))
-  (db/put! :online-state
-           (update-in
-            (st/state-template (db/get :online-row))
-            [:board :cells]
-            #(mapv (fn [_] "X") %)))
+  (generate-state!)
   (db/put! :online-timer nil)
   (db/put! :online-status :idle)
   (db/put! :online-hrz (= 1 (rand-int 2)))
   (swap! db/state dissoc :online-he))
 
 (defn- put-timer! [& {remains :remains}]
-  (let [remains      (or remains (contract/calc-turn-ms (db/get :online-row)))
+  (let [remains      (or remains (contract/calc-turn-ms
+                                  (contract/row-number (db/get :online-row))))
         warn-timer   (db/get :online-warn-timer)
         timeout-warn 5000]
     (when (> remains timeout-warn)
@@ -112,7 +118,8 @@
     (if (= :playing (db/get :online-status))
       [(db/get :online-timer)]
       [board/game-settings
-       :size-range (range b/row-count-min b/row-count-max-excl)
+       :label      (str/replace (str "Board size: " (db/get :online-row)) #"[\s]:" " ")
+       :size-range (cons :quick (range b/row-count-min b/row-count-max-excl))
        :state      (:online-state @db/state)
        :on-change  (fn [row-size]
                      (db/put! :online-row row-size)
