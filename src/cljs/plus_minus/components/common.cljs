@@ -79,3 +79,6 @@
 (defn play-sound [path]
   (def audio (js/Audio. path))
   (.play audio))
+
+(defn screen-width []
+  (.. js/document -body -offsetWidth))

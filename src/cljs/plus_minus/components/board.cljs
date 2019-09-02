@@ -1,7 +1,8 @@
 (ns plus-minus.components.board
   (:require [plus-minus.game.board :as b]
             [plus-minus.game.state :as s]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [plus-minus.components.common :as c]))
 
 (defn game-settings
   "on-change - fn [game-size]"
@@ -10,12 +11,14 @@
     (fn [& {state :state on-change :on-change size-range :size-range
             label :label :or {label (str "Board size: " (s/rows state))}}]
       [:div.dropdown
-       {:class (when @active "is-active") :on-click #(reset! active (not @active))}
+       {:class (str (when (< (c/screen-width) 800) "is-up") " "
+                    (when @active "is-active"))
+        :on-click #(reset! active (not @active))}
        [:div.dropdown-trigger
         [:button.button {:aria-haspopup "true", :aria-controls "dropdown1"}
          [:span label]
          [:span.icon.is-small
-          [:i {:class "fas fa-angle-down", :aria-hidden "true"}]]]]
+          [:i {:class "fas fa-angle-right", :aria-hidden "true"}]]]]
        [:div {:class "dropdown-menu", :id "dropdown1", :role "menu"}
         [:div.dropdown-content {:style {:max-width 65}}
          (for [row-size size-range]
