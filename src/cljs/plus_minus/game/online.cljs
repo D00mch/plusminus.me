@@ -38,9 +38,12 @@
   (db/put! :online-hrz (= 1 (rand-int 2)))
   (swap! db/state dissoc :online-he))
 
+(defn- calc-remain []
+  (contract/calc-turn-ms
+   (db/get-in [:online-state :board :row-size] b/row-count-min)))
+
 (defn- put-timer! [& {remains :remains}]
-  (let [remains      (or remains (contract/calc-turn-ms
-                                  (contract/row-number (db/get :online-row))))
+  (let [remains      (or remains (calc-remain))
         warn-timer   (db/get :online-warn-timer)
         timeout-warn 5000]
     (when (> remains timeout-warn)
@@ -72,11 +75,11 @@
 
 (defmethod has-reply! :state
   [{{p1h :player1-hrz,p1  :player1, p2 :player2,state :state :as game} :data}]
+  (when (st/start? state) (c/play-sound "sound/ring-bell.wav"))
   (let [you     (db/get :identity)
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
-    (when-not (db/get :online-timer) (put-timer!))
-    (when (st/start? state) (c/play-sound "sound/ring-bell.wav"))
+    (when-not (db/get :online-timer) (put-timer! ))
     (update-user-stats! game)
     (db/put! :online-he he)
     (db/put! :online-status :playing)

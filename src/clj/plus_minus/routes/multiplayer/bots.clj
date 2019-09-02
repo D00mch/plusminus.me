@@ -20,7 +20,7 @@
   (multiplayer/message (->Message type bot-name data)))
 
 (defn- new! []
-  (message! :new (if (:dev env) 5 (gen/generate (s/gen ::b/row-size)))))
+  (message! :new (gen/generate (s/gen ::b/row-size))))
 
 (defn- mock! [game]
   (let [{{influence :influence} :statistics} (c/stats game bot-name)
