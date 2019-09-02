@@ -11,7 +11,7 @@
     (fn [& {state :state on-change :on-change size-range :size-range
             label :label :or {label (str "Board size: " (s/rows state))}}]
       [:div.dropdown
-       {:class (str (when (< (c/screen-width) 800) "is-up") " "
+       {:class (str (when (> (c/screen-height) (c/screen-width)) "is-up") " "
                     (when @active "is-active"))
         :on-click #(reset! active (not @active))}
        [:div.dropdown-trigger
