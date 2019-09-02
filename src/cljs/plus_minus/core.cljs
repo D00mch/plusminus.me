@@ -29,6 +29,7 @@
 
 (defn- init-online-state! []
   (when (db/get :identity)
+    (js/setTimeout #(init-online-state!) 5000)
     (ws/ensure-websocket!
      online/has-reply!
      #(do
