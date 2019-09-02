@@ -7,7 +7,8 @@
             [plus-minus.websockets :as ws]
             [plus-minus.game.mock :as mock]
             [plus-minus.components.common :as c]
-            [ajax.core :as ajax]))
+            [ajax.core :as ajax]
+            [clojure.string :as str]))
 
 (def statuses #{:playing :searching :idle})
 
@@ -20,21 +21,36 @@
                         (db/put! :online-user-stats (-> r :statistics)))
              :error-handler nil #_(c/show-snack! "can't load your influence, sorry")}))
 
+(defn- generate-state! []
+  (let [row (contract/row-number (db/get :online-row))]
+    (db/put! :online-state
+             (update-in
+              (st/state-template row)
+              [:board :cells]
+              #(mapv (fn [_] "?") %)))))
+
 (defn initial-state! []
   (load-user-stats!)
   (db/put! :online-row (db/get :online-row b/row-count-min))
-  (db/put! :online-state
-           (update-in
-            (st/state-template (db/get :online-row))
-            [:board :cells]
-            #(mapv (fn [_] "X") %)))
+  (generate-state!)
   (db/put! :online-timer nil)
   (db/put! :online-status :idle)
   (db/put! :online-hrz (= 1 (rand-int 2)))
   (swap! db/state dissoc :online-he))
 
+(defn- calc-remain []
+  (contract/calc-turn-ms
+   (db/get-in [:online-state :board :row-size] b/row-count-min)))
+
 (defn- put-timer! [& {remains :remains}]
-  (let [remains (or remains (contract/calc-turn-ms (db/get :online-row)))]
+  (let [remains      (or remains (calc-remain))
+        warn-timer   (db/get :online-warn-timer)
+        timeout-warn 5000]
+    (when (> remains timeout-warn)
+      (js/clearTimeout warn-timer)
+      (db/put! :online-warn-timer
+               (js/setTimeout #(c/play-sound "sound/time-warn.flac")
+                              (- remains timeout-warn))))
     (db/put! :online-timer (c/timer-comp remains "Turn timer: "))))
 
 (defn- update-user-stats! [game]
@@ -54,14 +70,16 @@
                               :give-up "Sometimes it's better to give up"
                               :time-out "Unfortunately, turn time elapsed"
                               "By having less points in the end of the game")])]
-    (db/put! :modal (c/info-modal title body))))
+    (db/put! :modal (c/info-modal title body))
+    (js/clearTimeout (db/get :online-warn-timer))))
 
 (defmethod has-reply! :state
   [{{p1h :player1-hrz,p1  :player1, p2 :player2,state :state :as game} :data}]
+  (when (st/start? state) (c/play-sound "sound/ring-bell.wav"))
   (let [you     (db/get :identity)
         he      (contract/other-id game you)
         you-hrz (or (and p1h (= you p1)) (and (not p1h) (= you p2)))]
-    (when-not (db/get :online-timer) (put-timer!))
+    (when-not (db/get :online-timer) (put-timer! ))
     (update-user-stats! game)
     (db/put! :online-he he)
     (db/put! :online-status :playing)
@@ -75,7 +93,7 @@
         (db/update! :online-state st/move mv)
         (ws/push-message! :state))))
 
-(defmethod has-reply! :mock [mock] (mock/on-reply! mock))
+(defmethod has-reply! :mock [{mock :data}] (mock/on-reply! mock))
 
 (defmethod has-reply! :error [{error :data}]
   (let [info (case error
@@ -103,7 +121,8 @@
     (if (= :playing (db/get :online-status))
       [(db/get :online-timer)]
       [board/game-settings
-       :size-range (range b/row-count-min b/row-count-max-excl)
+       :label      (str/replace (str "Board size: " (db/get :online-row)) #"[\s]:" " ")
+       :size-range (cons :quick (range b/row-count-min b/row-count-max-excl))
        :state      (:online-state @db/state)
        :on-change  (fn [row-size]
                      (db/put! :online-row row-size)

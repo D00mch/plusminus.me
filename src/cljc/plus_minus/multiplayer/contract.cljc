@@ -3,7 +3,7 @@
             [plus-minus.game.state :as st]
             [plus-minus.validation :as validation]
             [clojure.spec.alpha :as s]
-            [clojure.spec.alpha :as spec])
+            [clojure.spec.gen.alpha :as gen])
   #?(:cljs (:require-macros [cljs.core :refer [defrecord]])))
 
 ;; request new game with :new (Message :new id size),
@@ -48,16 +48,20 @@
 ;; ************************  USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up :turn-time :drop :mock})
+(s/def ::game-request (s/or :size ::b/row-size, :opts #{:quick}))
 (s/def ::msg (s/and
               (s/keys :req-un [::msg-type ::validation/id])
               #(case (:msg-type %)
-                 :new  (s/valid? ::b/row-size (:data %))
-                 :drop (s/valid? ::b/row-size (:data %))
+                 :new  (s/valid? ::game-request (:data %))
+                 :drop (s/valid? ::game-request (:data %))
                  :move (s/valid? ::b/index (:data %))
                  :mock (s/valid? ::mock-type (:data %))
                  true)))
 
-#_(s/valid? ::msg (->Message :mock "bob" :board-pink))
+(defn row-number [row]
+  (if (number? row) row (gen/generate (s/gen ::b/row-size))))
+
+#_(s/valid? ::msg (->Message :new "bob" :quick))
 
 ;; ************************  STATISTICS
 (s/def ::give-up  ::count)

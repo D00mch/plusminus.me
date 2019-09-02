@@ -75,3 +75,11 @@
                    [:div.board
                     {:style {:color "#209cee", :font-size 15}}
                     text]])))
+
+(defn play-sound [path]
+  (def audio (js/Audio. path))
+  (.play audio))
+
+(defn screen-width [] (.. js/document -body -offsetWidth))
+(defn screen-height [] (.. js/document -body -offsetHeight))
+

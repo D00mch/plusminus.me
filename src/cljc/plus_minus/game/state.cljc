@@ -17,6 +17,7 @@
 (defn size [{{c :cells} :board}] (count c))
 (defn rows [{{r :row-size} :board}] r)
 (defn last-move [{s :start mvs :moves}] (or (peek mvs) s))
+(defn start? [{mvs :moves}] (empty? mvs))
 
 (defn valid-moves [{:keys [hrz-turn board moves] :as state}]
   (let [{:keys [x y]} (b/bcoords board (last-move state))]

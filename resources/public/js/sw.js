@@ -1,4 +1,4 @@
-var cacheName = 'plusminuscache'; // change name to update cache in browser
+var cacheName = 'plusminuscache2'; // change name to update cache in browser
 var filesToCache = [
     '/',
     'app.js',
@@ -15,7 +15,9 @@ var filesToCache = [
     '/img/icons/icon-152x152.png',
     '/img/icons/icon-192x192.png',
     '/img/icons/icon-384x384.png',
-    '/img/icons/icon-512x512.png'
+    '/img/icons/icon-512x512.png',
+    '/sound/time-warn.flac',
+    '/sound/ring-bell.wav'
 ];
 self.addEventListener('install', function(e) {
     console.log('[ServiceWorker] Install');
@@ -29,10 +31,18 @@ self.addEventListener('install', function(e) {
 self.addEventListener('activate',  event => {
     event.waitUntil(self.clients.claim());
 });
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request, {ignoreSearch:true}).then(response => {
-            return response || fetch(event.request);
+
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then((r) => {
+            console.log('[Service Worker] Fetching resource: '+e.request.url);
+            return r || fetch(e.request).then((response) => {
+                return caches.open(cacheName).then((cache) => {
+                    console.log('[Service Worker] Caching new resource: '+e.request.url);
+                    cache.put(e.request, response.clone());
+                    return response;
+                });
+            });
         })
     );
 });

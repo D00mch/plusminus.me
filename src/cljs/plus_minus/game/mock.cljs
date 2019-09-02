@@ -82,5 +82,4 @@
 (defmethod mock! :laughter [_]
   (c/show-snack! "Opponent tease you with laughter!" 5000)
   (let [file-num (int (+ 1 (rand 5)))]
-    (def audio (js/Audio. (str "sound/child-laugh" file-num ".wav")))
-    (.play audio)))
+    (c/play-sound (str "sound/child-laugh" file-num ".wav"))))
