@@ -48,16 +48,17 @@
 ;; ************************  USER MESSAGES
 (defrecord Message [msg-type, ^String id, data])
 (s/def ::msg-type #{:new :state :move :give-up :turn-time :drop :mock})
+(s/def ::game-request (s/or :size ::b/row-size, :opts #{:quick}))
 (s/def ::msg (s/and
               (s/keys :req-un [::msg-type ::validation/id])
               #(case (:msg-type %)
-                 :new  (s/valid? ::b/row-size (:data %))
-                 :drop (s/valid? ::b/row-size (:data %))
+                 :new  (s/valid? ::game-request (:data %))
+                 :drop (s/valid? ::game-request (:data %))
                  :move (s/valid? ::b/index (:data %))
                  :mock (s/valid? ::mock-type (:data %))
                  true)))
 
-#_(s/valid? ::msg (->Message :mock "bob" :board-pink))
+#_(s/valid? ::msg (->Message :new "bob" :quick))
 
 ;; ************************  STATISTICS
 (s/def ::give-up  ::count)
