@@ -3,7 +3,7 @@
             [plus-minus.game.state :as st]
             [plus-minus.validation :as validation]
             [clojure.spec.alpha :as s]
-            [clojure.spec.alpha :as spec])
+            [clojure.spec.gen.alpha :as gen])
   #?(:cljs (:require-macros [cljs.core :refer [defrecord]])))
 
 ;; request new game with :new (Message :new id size),
@@ -57,6 +57,9 @@
                  :move (s/valid? ::b/index (:data %))
                  :mock (s/valid? ::mock-type (:data %))
                  true)))
+
+(defn row-number [row]
+  (if (number? row) row (gen/generate (s/gen ::b/row-size))))
 
 #_(s/valid? ::msg (->Message :new "bob" :quick))
 

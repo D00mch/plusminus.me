@@ -7,6 +7,7 @@
             [clojure.core.async :refer [>!!] :as async]
             [plus-minus.routes.multiplayer.persist :as persist]
             [clojure.spec.alpha :as s]
+            [com.walmartlabs.cond-let :refer [cond-let]]
             [clojure.spec.gen.alpha :as gen]
             [plus-minus.game.board :as b])
   (:import [java.util.concurrent.atomic AtomicLong]
@@ -20,8 +21,7 @@
 (defn initial-state [size player1 player2]
   (let [game-id (generate-id!)]
     (map->Game
-     {:state       (st/state-template
-                    (if (number? size) size (gen/generate (s/gen ::b/row-size))))
+     {:state       (st/state-template (contract/row-number size))
       :game-id     game-id
       :created     (System/currentTimeMillis)
       :updated     (System/currentTimeMillis)
@@ -48,33 +48,30 @@
          (let [cached-id (.get ^HashMap size->id size)
                new-game! (fn [id1 id2 size]
                            (remove-values! size->id id1 id2)
-                           (rf result (initial-state size id2 id1)))]
+                           (rf result (initial-state size id2 id1)))
+               cache!    (fn [id size] (.put ^HashMap size->id size id) result)]
            (case type
              :new (cond
                     (admin/maintenance?)
                     (>!! drop> (->Reply :drop id "server is on maintenance,
                     it may take several minutes"))
 
-                    (get @active-games cached-id)       ;; already matched
-                    (do (.remove ^HashMap size->id size)
-                        result)
+                    (get @active-games id)                  ;; already matched
+                    (do (.remove ^HashMap size->id size) result)
 
-                    (and (not= cached-id id) cached-id) ;; the same size is matched
-                    (new-game! id cached-id size)
+                    (= cached-id id) (cache! id size)       ;; same player, cache it
 
-                    (and (not= cached-id id)            ;; someone waits for any size
-                         (.containsKey ^HashMap size->id :quick))
+                    cached-id (new-game! id cached-id size) ;; save size matched
+
+                    (.containsKey ^HashMap size->id :quick) ;; a guy waits for any size
                     (new-game! id (.get ^HashMap size->id :quick) size)
 
-                    (and (not= cached-id id)
-                         (= size :quick)                ;; you are ready for any size
+                    (and (= size :quick)                    ;; you ready for any size
                          (.. ^HashMap size->id keySet stream findAny isPresent))
                     (let [any-size (.. ^HashMap size->id keySet stream findAny get)]
                       (new-game! id (.get ^HashMap size->id any-size) any-size))
 
-                    :else                               ;; can't match now, cache
-                    (do (.put ^HashMap size->id size id)
-                        result))
+                    :else (cache! id size))                 ;; can't match now, cache it
 
              :drop (if (= cached-id id)
                      (do (.remove ^HashMap size->id size)
