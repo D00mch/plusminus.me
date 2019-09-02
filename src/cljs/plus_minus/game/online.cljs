@@ -99,17 +99,17 @@
   (initial-state!)
   (db/put! :modal (c/info-modal "Fail" "Game is already matched or never exist")))
 
-
 (defn- top-panel-component []
   [:div.flex.board.space-between
    [:div
     (if (= :playing (db/get :online-status))
       [(db/get :online-timer)]
       [board/game-settings
-       :state     (:online-state @db/state)
-       :on-change (fn [row-size]
-                    (db/put! :online-row row-size)
-                    (initial-state!))])]
+       :size-range (range b/row-count-min b/row-count-max-excl)
+       :state      (:online-state @db/state)
+       :on-change  (fn [row-size]
+                     (db/put! :online-row row-size)
+                     (initial-state!))])]
    [:div.tags.has-addons {:style {:margin 3}}
     [:span.tag.is-medium "influence$"]
     [:span.tag.is-info.is-medium {:class "is-light"}

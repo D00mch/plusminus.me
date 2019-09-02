@@ -1,15 +1,28 @@
 (ns plus-minus.components.board
   (:require [plus-minus.game.board :as b]
-            [plus-minus.game.state :as s]))
+            [plus-minus.game.state :as s]
+            [reagent.core :as r]))
 
 (defn game-settings
   "on-change - fn [game-size]"
-  [& {state :state on-change :on-change}]
-  [:div.control>div.select {:style {:margin-bottom 16}}
-   [:select {:on-change #(on-change (int (.. % -target -value)))
-             :value (get-in state [:board :row-size] 4)}
-    (for [row-size (range b/row-count-min b/row-count-max-excl)]
-      [:option {:key row-size} row-size])]])
+  [& {}]
+  (let [active (r/atom false)]
+    (fn [& {state :state on-change :on-change size-range :size-range}]
+      [:div.dropdown
+       {:class (when @active "is-active") :on-click #(reset! active (not @active))}
+       [:div.dropdown-trigger
+        [:button.button {:aria-haspopup "true", :aria-controls "dropdown1"}
+         [:span "Board size: " (s/rows state)]
+         [:span.icon.is-small
+          [:i {:class "fas fa-angle-down", :aria-hidden "true"}]]]]
+       [:div {:class "dropdown-menu", :id "dropdown1", :role "menu"}
+        [:div.dropdown-content {:style {:max-width 65}}
+         (for [row-size size-range]
+           ^{:key (str "adi-" row-size)}
+           [:a.dropdown-item
+            {:on-click (fn [] (on-change row-size))
+             :class (when (= row-size (s/rows state)) "is-active")}
+            row-size])]]])))
 
 (defn scors [& {s :state h :usr-hrz you :you he :he
                 :or {you "You", he "He"}}]

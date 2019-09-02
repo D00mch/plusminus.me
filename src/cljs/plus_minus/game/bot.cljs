@@ -4,10 +4,10 @@
             [plus-minus.app-db :as db]
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
+            [plus-minus.game.achivement :as ach]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
-            [clojure.string :as str]
             [plus-minus.game.board :as b]))
 
 (defn- change-state [state & {sync :sync :or {sync true}}]
@@ -36,7 +36,7 @@
 (def ^:private stats-handler
   #(->> % :statistics (db/put! :game-statistics)))
 
-(defn- send-end-game [state usr-gave-up]
+(defn- send-end-game! [state usr-gave-up]
   (when (db/get :identity)
     (ajax/PUT "api/game/end"
               {:params {:id      (db/get :identity)
@@ -77,7 +77,7 @@
                (after-delay
                 #(do (reset-game)
                      (c/show-info-modal! "Game end" (end-game-msg state))
-                     (send-end-game state false)))
+                     (send-end-game! state false)))
 
                (not (user-turn state))
                (after-delay #(move state (-> (g/move-bot state) :moves last)))))))))
@@ -117,13 +117,13 @@
               :name "Defeat"
               :on-do (fn []
                        (db/remove! :modal)
-                       (send-end-game (db/get :game-state) true)
+                       (send-end-game! (db/get :game-state) true)
                        (change-state (s/state-template row-size))))]))
 
 (defn game-stats []
   (let [id    (db/get :identity)
         stats (db/get :game-statistics)
-        iq    (g/calc-iq stats)]
+        iq    (:iq stats)]
     (cond
       (not id) [:div {:style {:margin-left 5
                               :margin-bottom 5}}
@@ -132,20 +132,21 @@
                 [:span.tag.is-dark "IQ"]
                 [:span.tag.is-info iq]])))
 
-(defn game-settins []
-  (board/game-settings
-   :state     (:game-state @db/state)
-   :on-change #(let [row-size %
-                     moves    (-> :game-state db/get :moves seq)]
-                 (if moves
-                   (db/put! :modal (alert-restart row-size))
-                   (change-state (s/state-template row-size))))))
+(defn game-settings []
+  [board/game-settings
+   :size-range (or (db/get-in [:game-statistics :opened-rows])
+                   [b/row-count-min])
+   :state      (:game-state @db/state)
+   :on-change  #(let [row-size %
+                      moves    (-> :game-state db/get :moves seq)]
+                  (if moves
+                    (db/put! :modal (alert-restart row-size))
+                    (change-state (s/state-template row-size))))])
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.columns
-   [:div.flex.column
+   [:div.flex.column.is-half
     [:div.board {:style {:display :flex :flex-direction :column}}
-     [game-settins]
      [game-stats]]
     [board/scors
      :state   (db/get :game-state)
@@ -159,4 +160,7 @@
                     (c/show-info-modal! "Can't make this move"
                                         "Please, check the game rules page")))
      :game-state (db/get :game-state)
-     :user-hrz   usr-hrz]]])
+     :user-hrz   usr-hrz]]
+   [:div.column.is-half
+    [game-settings]
+    [ach/component (db/get-in [:game-statistics :progress])]]])

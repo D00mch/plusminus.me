@@ -17,7 +17,8 @@
    [ring.util.http-response :as response]
    [plus-minus.game.board :as b]
    [plus-minus.multiplayer.contract :as contract]
-   [plus-minus.validation :as validation]))
+   [plus-minus.validation :as validation]
+   [plus-minus.game.progress :as p]))
 
 ;; http://localhost:3000/swagger-ui/index.html#/
 
@@ -103,16 +104,16 @@
                                 :state   ::game-state/state
                                 :usr-hrz boolean?
                                 :give-up boolean?}}
-            :responses {200 {:body {:statistics ::state/statistics}}}
+            :responses {200 {:body {:statistics ::p/statistics}}}
             :handler (fn [{{{:keys [id state usr-hrz give-up]} :body} :parameters}]
-                       (state/game-end id state usr-hrz give-up))}}]
+                       (state/game-end-resp id state usr-hrz give-up))}}]
 
     ["/statistics"
      {:get {:summary "get user game statistics"
             :parameters {:query {:id ::validation/id}}
-            :responses {200 {:body {:statistics ::state/statistics}}}
+            :responses {200 {:body {:statistics ::p/statistics}}}
             :handler (fn [{{{id :id} :query} :parameters}]
-                       (state/get-stats id))}}]
+                       (state/get-stats-resp id))}}]
     ]
 
    ["/online"

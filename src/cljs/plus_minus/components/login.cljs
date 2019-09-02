@@ -57,4 +57,6 @@
 
 (defn logout! []
   (ajax/POST "/api/logout"
-             {:handler (fn [] (db/remove! :identity))}))
+             {:handler (fn []
+                         (db/remove! :identity)
+                         (db/remove! :game-statistics))}))

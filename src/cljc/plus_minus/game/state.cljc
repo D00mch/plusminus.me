@@ -15,6 +15,7 @@
    :hrz-turn   true})
 
 (defn size [{{c :cells} :board}] (count c))
+(defn rows [{{r :row-size} :board}] r)
 (defn last-move [{s :start mvs :moves}] (or (peek mvs) s))
 
 (defn valid-moves [{:keys [hrz-turn board moves] :as state}]
