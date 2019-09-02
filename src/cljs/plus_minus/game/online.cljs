@@ -90,7 +90,7 @@
         (db/update! :online-state st/move mv)
         (ws/push-message! :state))))
 
-(defmethod has-reply! :mock [mock] (mock/on-reply! mock))
+(defmethod has-reply! :mock [{mock :data}] (mock/on-reply! mock))
 
 (defmethod has-reply! :error [{error :data}]
   (let [info (case error
