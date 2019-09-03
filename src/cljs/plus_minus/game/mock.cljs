@@ -63,11 +63,20 @@
         (db/assoc-in! [:online-user-stats :influence] remains)
         (c/show-snack! (str "your mock " (name type) " applied") 4500)))))
 
+(defn- rand-text [& texts]
+  (nth texts (int (rand (count texts)))))
+
 (defmethod mock! :alert-good-luck [_]
-  (c/show-info-modal! "Oppenent's mesage" "You oppenent wishes you good luck!"))
+  (c/show-info-modal! "Oppenent's mesage:"
+                      (rand-text "I wish you good luck!"
+                                 "God bless you!"
+                                 "Have a good game!")))
 
 (defmethod mock! :alert-you-gonna-lose [_]
-  (c/show-info-modal! "Oppenent says:" "Prepare to lose with grace!"))
+  (c/show-info-modal! "Oppenent says:"
+                      (rand-text "Prepare to lose with grace!"
+                                 "I will destroy you!"
+                                 "Get ready to be crushed!")))
 
 (defmethod mock! :board-pink [_]
   (c/show-snack! "Opponent tease you with colors!" 5000)
@@ -81,5 +90,5 @@
 
 (defmethod mock! :laughter [_]
   (c/show-snack! "Opponent tease you with laughter!" 5000)
-  (let [file-num (int (+ 1 (rand 5)))]
+  (let [file-num (int (+ 1 (rand 8)))]
     (c/play-sound (str "sound/child-laugh" file-num ".wav"))))

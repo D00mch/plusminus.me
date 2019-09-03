@@ -5,6 +5,7 @@
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
             [plus-minus.game.achivement :as ach]
+            [plus-minus.components.rich :as rich]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
@@ -161,6 +162,11 @@
                                         "Please, check the game rules page")))
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]]
-   [:div.column.is-half
-    [game-settings]
-    [ach/component (db/get-in [:game-statistics :progress])]]])
+   [:div.column.is-one-third
+      [:div.flex {:justify-content "flex-start"}
+       [:div.column
+        [game-settings]
+        [ach/component (db/get-in [:game-statistics :progress])]]
+       [:div.flex.column
+        [rich/donation]
+        [rich/donate-justify]]]]])
