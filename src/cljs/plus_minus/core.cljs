@@ -15,7 +15,8 @@
    [plus-minus.game.statistics :as stats]
    [reitit.core :as reitit]
    [ajax.core :as a]
-   [clojure.string :as string])
+   [clojure.string :as string]
+   [plus-minus.components.rich :as rich])
   (:import goog.History))
 
 (defn- close-expanded! [expanded?] (reset! expanded? false))
@@ -92,7 +93,10 @@
    [:div.column.is-half
     [about/component]]
    [:div.column.is-half
-    [:img {:src "/img/warning_clojure.png"}]]])
+    [rich/donate-explained]
+    [:div.flex
+     [:img {:src "/img/warning_clojure.png"}]
+     [:div.left-mar [rich/donation]]]]])
 
 (defn home-page []
   [bot/game-component])

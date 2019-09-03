@@ -23,3 +23,10 @@
    "We don't sell stuff." [:br][:br]
    "The game is free" [:br]
    "As you want it to be!"])
+
+(defn donate-explained []
+  [:div.content
+   [:h5 "Consider Dontaion"]
+   [:p
+    "This project is free. No adds. All feature are opened for everyone."
+    "With your help, we will be able to continue development."]])
