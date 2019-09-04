@@ -48,6 +48,9 @@
    "beforeunload"
    try-drop-searching!))
 
+(defn connected? []
+  (db/get :websocket-connected))
+
 (defn make-websocket! [url receive-handler & [on-open]]
   (println "attempting to connect websocket")
   (add-close-handler!)

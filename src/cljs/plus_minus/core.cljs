@@ -31,7 +31,6 @@
 
 (defn- init-online-state! []
   (when (db/get :identity)
-    (js/setTimeout #(init-online-state!) 5000)
     (ws/ensure-websocket!
      online/has-reply!
      #(do
@@ -111,19 +110,13 @@
   (fn []
     (let [anonim        (not (db/get :identity))
           connected (db/get :websocket-connected)]
-      (cond
-        anonim    [:section.section>div.container>div.content
-                   [:label "Authenticate to play with other people"]]
-        connected (do
-                    (init-online-state!)
-                    [online/game-component])
-        :else     (do
-                    (js/setTimeout #(init-online-state!) 1000)
-                    [:section.section>div.container>div.content
-                    [:p
-                     "Loading multiplayer state..."
-                     [:br]
-                     "Try to reload the page if it's taking too long"]])))))
+      (if connected
+        (init-online-state!)
+        (js/setTimeout #(init-online-state!) 1000))
+      (if anonim
+        [:section.section>div.container>div.content
+         [:label "Authenticate to play with other people"]]
+        [online/game-component]))))
 
 (defn statistics-page []
   (stats/stats-component))
