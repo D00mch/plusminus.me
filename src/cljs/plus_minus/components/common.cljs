@@ -82,4 +82,3 @@
 
 (defn screen-width [] (.. js/document -body -offsetWidth))
 (defn screen-height [] (.. js/document -body -offsetHeight))
-

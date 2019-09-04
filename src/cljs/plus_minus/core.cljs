@@ -13,6 +13,7 @@
    [plus-minus.components.common :as c]
    [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
+   [plus-minus.components.theme :as theme]
    [reitit.core :as reitit]
    [ajax.core :as a]
    [clojure.string :as string]
@@ -70,7 +71,8 @@
      (login/login-button #(on-logged-in expanded?))]))
 
 (defn navbar []
-  (r/with-let [expanded? (r/atom false)]
+  (r/with-let [expanded? (r/atom false)
+               dark?     (r/atom true)]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
       [:a.navbar-item {:href "/" :style {:font-weight :bold}} "Plus-minus"]
@@ -86,6 +88,10 @@
        [nav-link "#/about" "About" :about expanded?]
        [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
        [nav-link "#/statistics" "Statistics" :statistics expanded?]]
+      [:a.navbar-item.div
+       {:on-click #(do (swap! dark? not)
+                       (theme/dark-reader! @dark?))}
+       [:span.icon.has-text-dangeri.fas.fa-moon]]
       [user-menu expanded?]]]))
 
 (defn about-page []
@@ -186,7 +192,9 @@
   (db/put! :identity js/identity)
 
   ;; init states
+  (theme/set-up)
   (init-online-state!)
   (bot/init-game-state!)
   (stats/init-stats!)
   (mount-components))
+
