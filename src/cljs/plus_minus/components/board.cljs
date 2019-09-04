@@ -64,7 +64,7 @@
                                             (and valid turn) "#209cee"
                                             valid            "#ee1f1f"
                                             cell-bg          cell-bg
-                                            :else            "WhiteSmoke")}
+                                            :else            "Gainsboro")}
                       :key i
                       :on-click #(on-click turn state i)
                       :class (when valid "pulse")}
