@@ -46,10 +46,12 @@
         ([result] (rf result))
         ([result {type :msg-type, id :id, size :data}]
          (let [cached-id (.get ^HashMap size->id size)
+               cache!    (fn [id size] (.put ^HashMap size->id size id) result)
                new-game! (fn [id1 id2 size]
-                           (remove-values! size->id id1 id2)
-                           (rf result (initial-state size id2 id1)))
-               cache!    (fn [id size] (.put ^HashMap size->id size id) result)]
+                           (if (= id1 id2)                ;; same player, cache it
+                             (cache! id1 size)
+                             (do (remove-values! size->id id1 id2)
+                                 (rf result (initial-state size id2 id1)))))]
            (case type
              :new (cond
                     (admin/maintenance?)
@@ -58,8 +60,6 @@
 
                     (get @active-games id)                  ;; already matched
                     (do (.remove ^HashMap size->id size) result)
-
-                    (= cached-id id) (cache! id size)       ;; same player, cache it
 
                     cached-id (new-game! id cached-id size) ;; save size matched
 
