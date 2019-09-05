@@ -16,17 +16,39 @@
    [:img {:alt "", :border "0", :width "1", :height "1",
           :src "https://www.paypal.com/en_KZ/i/scr/pixel.gif"}]])
 
+(defn donation-ru []
+  [:form.top-mar
+   {:method "POST", :action "https://money.yandex.ru/quickpay/confirm.xml"}
+   [:input {:type "hidden", :name "receiver", :value "410012912961469"}]
+   [:input {:type "hidden", :name "formcomment", :value "Проект «Плюс Минус»: математическая головоломка"}]
+   [:input {:type "hidden", :name "short-dest", :value "Игра Плюс-Минус"}]
+   [:input {:type "hidden", :name "label", :value "$order_id"}]
+   [:input {:type "hidden", :name "quickpay-form", :value "donate"}]
+   [:input {:type "hidden", :name "targets", :value "На поддержку игры"}]
+   [:input {:type "hidden", :name "sum", :value "399", :data-type "number"}]
+   [:input {:type "hidden", :name "comment", :value "На расходы по хостингу, дизайн, новые фичи"}]
+   [:input {:type "hidden", :name "need-fio", :value "false"}]
+   [:input {:type "hidden", :name "need-email", :value "false"}]
+   [:input {:type "hidden", :name "need-phone", :value "false"}]
+   [:input {:type "hidden", :name "need-address", :value "false"}]
+   [:label
+    [:input {:type "radio", :name "paymentType", :value "PC"}] "Yandex.Money"]
+   [:br]
+   [:label
+    [:input {:type "radio", :name "paymentType", :value "AC"}] "Bank Card"]
+   [:br]
+   [:input.button.is-small {:type "submit", :value "Send!"
+                            :style {:width 100 :margin-top 10}}]])
+
 (defn donate-justify []
   [:p {:style {:text-align nil, :margin-top 10}}
-   "We need your help!" [:br]
-   "You don't see adds," [:br]
-   "We don't sell stuff." [:br][:br]
-   "The game is free" [:br]
-   "As you want it to be!"])
+   "Your help will be match appreciated!" [:br]
+   "You will continue seeing no adds :)"])
 
 (defn donate-explained []
   [:div.content
    [:h5 "Consider Dontaion"]
    [:p
     "This project is free. No adds. All feature are opened for everyone."
-    "With your help, we will be able to continue development."]])
+    [:br]
+    "With your help, this project may grow sky-high :)"]])

@@ -101,7 +101,9 @@
     [rich/donate-explained]
     [:div.flex
      [:img {:src "/img/warning_clojure.png"}]
-     [:div.left-mar [rich/donation]]]]])
+     [:div.flex.column.left-mar
+      [:div [rich/donation]]
+      [:div {:style {:margin-left 10}} [rich/donation-ru]]]]]])
 
 (defn home-page []
   [bot/game-component])
