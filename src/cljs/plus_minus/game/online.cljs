@@ -31,7 +31,7 @@
 
 (defn initial-state! []
   (load-user-stats!)
-  (db/put! :online-row (db/get :online-row b/row-count-min))
+  (db/put! :online-row (db/get :online-row :quick))
   (generate-state!)
   (db/put! :online-timer nil)
   (db/put! :online-status :idle)
