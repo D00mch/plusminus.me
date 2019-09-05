@@ -67,6 +67,18 @@
       (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
       [:div label @time])))
 
+(defn line-timer-comp [millis-remains max diff]
+  (fn []
+    (r/with-let [time (r/atom millis-remains)]
+      (when (> @time 0) (js/setTimeout #(swap! time - diff) diff))
+      [:progress.progress.board
+       {:value @time :max (- max 100)
+        :class (condp < (/ max @time)
+                 5     "is-danger"
+                 2     "is-warning"
+                 "is-success")
+        :style {:height 2 :margin 0 :margin-top 5}}])))
+
 (defn show-snack! [text & [time]]
   (js/setTimeout #(db/remove! :snack) (or time 3000))
   (db/put! :snack

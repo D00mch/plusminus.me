@@ -42,6 +42,10 @@
   (contract/calc-turn-ms
    (db/get-in [:online-state :board :row-size] b/row-count-min)))
 
+(defn- max-time-millis []
+  (contract/calc-turn-ms
+   (db/get-in [:online-state :board :row-size] b/row-count-min)))
+
 (defn- put-timer! [& {remains :remains}]
   (let [remains      (or remains (calc-remain))
         warn-timer   (db/get :online-warn-timer)
@@ -51,7 +55,8 @@
       (db/put! :online-warn-timer
                (js/setTimeout #(c/play-sound "sound/time-warn.flac")
                               (- remains timeout-warn))))
-    (db/put! :online-timer (c/timer-comp remains "Turn timer: "))))
+    (db/put! :online-timer (c/timer-comp remains "Turn timer: "))
+    (db/put! :online-timer-line (c/line-timer-comp remains (max-time-millis) 100))))
 
 (defn- update-user-stats! [game]
   (db/put! :online-user-stats (:statistics (contract/stats game (db/get :identity)))))
@@ -155,9 +160,10 @@
                 [:progress.board.progress.is-small.is-dark
                  {:max 100
                   :style {:margin-bottom "10px"}}]]
-    :idle      [:a.board.play.button.is-light
-                {:on-click start-new-game!}
-                "start new game"]
+    :idle      [:a.board.play.button
+                {:on-click start-new-game!
+                 :style {:background-color "gainsboro"}}
+                "new game"]
     [:a.board.play.button {:disabled true} "connecting..."]))
 
 (defn game-component []
@@ -175,7 +181,9 @@
      :game-state  (db/get :online-state)
      :cell-bg     (db/get :online-cell-color)
      :board-width (db/get :online-board-width)
-     :user-hrz    (db/get :online-hrz)]]
+     :user-hrz    (db/get :online-hrz)]
+    (when (= :playing (db/get :online-status))
+      [(db/get :online-timer-line)])]
 
    [:div.flex.column
     [top-panel-component]

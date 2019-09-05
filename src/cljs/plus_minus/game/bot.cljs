@@ -169,4 +169,5 @@
         [ach/component (db/get-in [:game-statistics :progress])]]
        [:div.flex.column
         [rich/donation]
+        [rich/donation-ru]
         [rich/donate-justify]]]]])

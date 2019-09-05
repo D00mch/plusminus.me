@@ -5,7 +5,7 @@ Math game.
 check current web-version on [plusminus.me][1]
 (currently banned in Russia by Roskomnadzor, use proxy)
 
-<img src="https://github.com/Liverm0r/Plus-Minus-Fullstack/blob/dev/resources/public/img/gif/demo.gif" alt="alt text" width="284" height="335">
+<img src="https://github.com/Liverm0r/Plus-Minus-Fullstack/blob/dev/resources/public/img/gif/demo.gif" alt="alt text" width="286" height="514">
 
 published with [digitalocean.com][3]
 

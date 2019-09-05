@@ -52,6 +52,7 @@ body {
 .is-bold {font-weight: bold}
 .top-mar {margin-top: 20px}
 .left-mar {margin-left: 20px}
+.r-mar {margin-right: 5px}
 
 .board {
     max-width: 450px;
@@ -59,7 +60,6 @@ body {
 
 .board.grid {
     margin: 0 0;
-    height: 86vw;
     max-height: 450px;
 }
 
