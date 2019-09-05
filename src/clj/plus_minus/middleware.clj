@@ -71,6 +71,7 @@
       (wrap-defaults
        (-> site-defaults
            (assoc-in [:security :anti-forgery] false)
+           (assoc-in [:session :cookie-attrs :same-site] :lax)
            (assoc-in [:session :store]
                      (cookie-store {:key (:session-store-key env)}))))
       wrap-internal-error))
