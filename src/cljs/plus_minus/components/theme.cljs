@@ -5,12 +5,13 @@
   (str "{brightness:" brightness ",constrast:" contrast
        ",sepia:" sepia ",grayscale" grayscale "}"))
 
-(defn dark-reader! [enable? & [options]]
-  (cookies/set! :theme-dark enable?)
-  (if enable?
-    (.enable js/DarkReader (or options (dark-options 100 100 10 40)))
-    (.disable js/DarkReader)))
+(defn is-light? [] (cookies/get :theme-light))
+
+(defn dark-reader! [light? & [options]]
+  (cookies/set! :theme-light light?)
+  (if light?
+    (.disable js/DarkReader)
+    (.enable js/DarkReader (or options (dark-options 100 100 10 40)))))
 
 (defn set-up []
-  (let [dark? (cookies/get :theme-dark true)]
-    (dark-reader! dark?)))
+  (dark-reader! (is-light?)))

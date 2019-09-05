@@ -12,7 +12,8 @@
             [plus-minus.db.core]
             [plus-minus.config :refer [env]]
             [luminus-migrations.core :as migrations]
-            [clojure.spec.alpha :as s])
+            [clojure.spec.alpha :as s]
+            [plus-minus.multiplayer.contract :as c])
   (:import [plus_minus.multiplayer.contract Game]))
 
 (def ^:private id-gen (spec/gen ::validation/id))
@@ -83,6 +84,16 @@
       (let [{p1 :player1 p2 :player2} (get-with-timeout!! out>)]
         (is (= u1 p1))
         (is (= u2 p2))))))
+
+(deftest matching-self
+  (let [user "lonely"
+        [in> out>] (in-out-matcher-channels (atom {}))
+        sizes      (-> (spec/gen ::c/game-request) (gen/sample 100))]
+    (doseq [s sizes]
+      (>!! in> (->Message :new user s)))
+    (testing "can't have a game with yourself"
+      (let [game (get-with-timeout!! out>)]
+        (is (nil? game))))))
 
 (deftest matching-games
   (let [users          (-> (spec/gen ::validation/id) (gen/sample 2000) distinct)

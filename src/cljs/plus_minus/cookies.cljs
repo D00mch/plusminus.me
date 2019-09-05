@@ -34,7 +34,11 @@
 (defn get
   "gets the value at the key (as edn), optional default when value is not found"
   [k & [default]]
-  (get-value k read-edn-value default))
+  (try
+    (get-value k read-edn-value default)
+    (catch :default e
+      (prn "error getting cookie " e)
+      nil)))
 
 (defn get-raw
   "gets the value at the key (as string), optional default when value is not found"

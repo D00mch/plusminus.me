@@ -31,7 +31,6 @@
 
 (defn- init-online-state! []
   (when (db/get :identity)
-    (js/setTimeout #(init-online-state!) 5000)
     (ws/ensure-websocket!
      online/has-reply!
      #(do
@@ -72,7 +71,7 @@
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)
-               dark?     (r/atom true)]
+               light?     (r/atom (theme/is-light?))]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
       [:a.navbar-item {:href "/" :style {:font-weight :bold}} "Plus-minus"]
@@ -89,8 +88,8 @@
        [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
        [nav-link "#/statistics" "Statistics" :statistics expanded?]]
       [:a.navbar-item.div
-       {:on-click #(do (swap! dark? not)
-                       (theme/dark-reader! @dark?))}
+       {:on-click #(do (swap! light? not)
+                       (theme/dark-reader! @light?))}
        [:span.icon.has-text-dangeri.fas.fa-moon]]
       [user-menu expanded?]]]))
 
@@ -111,19 +110,13 @@
   (fn []
     (let [anonim        (not (db/get :identity))
           connected (db/get :websocket-connected)]
-      (cond
-        anonim    [:section.section>div.container>div.content
-                   [:label "Authenticate to play with other people"]]
-        connected (do
-                    (init-online-state!)
-                    [online/game-component])
-        :else     (do
-                    (js/setTimeout #(init-online-state!) 1000)
-                    [:section.section>div.container>div.content
-                    [:p
-                     "Loading multiplayer state..."
-                     [:br]
-                     "Try to reload the page if it's taking too long"]])))))
+      (if connected
+        (init-online-state!)
+        (js/setTimeout #(init-online-state!) 1000))
+      (if anonim
+        [:section.section>div.container>div.content
+         [:label "Authenticate to play with other people"]]
+        [online/game-component]))))
 
 (defn statistics-page []
   (stats/stats-component))

@@ -127,10 +127,12 @@
        :on-change  (fn [row-size]
                      (db/put! :online-row row-size)
                      (initial-state!))])]
+   [:span.dot {:style {:height 9 :width 9 :border-radius "50%" :margin-top 10,
+                       :background-color (if (ws/connected?) "green" "red")}}]
    [:div.tags.has-addons {:style {:margin 3}}
     [:span.tag.is-medium "influence$"]
     [:span.tag.is-info.is-medium {:class "is-light"}
-     (db/get-in [:online-user-stats :influence])]]])
+     (db/get-in [:online-user-stats :influence] "..")]]])
 
 (defn- start-new-game! []
   (ws/push-message! :new (db/get :online-row))
@@ -155,7 +157,8 @@
                   :style {:margin-bottom "10px"}}]]
     :idle      [:a.board.play.button.is-light
                 {:on-click start-new-game!}
-                "start new game"]))
+                "start new game"]
+    [:a.board.play.button {:disabled true} "connecting..."]))
 
 (defn game-component []
   [:section.section>div.container>div.columns

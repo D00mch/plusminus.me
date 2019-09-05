@@ -76,9 +76,7 @@
                     {:style {:color "#209cee", :font-size 15}}
                     text]])))
 
-(defn play-sound [path]
-  (def audio (js/Audio. path))
-  (.play audio))
+(defn play-sound [path] (.play (js/Audio. path)))
 
 (defn screen-width [] (.. js/document -body -offsetWidth))
 (defn screen-height [] (.. js/document -body -offsetHeight))
