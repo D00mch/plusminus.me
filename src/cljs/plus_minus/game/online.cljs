@@ -155,9 +155,10 @@
                 [:progress.board.progress.is-small.is-dark
                  {:max 100
                   :style {:margin-bottom "10px"}}]]
-    :idle      [:a.board.play.button.is-light
-                {:on-click start-new-game!}
-                "start new game"]
+    :idle      [:a.board.play.button
+                {:on-click start-new-game!
+                 :style {:background-color "gainsboro"}}
+                "new game"]
     [:a.board.play.button {:disabled true} "connecting..."]))
 
 (defn game-component []
