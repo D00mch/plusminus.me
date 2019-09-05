@@ -71,7 +71,7 @@
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)
-               dark?     (r/atom true)]
+               light?     (r/atom (theme/is-light?))]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
       [:a.navbar-item {:href "/" :style {:font-weight :bold}} "Plus-minus"]
@@ -88,8 +88,8 @@
        [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
        [nav-link "#/statistics" "Statistics" :statistics expanded?]]
       [:a.navbar-item.div
-       {:on-click #(do (swap! dark? not)
-                       (theme/dark-reader! @dark?))}
+       {:on-click #(do (swap! light? not)
+                       (theme/dark-reader! @light?))}
        [:span.icon.has-text-dangeri.fas.fa-moon]]
       [user-menu expanded?]]]))
 
