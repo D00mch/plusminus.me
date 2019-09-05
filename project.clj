@@ -4,7 +4,7 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[buddy "2.0.0"]
-                [ch.qos.logback/logback-classic "1.2.3"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  [cheshire "5.8.1"]
                  [stuarth/clj-oauth2 "0.3.2"]
                  [cljs-ajax "0.8.0"]
