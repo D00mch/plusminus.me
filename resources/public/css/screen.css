@@ -59,7 +59,6 @@ body {
 
 .board.grid {
     margin: 0 0;
-    height: 86vw;
     max-height: 450px;
 }
 
