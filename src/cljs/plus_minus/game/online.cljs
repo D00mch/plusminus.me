@@ -2,6 +2,7 @@
   (:require [plus-minus.game.state :as st]
             [plus-minus.app-db :as db]
             [plus-minus.game.board :as b]
+            [plus-minus.game.statistics :as stats]
             [plus-minus.components.board :as board]
             [plus-minus.multiplayer.contract :as contract]
             [plus-minus.websockets :as ws]
@@ -74,6 +75,7 @@
                               :time-out "Unfortunately, turn time elapsed"
                               "By having less points in the end of the game")])]
     (update-user-stats! game)
+    (stats/init-stats!)
     (db/put! :modal (c/info-modal title body))
     (js/clearTimeout (db/get :online-warn-timer))
     (c/after-delay 1500 #(initial-state!))))
