@@ -47,7 +47,7 @@
           nil)
         (when (not= type :end)
           (if (= (contract/turn-id @game-state) bot-name)
-            (let [move (-> @game-state :state (game/move-bot 3) :moves last)]
+            (let [move (-> @game-state :state (game/move-clever-bot) :moves last)]
               (log/debug "about to move with" move)
               (message! :move move))
             (consider-mock! @game-state)))

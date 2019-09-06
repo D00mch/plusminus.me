@@ -80,7 +80,8 @@
                      (send-end-game! state false)
                      (after-delay (fn [] (reset-game)))))
                (not (user-turn state))
-               (after-delay #(move state (-> (g/move-bot state 2) :moves last)))))))))
+               (after-delay
+                #(move state (-> (g/move-bot-safe state 2) :moves last)))))))))
 
 (defn- load-stats! []
   (if-let [id (db/get :identity)]

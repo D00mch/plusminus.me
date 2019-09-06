@@ -95,6 +95,7 @@
                                  [figwheel-sidecar "0.5.18"]
                                  [pjstadig/humane-test-output "0.9.0"]
                                  [prone "1.6.3"]
+                                 [org.clojure/math.combinatorics "0.1.6"]
                                  [ring/ring-devel "1.7.1"]
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
@@ -121,6 +122,7 @@
                   :injections [(require 'pjstadig.humane-test-output)
                                (pjstadig.humane-test-output/activate!)]}
    :project/test {:jvm-opts ["-Dconf=test-config.edn"]
+                  :dependencies [[org.clojure/math.combinatorics "0.1.6"]]
                   :resource-paths ["env/test/resources"]
                   :cljsbuild 
                   {:builds
