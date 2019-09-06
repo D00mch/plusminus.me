@@ -92,3 +92,6 @@
 
 (defn screen-width [] (.. js/document -body -offsetWidth))
 (defn screen-height [] (.. js/document -body -offsetHeight))
+
+(defn after-delay [delay f]
+  (js/setTimeout f delay))

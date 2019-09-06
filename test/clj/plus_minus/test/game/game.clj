@@ -1,4 +1,4 @@
-(ns plus-minus.test.game
+(ns plus-minus.test.game.game
   (:require [clojure.test :refer [deftest is testing]]
             [plus-minus.game.board :as b]
             [plus-minus.game.state :as st]
@@ -13,4 +13,3 @@
     (ns-specs-test b/test-defns))
   (testing "state"
     (ns-specs-test st/test-defns)))
-

@@ -56,7 +56,7 @@
         "You lose"))))
 
 (defn- after-delay [f]
-  (js/setTimeout f 1250))
+  (c/after-delay 1250 f))
 
 (defn- reset-watchers!
   "watcher make moves, resets game on end and ivalid state"
@@ -76,12 +76,12 @@
 
                (-> state s/moves? not)
                (after-delay
-                #(do (reset-game)
-                     (c/show-info-modal! "Game end" (end-game-msg state))
-                     (send-end-game! state false)))
-
+                #(do (c/show-info-modal! "Game end" (end-game-msg state))
+                     (send-end-game! state false)
+                     (after-delay (fn [] (reset-game)))))
                (not (user-turn state))
-               (after-delay #(move state (-> (g/move-bot state 2) :moves last)))))))))
+               (after-delay
+                #(move state (-> (g/move-bot-safe state 2) :moves last)))))))))
 
 (defn- load-stats! []
   (if-let [id (db/get :identity)]
