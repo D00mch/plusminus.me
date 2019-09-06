@@ -62,8 +62,6 @@
   (db/put! :online-user-stats (:statistics (contract/stats game (db/get :identity)))))
 
 (defmethod has-reply! :end [{{outcome :outcome cause :cause game :game} :data}]
-  (initial-state!)
-  (update-user-stats! game)
   (let [[title body]
         (case outcome
           :win ["You win!" (case cause
@@ -75,8 +73,10 @@
                               :give-up "Sometimes it's better to give up"
                               :time-out "Unfortunately, turn time elapsed"
                               "By having less points in the end of the game")])]
+    (update-user-stats! game)
     (db/put! :modal (c/info-modal title body))
-    (js/clearTimeout (db/get :online-warn-timer))))
+    (js/clearTimeout (db/get :online-warn-timer))
+    (c/after-delay 1500 #(initial-state!))))
 
 (defmethod has-reply! :state
   [{{p1h :player1-hrz,p1  :player1, p2 :player2,state :state :as game} :data}]
