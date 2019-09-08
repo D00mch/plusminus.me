@@ -95,3 +95,8 @@
 
 (defn after-delay [delay f]
   (js/setTimeout f delay))
+
+(defn show-top-el! [el & {delay :delay :or {delay 1500}}]
+  (js/clearTimeout (db/get :common-el-timer))
+  (db/put! :common-el-timer (after-delay delay #(db/remove! :common-el)))
+  (db/put! :common-el (fn [] el)))

@@ -95,9 +95,13 @@
 
 (defmethod has-reply! :move [{mv :data}]
   (put-timer!)
-  (let [state (db/get :online-state)]
+  (let [{{c :cells} :board :as state} (db/get :online-state)]
       (if (st/valid-move? state mv)
-        (db/update! :online-state st/move mv)
+        (do
+          (board/animate-click! mv (nth c mv) (:hrz-turn state))
+          (c/after-delay
+           (+ board/anim-delay board/anim-time)
+           #(db/update! :online-state st/move mv)))
         (ws/push-message! :state))))
 
 (defmethod has-reply! :mock [{mock :data}] (mock/on-reply! mock))
@@ -137,7 +141,7 @@
    [:span.dot {:style {:height 9 :width 9 :border-radius "50%" :margin-top 10,
                        :background-color (if (ws/connected?) "green" "red")}}]
    [:div.tags.has-addons {:style {:margin 3}}
-    [:span.tag.is-medium "influence$"]
+    [:span.tag.is-medium.disable-selection "influence$"]
     [:span.tag.is-info.is-medium {:class "is-light"}
      (db/get-in [:online-user-stats :influence] "..")]]])
 
@@ -168,6 +172,13 @@
                 "new game"]
     [:a.board.play.button {:disabled true} "connecting..."]))
 
+(defn- on-click [turn? _ index]
+  (if (= :playing (db/get :online-status))
+    (if turn?
+      (ws/push-message! :move index)
+      (board/show-info-near-cell! index "You can't go here!"))
+    (board/show-info-near-cell! index "press 'new game' to start")))
+
 (defn game-component []
   [:section.section>div.container>div.columns
    [:div.flex.column
@@ -176,10 +187,7 @@
      :usr-hrz (db/get :online-hrz)
      :he      (db/get :online-he "He")]
     [board/matrix
-     :on-click    (fn [turn? _ index]
-                    (if turn?
-                      (ws/push-message! :move index)
-                      (c/info-modal "Mind your manners" "it's not your turn")))
+     :on-click    on-click
      :game-state  (db/get :online-state)
      :cell-bg     (db/get :online-cell-color)
      :board-width (db/get :online-board-width)

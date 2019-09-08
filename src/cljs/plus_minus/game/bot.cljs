@@ -20,16 +20,21 @@
                         :state state}
                :handler #(db/remove! :game-sync-request)})))
 
-(defn- move [state mv]
+(defn- change-state-with-anim [{{c :cells} :board :as state} index & {sync :sync}]
+  (board/animate-click! index (nth c index) (:hrz-turn state))
+  (c/after-delay (+ board/anim-delay board/anim-time)
+                 #(change-state (s/move state index) :sync sync)))
+
+(defn- move [{{c :cells} :board :as state} mv]
   (if-let [id (db/get :identity)]
     (ajax/PUT
      "api/game/move"
      {:url-params {:id id, :move mv}
-      :handler #(change-state (s/move state mv) :sync (db/get :game-sync-request))
+      :handler #(change-state-with-anim state mv :sync (db/get :game-sync-request))
       :error-handler #(let [{msg :message} (get % :response)]
                         (db/put! :game-sync-request true)
                         (fn [_] (change-state (s/move state mv))))})
-    (change-state (s/move state mv))))
+    (change-state-with-anim state mv)))
 
 (defn- user-turn [{hrz :hrz-turn}]
   (= (db/get :usr-hrz-turn) hrz))
@@ -79,6 +84,7 @@
                 #(do (c/show-info-modal! "Game end" (end-game-msg state))
                      (send-end-game! state false)
                      (after-delay (fn [] (reset-game)))))
+
                (not (user-turn state))
                (after-delay
                 #(move state (-> (g/move-bot-safe state 2) :moves last)))))))))
@@ -144,6 +150,11 @@
                     (db/put! :modal (alert-restart row-size))
                     (change-state (s/state-template row-size))))])
 
+(defn on-click [turn? state index]
+  (if turn?
+    (move state index)
+    (board/show-info-near-cell! index "Can't make this move")))
+
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.columns
    [:div.flex.column.is-half
@@ -155,19 +166,15 @@
      :you     (db/get :identity)
      :he      "IQ rater"]
     [board/matrix
-     :on-click  (fn [turn? state index]
-                  (if turn?
-                    (move state index)
-                    (c/show-info-modal! "Can't make this move"
-                                        "Please, check the game rules page")))
+     :on-click  on-click
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]]
    [:div.column.is-one-third
-      [:div.flex {:justify-content "flex-start"}
-       [:div.column
-        [game-settings]
-        [ach/component (db/get-in [:game-statistics :progress])]]
-       [:div.flex.column
-        [rich/donation]
-        [rich/donation-ru]
-        [rich/donate-justify]]]]])
+    [:div.flex {:justify-content "flex-start"}
+     [:div.column
+      [game-settings]
+      [ach/component]]
+     [:div.flex.column
+      [rich/donation]
+      [rich/donation-ru]
+      [rich/donate-justify]]]]])
