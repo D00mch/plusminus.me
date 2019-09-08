@@ -140,8 +140,8 @@
                      (initial-state!))])]
    [:span.dot {:style {:height 9 :width 9 :border-radius "50%" :margin-top 10,
                        :background-color (if (ws/connected?) "green" "red")}}]
-   [:div.tags.has-addons {:style {:margin 3}}
-    [:span.tag.is-medium.disable-selection "influence$"]
+   [:div.tags.has-addons.disable-selection {:style {:margin 3}}
+    [:span.tag.is-medium "influence$"]
     [:span.tag.is-info.is-medium {:class "is-light"}
      (db/get-in [:online-user-stats :influence] "..")]]])
 

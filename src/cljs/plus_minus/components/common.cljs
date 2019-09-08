@@ -4,7 +4,7 @@
             [reagent.core :as r]))
 
 (defn modal [& {:keys [header body footer style]}]
-  [:div.modal.is-active
+  [:div.modal.is-active.disable-selection
    [:div.modal-background
     {:on-click #(db/remove! :modal)}]
    [:div.modal-card
@@ -82,7 +82,7 @@
 (defn show-snack! [text & [time]]
   (js/setTimeout #(db/remove! :snack) (or time 3000))
   (db/put! :snack
-           (fn [] [:div.flex.center.column
+           (fn [] [:div.flex.center.column.disable-selection
                    {:style {:background "WhiteSmoke"}}
                    [:div.board
                     {:style {:color "#209cee", :font-size 15}}

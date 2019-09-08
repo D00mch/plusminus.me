@@ -135,7 +135,7 @@
       (not id) [:div {:style {:margin-left 5
                               :margin-bottom 5}}
                 [:label "Authorize to rate your IQ"]]
-      (> iq 0) [:div.tags.has-addons {:style {:margin 3}}
+      (> iq 0) [:div.tags.has-addons.disable-selection {:style {:margin 3}}
                 [:span.tag.is-dark "IQ"]
                 [:span.tag.is-info iq]])))
 

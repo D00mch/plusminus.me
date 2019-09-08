@@ -38,7 +38,7 @@
   (let [his-p     (if h (:vrt-points s) (:hrz-points s))
         your-p    (if h (:hrz-points s) (:vrt-points s))
         you-moved (= hrz-turn (not h))]
-    [:div.board.scors
+    [:div.board.scors.disable-selection
      [:div.tags.has-addons
       {:style {:margin 3}
        :id    "scors-you"
