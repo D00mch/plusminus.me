@@ -2,8 +2,12 @@
   (:require [plus-minus.game.board :as b]
             [plus-minus.game.state :as s]
             [reagent.core :as r]
+            [reanimated.core :as anim]
             [plus-minus.components.common :as c]
             [plus-minus.app-db :as db]))
+
+(def anim-delay 150)
+(def anim-time 300)
 
 (defn game-settings
   "on-change - fn [game-size]"
@@ -37,23 +41,27 @@
     [:div.board.scors
      [:div.tags.has-addons
       {:style {:margin 3}
-       :class (if you-moved "pulse1" "")}
+       :id    "scors-you"
+       :class (if you-moved "rotate" "")}
       [:span.tag.is-light you]
       [:span.tag {:class (if (> his-p your-p) "is-danger" "is-light")} your-p]]
      [:div.tags.has-addons
       {:style {:margin 3}
-       :class (if you-moved "" "pulse1")}
+       :id    "scors-he"
+       :class (if you-moved "" "rotate")}
       [:span.tag.is-light he]
       [:span.tag.is-light his-p]]]))
 
-(defn show-info-near-cell! [el-id text]
-  (let [el   (.getElementById js/document el-id)
-        top  (+ (.-offsetTop (.. el -offsetParent))
-                (.-offsetTop el)
-                (* 0.8 (.-offsetHeight el)))
-        left (+ (.-offsetLeft (.. el -offsetParent))
-                (.-offsetLeft el)
-                (* 0.6 (.-offsetWidth el)))]
+
+(defn cell-id [index] (str "board-cell" index))
+
+(defn show-info-near-cell! [index text]
+  (let [el-id (cell-id index)
+        el   (.getElementById js/document el-id)
+        el-w (.-offsetWidth el)
+        el-h (.-offsetHeight el)
+        top  (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el) (* 0.8 el-h))
+        left (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el) (* 0.6 el-w))]
     (c/show-top-el!
      [:div.notification.is-small
       {:style {:position "absolute"
@@ -61,6 +69,36 @@
                :left left}}
       [:button.delete {:on-click #(db/remove! :common-el)}] text]
      :delay 2000)))
+
+(defn- offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
+(defn- offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
+
+(defn animate-click! [index v turn?]
+  (let [cell        (.getElementById js/document (cell-id index))
+        cell-w      (.-offsetWidth cell)
+        cell-h      (.-offsetHeight cell)
+        points      (.getElementById js/document (if turn? "scors-you" "scors-he"))
+        points-top  (offset-top points)
+        points-left (+ (* 0.8 (.-offsetWidth points)) (offset-left points))
+        top         (r/atom (+ (offset-top cell) (* 0.15 cell-h)))
+        left        (r/atom (+ (offset-left cell) (* 0.25 cell-w)))]
+    (set! (.. cell -style -visibility) "hidden")
+    (c/after-delay anim-delay
+     (fn []
+       (swap! top - (- @top points-top))
+       (swap! left - (- @left points-left))))
+    (c/show-top-el!
+     (let [top-a   (anim/interpolate-to top {:duration anim-time})
+           left-a  (anim/spring left {:mass 2 :stiffness 0.3 :duration anim-time})]
+       (fn []
+         [:div
+          {:style {:position "absolute"
+                   :opacity "0.3"
+                   :font-size 20
+                   :top  @top-a
+                   :left @left-a}}
+          v]))
+     :delay (+ anim-time anim-delay))))
 
 (defn matrix
   "on-click - fn [turn? state index]"
@@ -80,7 +118,8 @@
               valid  (s/valid-move? state i)
               turn   (and valid (= usr-hrz hrz-turn))
               hidden (some #{i} moves)
-              id     (str "board-cell" i)]
+              id     (cell-id i)
+              v      (nth cells i)]
           [:div.cell {:style {:margin 4
                               :visibility (when hidden "hidden")
                               :background (cond
@@ -90,7 +129,7 @@
                                             :else            "Gainsboro")}
                       :id id
                       :key i
-                      :on-click #(on-click turn state i id)
+                      :on-click #(on-click turn state i)
                       :class (when valid "pulse")}
            [:div.inner.disable-selection {:style {:color (when valid "white")}}
-            (nth cells i)]]))])])
+            v]]))])])

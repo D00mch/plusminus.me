@@ -18,9 +18,8 @@ check Android version on [Google play][2]
 ## Status: in progress 
 
 ### TODOS
-- animation;
-- design;
 - event driven database;
+- cache on server for single-player game;
 - PWA;
 - chat
 

@@ -95,9 +95,13 @@
 
 (defmethod has-reply! :move [{mv :data}]
   (put-timer!)
-  (let [state (db/get :online-state)]
+  (let [{{c :cells} :board :as state} (db/get :online-state)]
       (if (st/valid-move? state mv)
-        (db/update! :online-state st/move mv)
+        (do
+          (board/animate-click! mv (nth c mv) (:hrz-turn state))
+          (c/after-delay
+           (+ board/anim-delay board/anim-time)
+           #(db/update! :online-state st/move mv)))
         (ws/push-message! :state))))
 
 (defmethod has-reply! :mock [{mock :data}] (mock/on-reply! mock))
@@ -168,12 +172,12 @@
                 "new game"]
     [:a.board.play.button {:disabled true} "connecting..."]))
 
-(defn- on-click [turn? _ index el-id]
+(defn- on-click [turn? _ index]
   (if (= :playing (db/get :online-status))
     (if turn?
       (ws/push-message! :move index)
-      (board/show-info-near-cell! el-id "Mind your manners! it's not your turn"))
-    (board/show-info-near-cell! el-id "press 'new game' to start")))
+      (board/show-info-near-cell! index "You can't go here!"))
+    (board/show-info-near-cell! index "press 'new game' to start")))
 
 (defn game-component []
   [:section.section>div.container>div.columns
