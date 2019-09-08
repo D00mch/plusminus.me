@@ -28,15 +28,20 @@
              :class (when (= row-size (s/rows state)) "is-active")}
             row-size])]]])))
 
-(defn scors [& {s :state h :usr-hrz you :you he :he
+(defn scors [& {{hrz-turn :hrz-turn :as s} :state h :usr-hrz you :you he :he
                 :or {you "You", he "He"}}]
-  (let [his-p  (if h (:vrt-points s) (:hrz-points s))
-        your-p (if h (:hrz-points s) (:vrt-points s))]
+  (let [his-p     (if h (:vrt-points s) (:hrz-points s))
+        your-p    (if h (:hrz-points s) (:vrt-points s))
+        you-moved (= hrz-turn (not h))]
     [:div.board.scors
-     [:div.tags.has-addons {:style {:margin 3}}
+     [:div.tags.has-addons
+      {:style {:margin 3}
+       :class (if you-moved "pulse1" "")}
       [:span.tag.is-light you]
       [:span.tag {:class (if (> his-p your-p) "is-danger" "is-light")} your-p]]
-     [:div.tags.has-addons {:style {:margin 3}}
+     [:div.tags.has-addons
+      {:style {:margin 3}
+       :class (if you-moved "" "pulse1")}
       [:span.tag.is-light he]
       [:span.tag.is-light his-p]]]))
 
