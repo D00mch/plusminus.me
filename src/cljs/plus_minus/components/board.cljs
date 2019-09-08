@@ -52,16 +52,19 @@
       [:span.tag.is-light he]
       [:span.tag.is-light his-p]]]))
 
-
 (defn cell-id [index] (str "board-cell" index))
+
+(defn- offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
+(defn- offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
 
 (defn show-info-near-cell! [index text]
   (let [el-id (cell-id index)
         el   (.getElementById js/document el-id)
         el-w (.-offsetWidth el)
         el-h (.-offsetHeight el)
-        top  (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el) (* 0.8 el-h))
-        left (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el) (* 0.6 el-w))]
+        top  (+ (offset-top el) (* 0.8 el-h))
+        left (+ (offset-left el) (* 0.6 el-w))
+        left (if (> left (* 0.5 (c/screen-width))) (- left (* 2 el-w)) left)]
     (c/show-top-el!
      [:div.notification.is-small
       {:style {:position "absolute"
@@ -69,9 +72,6 @@
                :left left}}
       [:button.delete {:on-click #(db/remove! :common-el)}] text]
      :delay 2000)))
-
-(defn- offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
-(defn- offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
 
 (defn animate-click! [index v turn?]
   (let [cell        (.getElementById js/document (cell-id index))

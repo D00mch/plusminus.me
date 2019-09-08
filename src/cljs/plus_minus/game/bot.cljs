@@ -170,11 +170,11 @@
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]]
    [:div.column.is-one-third
-      [:div.flex {:justify-content "flex-start"}
-       [:div.column
-        [game-settings]
-        [ach/component (db/get-in [:game-statistics :progress])]]
-       [:div.flex.column
-        [rich/donation]
-        [rich/donation-ru]
-        [rich/donate-justify]]]]])
+    [:div.flex {:justify-content "flex-start"}
+     [:div.column
+      [game-settings]
+      [ach/component]]
+     [:div.flex.column
+      [rich/donation]
+      [rich/donation-ru]
+      [rich/donate-justify]]]]])

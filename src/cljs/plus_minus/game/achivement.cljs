@@ -1,6 +1,5 @@
 (ns plus-minus.game.achivement
   (:require [reagent.core :as r]
-            [plus-minus.app-db :as db]
             [plus-minus.game.progress :refer [achivements]]))
 
 ;; icons https://fontawesome.com/icons?d=gallery&q=achi
@@ -31,11 +30,11 @@
      [:div.dropdown-item
       [:p (requirement-text req)]]]]])
 
-(defn component [progress]
+(defn component [_]
   (let [active (r/atom nil)]
     (fn [progress]
       [:div.flex.column
-       [:label {:style {:margin-bottom 10}} "Achivements:"]
+       [:label.disable-selection {:style {:margin-bottom 10}} "Achivements:"]
        (doall
         (for [{n :ach-name :as a} achivements]
           ^{:key (str "achivment-" n)}

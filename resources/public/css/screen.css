@@ -122,19 +122,18 @@ body {
 /* pulse animation */
 @keyframes pulse_animation {
     0% { transform: scale(1); }
-    10% { transform: scale(1.05); }
-    30% { transform: scale(1); }
-    50% { transform: scale(1); }
-    60% { transform: scale(1.04); }
-    70% { transform: scale(1); }
+    5% { transform: scale(1.01); }
+    30% { transform: scale(1.03); }
+/*    60% { transform: scale(1.04); } */
+    70% { transform: scale(1.01); }
     80% { transform: scale(1); }
     100% { transform: scale(1); }
 }
 .pulse {
     animation-name: pulse_animation;
-    animation-duration: 5000ms;
+    animation-duration: 900ms;
     transform-origin:70% 70%;
-    animation-iteration-count: infinite;
+    animation-iteration-count: single;
     animation-timing-function: linear;
 }
 
