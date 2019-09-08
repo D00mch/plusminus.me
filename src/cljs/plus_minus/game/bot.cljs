@@ -144,6 +144,11 @@
                     (db/put! :modal (alert-restart row-size))
                     (change-state (s/state-template row-size))))])
 
+(defn on-click [turn? state index id]
+  (if turn?
+    (move state index)
+    (board/show-info-near-cell! id "Can't make this move")))
+
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:section.section>div.container>div.columns
    [:div.flex.column.is-half
@@ -155,11 +160,7 @@
      :you     (db/get :identity)
      :he      "IQ rater"]
     [board/matrix
-     :on-click  (fn [turn? state index]
-                  (if turn?
-                    (move state index)
-                    (c/show-info-modal! "Can't make this move"
-                                        "Please, check the game rules page")))
+     :on-click  on-click
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]]
    [:div.column.is-one-third

@@ -2,7 +2,8 @@
   (:require [plus-minus.game.board :as b]
             [plus-minus.game.state :as s]
             [reagent.core :as r]
-            [plus-minus.components.common :as c]))
+            [plus-minus.components.common :as c]
+            [plus-minus.app-db :as db]))
 
 (defn game-settings
   "on-change - fn [game-size]"
@@ -45,6 +46,22 @@
       [:span.tag.is-light he]
       [:span.tag.is-light his-p]]]))
 
+(defn show-info-near-cell! [el-id text]
+  (let [el   (.getElementById js/document el-id)
+        top  (+ (.-offsetTop (.. el -offsetParent))
+                (.-offsetTop el)
+                (* 0.8 (.-offsetHeight el)))
+        left (+ (.-offsetLeft (.. el -offsetParent))
+                (.-offsetLeft el)
+                (* 0.6 (.-offsetWidth el)))]
+    (c/show-top-el!
+     [:div.notification.is-small
+      {:style {:position "absolute"
+               :top (str top "px")
+               :left left}}
+      [:button.delete {:on-click #(db/remove! :common-el)}] text]
+     :delay 2000)))
+
 (defn matrix
   "on-click - fn [turn? state index]"
   [& {on-click                           :on-click,
@@ -62,7 +79,8 @@
         (let [i      (b/xy->index x y r)
               valid  (s/valid-move? state i)
               turn   (and valid (= usr-hrz hrz-turn))
-              hidden (some #{i} moves)]
+              hidden (some #{i} moves)
+              id     (str "board-cell" i)]
           [:div.cell {:style {:margin 4
                               :visibility (when hidden "hidden")
                               :background (cond
@@ -70,8 +88,9 @@
                                             valid            "#ee1f1f"
                                             cell-bg          cell-bg
                                             :else            "Gainsboro")}
+                      :id id
                       :key i
-                      :on-click #(on-click turn state i)
+                      :on-click #(on-click turn state i id)
                       :class (when valid "pulse")}
            [:div.inner.disable-selection {:style {:color (when valid "white")}}
             (nth cells i)]]))])])

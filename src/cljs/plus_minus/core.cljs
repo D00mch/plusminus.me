@@ -138,11 +138,16 @@
    (when-let [snack (db/get :snack)]
      [snack])])
 
+(defn common-top-el []
+  (when-let [el (db/get :common-el)]
+    [el]))
+
 (defn page []
   [:div
    [modal]
    [snack]
-   [(pages (db/get :page))]])
+   [(pages (db/get :page))]
+   [common-top-el]])
 
 ;; -------------------------
 ;; Routes
