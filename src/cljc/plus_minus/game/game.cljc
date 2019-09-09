@@ -56,10 +56,10 @@
     (doseq [{m :moves :as s} states] (prn "m: " m (points-diff hrz s)))
     (st/move state mv)))
 
-(defn move-clever-bot [{mvs :moves {r :row-size} :board :as state}]
+(defn move-clever-bot [{mvs :moves {r :row-size} :board :as state} & [prediction]]
    (let [max-mvs (* r r)
          mvs%    (int (* 100 (/ (count mvs) max-mvs )))]
-     (cond (< mvs% 50) (move-bot state 3)
+     (cond (< mvs% 50) (move-bot state (or prediction 3))
            :else       (move-bot-safe state 1))))
 
 (defn some-move [state]

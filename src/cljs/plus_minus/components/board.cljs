@@ -14,7 +14,7 @@
   [& {}]
   (let [active (r/atom false)]
     (fn [& {state :state on-change :on-change size-range :size-range
-            label :label :or {label (str "Board size: " (s/rows state))}}]
+            label :label :or {label (str "Size: " (s/rows state))}}]
       [:div.dropdown
        {:class (str (when (> (c/screen-height) (c/screen-width)) "is-up") " "
                     (when @active "is-active"))
@@ -38,7 +38,7 @@
   (let [his-p     (if h (:vrt-points s) (:hrz-points s))
         your-p    (if h (:hrz-points s) (:vrt-points s))
         you-moved (= hrz-turn (not h))]
-    [:div.board.scors
+    [:div.board.scors.disable-selection
      [:div.tags.has-addons
       {:style {:margin 3}
        :id    "scors-you"

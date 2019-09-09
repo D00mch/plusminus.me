@@ -44,7 +44,7 @@
      "Laugh"]]))
 
 (defn mock-explained []
-  [:p
+  [:p.disable-selection
    "Use mocks to neutralize enemy morale." [:br]
    "You can bye mock on your influence." [:br] [:br]
    "“The supreme art of war is to subdue the enemy " [:br]

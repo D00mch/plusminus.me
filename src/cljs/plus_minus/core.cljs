@@ -74,7 +74,8 @@
                light?     (r/atom (theme/is-light?))]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "Plus-minus"]
+      [:a.navbar-item.disable-selection
+       {:href "/" :style {:font-weight :bold}} "Plus-minus"]
       [:span.navbar-burger.burger
        {:data-target :nav-menu
         :on-click #(swap! expanded? not)
