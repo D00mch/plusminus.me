@@ -13,7 +13,7 @@
 (def ^{:private true, :const true} win "Win")
 (def ^{:private true, :const true} lose "Lose")
 (def ^{:private true, :const true} draw "Draw")
-(def ^{:private true, :const true} infl "Influence, $")
+(def ^{:private true, :const true} infl "$")
 
 (defn- sum-stats [stats]
   (map #(update % :statistics contract/stats-summed) stats))
