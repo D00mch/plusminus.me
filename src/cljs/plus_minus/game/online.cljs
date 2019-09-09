@@ -98,7 +98,8 @@
   (let [{{c :cells} :board :as state} (db/get :online-state)]
       (if (st/valid-move? state mv)
         (do
-          (board/animate-click! mv (nth c mv) (:hrz-turn state))
+          (board/animate-click!
+           mv (nth c mv) (= (db/get :online-hrz) (:hrz-turn state)))
           (c/after-delay
            (+ board/anim-delay board/anim-time)
            #(db/update! :online-state st/move mv)))
@@ -132,7 +133,7 @@
     (if (= :playing (db/get :online-status))
       [(db/get :online-timer)]
       [board/game-settings
-       :label      (str/replace (str "Board size: " (db/get :online-row)) #"[\s]:" " ")
+       :label      (str/replace (str "Size: " (db/get :online-row)) #"[\s]:" " ")
        :size-range (cons :quick (range b/row-count-min b/row-count-max-excl))
        :state      (:online-state @db/state)
        :on-change  (fn [row-size]
@@ -141,7 +142,7 @@
    [:span.dot {:style {:height 9 :width 9 :border-radius "50%" :margin-top 10,
                        :background-color (if (ws/connected?) "green" "red")}}]
    [:div.tags.has-addons.disable-selection {:style {:margin 3}}
-    [:span.tag.is-medium "influence$"]
+    [:span.tag.is-medium "$"]
     [:span.tag.is-info.is-medium {:class "is-light"}
      (db/get-in [:online-user-stats :influence] "..")]]])
 
