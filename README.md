@@ -3,7 +3,7 @@
 Math game.
 
 check current web-version on [plusminus.me][1]
-(currently banned in Russia by Roskomnadzor, use proxy)
+(currently banned in Russia by Roskomnadzor, use proxy or check demo published with [heroku][4])
 
 <img src="https://github.com/Liverm0r/Plus-Minus-Fullstack/blob/dev/resources/public/img/gif/demo.gif" alt="alt text" width="286" height="514">
 
@@ -14,6 +14,7 @@ check Android version on [Google play][2]
 [1]: https://plusminus.me
 [2]: https://play.google.com/store/apps/details?id=com.livermor.plusminus
 [3]: https://m.do.co/c/edb551a6bfca
+[4]: https://plus-minus-game.herokuapp.com/
 
 ## Status: in progress 
 
