@@ -53,7 +53,7 @@
         states (sort (states-comparator hrz) states)
         {pmvs :moves} (first states)
         mv            (->> mvs count (nth pmvs))]
-    (doseq [{m :moves :as s} states] (prn "m: " m (points-diff hrz s)))
+    #_(doseq [{m :moves :as s} states] (prn "m: " m (points-diff hrz s)))
     (st/move state mv)))
 
 (defn move-clever-bot [{mvs :moves {r :row-size} :board :as state} & [prediction]]
