@@ -34,22 +34,19 @@
                    (apply max-key #(points-diff (:hrz-turn state) %)))))
 
 (defn move-bot [{mvs :moves :as state} & [prediction]]
-  (let [{pmvs :moves} (predict state (or prediction 5))
+  (let [{pmvs :moves} (predict state (or prediction 3))
         mv (->> mvs count (nth pmvs))]
     (st/move state mv)))
 
-(defn- scenarios [state turns-ahead best-move-fn]
-  (cond (-> state st/moves? not) (update state :hrz-turn not)
-        (<= turns-ahead 0) (best-move-fn state)
-        :else (->> (st/valid-moves state)
-                   (map #(st/move state %))
-                   (map #(predict % (dec turns-ahead)))
-                   flatten)))
+(defn- scenarios [state turns-ahead]
+  (->> (st/valid-moves state)
+       (map #(st/move state %))
+       (map #(predict % (dec turns-ahead)))))
 
 (defn move-bot-safe
   "just like move-bot, but prevents suicide moves and prefers quick wins"
   [{mvs :moves hrz :hrz-turn :as state} & [prediction]]
-  (let [states (scenarios state (or prediction 1) move-max)
+  (let [states (scenarios state (or prediction 1))
         states (sort (states-comparator hrz) states)
         {pmvs :moves} (first states)
         mv            (->> mvs count (nth pmvs))]

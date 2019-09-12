@@ -12,7 +12,7 @@
   2 6 3
   4 9 1 | {:x 0, :y 2} -> 4
 
-  represented in code as {:row-size n, :board [...]})
+  represented in code as {:row-size n, :cells [...]})
 
 (def row-count-min 5)
 (def row-count-max 9)
