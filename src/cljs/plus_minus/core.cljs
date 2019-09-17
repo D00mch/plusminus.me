@@ -39,7 +39,7 @@
 
 (defn account-actions [expanded?]
   [:div.navbar-item.has-dropdown.is-hoverable
-   [:a.navbar-link "Sign Out"]
+   [:a.navbar-link "User actions"]
    [:div.navbar-dropdown
     [:a.navbar-item
      {:on-click #(do (close-expanded! expanded?)
@@ -50,7 +50,10 @@
      {:on-click #(reg/delete-account!
                   (fn []
                     (close-expanded! expanded?)
-                    (ws/close!)))} "Delete account!"]]])
+                    (ws/close!)))} "Delete account!"]
+    [:a.navbar-item
+     {:on-click #(db/put! :modal (reg/change-pass-form))}
+     "Change password"]]])
 
 (defn- on-logged-in [expanded?]
   (init-online-state!)

@@ -74,6 +74,18 @@
       (ring-response/ok)
       (assoc :session nil)))
 
+(defn change-pass! [id new-pass]
+  (if-let [errors (validate/change-pass-errors new-pass)]
+    (response/e-precondition "precondition failed" {:validation errors})
+    (if-let [_ (db/get-user {:id id})]
+      (response/try-with-wrap-internal-error
+       :fun (fn []
+              (db/update-user! {:id id :pass (hashers/encrypt new-pass)})
+              {:result :ok})
+       :msg "server error occured while changing password")
+      (ring-response/unauthorized {:result :unauthorized
+                                   :message "user does not exist"}))))
+
 (defn delete-account! [identity]
   (db/delete-user! {:id identity})
   (-> {:result :ok}

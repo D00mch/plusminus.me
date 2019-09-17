@@ -132,6 +132,15 @@
     {:swagger {:tags ["restricted"]}
      :middleware [middleware/wrap-restricted]}
 
+    ["/change-pass"
+     {:post {:summary "change user's password"
+             :parameters {:body {:pass string?}}
+             :responses {200 {:body {:result keyword?}}}
+             :handler (fn [{{id :identity :as s} :session
+                            {{p :pass} :body} :parameters :as req}]
+                        (clojure.pprint/pprint {:session s})
+                        (auth/change-pass! id p))}}]
+
     ["/delete-account"
      {:post {:summary "delete user profile from database"
              :responses {200 {:body {:result keyword?}}}

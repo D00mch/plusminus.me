@@ -5,30 +5,53 @@
             [plus-minus.components.common :as c]
             [plus-minus.validation :as validation]))
 
+(defn- errors-handler [styles]
+  #(let [resp (:response %)]
+     (swap! styles dissoc :loading)
+     (swap! styles assoc-in [:errors :id] (:message resp))))
+
+(defn- make-req! [styles req]
+  (when-not (:errors @styles)
+    (swap! styles assoc :loading :loading)
+    (req)))
+
 (defn- register!
   "fields - r/atom with map with edit-texts fields;
   styles - r/atom with styles for this edit-texts"
   [fields styles on-reg]
   (swap! styles assoc :errors (validation/registration-errors @fields))
-  (when-not (:errors @styles)
-    (swap! styles assoc :loading :loading)
-    (ajax/POST "/api/register"
+  (make-req!
+   styles
+   #(ajax/POST "/api/register"
                {:header {"Accept" "application/transit+json"}
                 :params @fields
-                :handler #(do (app-db/put! :identity (:id @fields))
-                              (swap! styles dissoc :loading)
-                              (reset! fields {})
-                              (app-db/remove! :modal)
-                              (on-reg))
-                :error-handler
-                #(let [resp (:response %)]
-                   (swap! styles dissoc :loading)
-                   (swap! styles assoc-in [:errors :id] (:message resp)))})))
+                :handler (fn []
+                           (app-db/put! :identity (:id @fields))
+                           (swap! styles dissoc :loading)
+                           (reset! fields {})
+                           (app-db/remove! :modal)
+                           (on-reg))
+                :error-handler (errors-handler styles)})))
+
+(defn- change-pass!
+  [fields styles]
+  (swap! styles assoc :errors (validation/change-pass-errors (:pass @fields)))
+  (make-req!
+   styles
+   #(ajax/POST "/api/restricted/change-pass"
+               {:header {"Accept" "application/transit+json"}
+                :params @fields
+                :handler (fn []
+                           (swap! styles dissoc :loading)
+                           (reset! fields {})
+                           (app-db/remove! :modal))
+                :error-handler (errors-handler styles)})))
 
 (defn- registration-form [on-reg]
   (let [fields (r/atom {})
         styles (r/atom {:id {:auto-focus true}})]
-    (fn []
+    (fn [
+]
       [c/modal
        :header [:div  "Plus-minus registration"]
        :body   [:div
@@ -80,3 +103,21 @@
                                          (on-delete)
                                          (app-db/remove! :identity)
                                          (app-db/put! :page :home))}))))
+
+(defn change-pass-form []
+  (let [fields (r/atom {})
+        styles (r/atom {:id {:auto-focus true}})]
+    (fn []
+      [c/modal
+       :header [:div "Changing password"]
+       :body   [:div
+                [c/input
+                 :id     :pass
+                 :type   "password"
+                 :hint   "new password"
+                 :fields fields
+                 :styles styles]]
+       :footer (c/do-or-close-footer
+                :name "Change!"
+                :on-do #(change-pass! fields styles)
+                :styles styles)])))

@@ -35,7 +35,7 @@
 
 (defn- form->key-errors [form spec]
   (when-let [problems (::s/problems (s/explain-data spec form))]
-    (let [ids  (-> form keys set)]
+    (let [ids (-> form keys set)]
       (->> (for [problem problems
                  :let [specs (-> problem :via)
                        msg   (get @spec-msgs (last specs))
@@ -46,5 +46,17 @@
              [id msg])
            (into {})))))
 
+(defn- key->errors [k spec]
+  (when-let [problems (::s/problems (s/explain-data spec k))]
+    (->> (for [problem problems
+               :let [specs (-> problem :via)
+                     msg   (get @spec-msgs (last specs))
+                     id    (-> spec name keyword)]]
+           [id msg])
+         (into {}))))
+
 (defn registration-errors [params]
   (form->key-errors params :unq/person))
+
+(defn change-pass-errors [pass]
+  (key->errors pass ::pass))
