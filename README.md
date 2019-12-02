@@ -31,10 +31,10 @@ You will need [Leiningen][3] 2.0 or above installed.
 
 Project is generated with [luminus-template][5].
 
-PWA is implemented with [page-renderer][4].
+PWA is implemented with [page-renderer][6].
 
-[4]: https://github.com/spacegangster/page-renderer
 [5]: https://github.com/luminus-framework/luminus-template
+[6]: https://github.com/spacegangster/page-renderer
 
 ## Running
 
