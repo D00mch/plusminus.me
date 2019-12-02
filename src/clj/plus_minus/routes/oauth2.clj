@@ -61,7 +61,7 @@
                              {:query-params {:access_token (:access-token token)}
                               :as :json})
         user       (-> token-info :body :email email->user!)]
-    (auth/enrich-session (redirect "/") session user)))
+    (auth/enrich-session (redirect "/app") session user)))
 
 (defn routes []
   ["/oauth"
