@@ -18,9 +18,9 @@ check Android version on [Google play][2]
 ## Status: in progress 
 
 ### TODOS
-- event driven database;
+- campaing;
 - cache on server for single-player game;
-- PWA;
+- event driven database;
 - chat
 
 ## Prerequisites
@@ -28,6 +28,15 @@ check Android version on [Google play][2]
 You will need [Leiningen][3] 2.0 or above installed.
 
 [3]: https://github.com/technomancy/leiningen
+
+## How-to
+
+Project is generated with [luminus-template][5].
+
+PWA is implemented with [page-renderer][4].
+
+[4]: https://github.com/spacegangster/page-renderer
+[5]: https://github.com/luminus-framework/luminus-template
 
 ## Running
 
