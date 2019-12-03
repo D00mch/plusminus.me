@@ -16,6 +16,9 @@ profiles.clj
 /node_modules
 /log
 
+#android pwa
+resources/public/json/assetlinks.json
+
 #IntelliJ IDEA
 .idea
 *.iml

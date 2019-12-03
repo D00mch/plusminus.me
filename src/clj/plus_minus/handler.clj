@@ -3,6 +3,7 @@
     [plus-minus.middleware :as middleware]
     [plus-minus.layout :refer [error-page]]
     [plus-minus.routes.home :refer [home-routes]]
+    [plus-minus.routes.pwa :refer [pwa-routes]]
     [plus-minus.routes.services :refer [service-routes]]
     [plus-minus.routes.oauth2 :refer [routes]]
     [plus-minus.routes.admin :refer [admin-routes]]
@@ -25,6 +26,7 @@
     (ring/ring-handler
       (ring/router
         [(home-routes)
+         (pwa-routes)
          (admin-routes)
          (websocket-routes)
          (service-routes)
