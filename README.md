@@ -23,18 +23,18 @@ check Android version on [Google play][2]
 
 ## Prerequisites
 
-You will need [Leiningen][3] 2.0 or above installed.
+You will need [Leiningen][5] 2.0 or above installed.
 
-[3]: https://github.com/technomancy/leiningen
+[5]: https://github.com/technomancy/leiningen
 
 ## How-to
 
-Project is generated with [luminus-template][5].
+Project is generated with [luminus-template][6].
 
-PWA is implemented with [page-renderer][6].
+PWA is implemented with [page-renderer][7].
 
-[5]: https://github.com/luminus-framework/luminus-template
-[6]: https://github.com/spacegangster/page-renderer
+[6]: https://github.com/luminus-framework/luminus-template
+[7]: https://github.com/spacegangster/page-renderer
 
 ## Running
 
@@ -61,9 +61,13 @@ To start it in dev you need to provide dev-config.edn file (put it in project ro
  :session-store-key "some_16chars_key"
 }
 ```
+To support pwa with android apk provide `resources/public/json/assetlinks.json` (check official [docs][8])
+
 To start a web server for the application, run:
 
     lein run 
+
+[8]: https://developers.google.com/digital-asset-links/tools/generator
 
 ## License
 ```
