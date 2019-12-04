@@ -56,6 +56,7 @@
    "Login"])
 
 (defn logout! []
+  (c/clear-cache)
   (ajax/POST "/api/logout"
              {:handler (fn []
                          (db/remove! :identity)
