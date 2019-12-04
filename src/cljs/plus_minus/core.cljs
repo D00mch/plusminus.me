@@ -64,7 +64,8 @@
   (if (db/get :identity)
     [account-actions expanded?]
     [:div.navbar-end>div.navbar-item>div.buttons
-     [:a.button {:href "/oauth/init"}
+     [:a.button {:href "/oauth/init"
+                 :on-click (fn[] (c/clear-cache))}
       [:span.icon>img {:width 20
                        :alt "Google &quot;G&quot; Logo"
                        :src "/img/google.png"}]

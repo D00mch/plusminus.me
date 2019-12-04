@@ -96,6 +96,7 @@
                         (on-delete))))))
 
 (defn delete-account! [on-delete]
+  (c/clear-cache)
   (app-db/put!
    :modal
    (alert-delete #(ajax/POST "/api/restricted/delete-account"

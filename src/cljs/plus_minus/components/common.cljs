@@ -100,3 +100,7 @@
   (js/clearTimeout (db/get :common-el-timer))
   (db/put! :common-el-timer (after-delay delay #(db/remove! :common-el)))
   (db/put! :common-el (fn [] el)))
+
+(defn clear-cache []
+  (.then (.keys js/caches)
+         (fn [cs] (.forEach cs #(.delete js/caches %)))))
