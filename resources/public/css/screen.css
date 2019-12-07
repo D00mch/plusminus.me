@@ -5,6 +5,9 @@ html,
 body {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
+html, body {
+    background: #F5F5F5;
+}
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
