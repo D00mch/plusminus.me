@@ -182,19 +182,16 @@
 
 ;; -------------------------
 ;; Initialize app
-#_(defn fetch-docs! []
-  (GET "/docs" {:handler #(db/put! :docs %)}))
 
 (defn mount-components []
   (r/render [#'navbar] (.getElementById js/document "navbar"))
   (r/render [#'page] (.getElementById js/document "app")))
 
-(defn init! [dev?]
-  (db/put! :dev? dev?)
-  (ajax/load-interceptors!)
-  #_(fetch-docs!)
+(defn init! []
   (hook-browser-navigation!)
+  (ajax/load-interceptors!)
   (db/put! :identity js/identity)
+  (db/put! :dev? (= (.-host js/location) "localhost:3000"))
 
   ;; init states
   (theme/set-up)

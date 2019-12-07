@@ -16,4 +16,4 @@
 
 (devtools/install!)
 
-(core/init! true)
+(core/init!)
