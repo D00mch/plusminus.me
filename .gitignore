@@ -12,6 +12,7 @@ profiles.clj
 /.env
 .nrepl-port
 .repl
+/.clj-kondo
 
 /node_modules
 /log
