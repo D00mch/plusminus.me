@@ -1,6 +1,7 @@
 (ns plus-minus.routes.home
   (:require
     [plus-minus.layout :as layout]
+    [ring.util.response :refer [redirect]]
     [plus-minus.middleware :as middleware]))
 
 (defn home-page [request]
@@ -13,7 +14,6 @@
   [""
    {:middleware [middleware/wrap-csrf
                  middleware/wrap-formats]}
-   ["/" {:get home-page}]
+   ["/" {:get (fn [_] (redirect "/app"))}]
    ["/app" {:get home-page}]
    ["/privacy-policy" {:get privacy-policy}]])
-
