@@ -172,9 +172,5 @@
    [:div.column.is-one-third
     [:div.flex {:justify-content "flex-start"}
      [:div.column
-      [game-settings]
-      [ach/component]]
-     [:div.flex.column
-      [rich/donation]
-      [rich/donation-ru]
-      [rich/donate-justify]]]]])
+      [:div {:style {:margin-left 10}} [game-settings]]
+      [ach/component]]]]])
