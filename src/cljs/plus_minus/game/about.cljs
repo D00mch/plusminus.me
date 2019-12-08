@@ -1,4 +1,5 @@
-(ns plus-minus.game.about)
+(ns plus-minus.game.about
+  (:require [plus-minus.app-db :as db]))
 
 (defn component []
   [:div.content
@@ -16,4 +17,9 @@
    [:br]
    [:a {:href "https://github.com/liverm0r/Plus-Minus-Fullstack/"} "github"]
    [:p "published with "
-    [:a {:href "https://m.do.co/c/edb551a6bfca"} "digitalocean.com"]]])
+    [:a {:href "https://m.do.co/c/edb551a6bfca"} "digitalocean.com"]]
+   [:br]
+   [:a {:href (str (if (db/get :dev?) "http://" "https://")
+                   (.-host js/location)
+                   "/privacy-policy")}
+    "privacy policy"]])

@@ -5,7 +5,6 @@
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
             [plus-minus.game.achivement :as ach]
-            [plus-minus.components.rich :as rich]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
