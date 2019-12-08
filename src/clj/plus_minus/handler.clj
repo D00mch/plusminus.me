@@ -15,7 +15,7 @@
     [plus-minus.env :refer [defaults]]
     [mount.core :as mount]))
 
-#_(mount/defstate init-app
+(mount/defstate init-app
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
