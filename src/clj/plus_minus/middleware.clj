@@ -65,9 +65,16 @@
         (wrap-authentication backend)
         (wrap-authorization backend))))
 
+(defn wrap-cache [handler duration]
+  (fn [request]
+    (let [response (handler request)]
+      (assoc-in response [:headers "Cache-Control"]
+                (str "max-age=" duration)))))
+
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       wrap-auth
+      (wrap-cache 1200)
       (wrap-defaults
        (-> site-defaults
            (assoc-in [:security :anti-forgery] false)
