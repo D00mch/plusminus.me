@@ -100,13 +100,17 @@
 
     ["/end"
      {:put {:summary "update user game statistics"
-            :parameters {:body {:id      ::validation/id
-                                :state   ::game-state/state
-                                :usr-hrz boolean?
-                                :give-up boolean?}}
+            :parameters {:body ::state/result-state}
             :responses {200 {:body {:statistics ::p/statistics}}}
             :handler (fn [{{{:keys [id state usr-hrz give-up]} :body} :parameters}]
                        (state/game-end-resp id state usr-hrz give-up))}}]
+
+    ["/ends"
+     {:put {:summary "update user game statistics"
+            :parameters {:body ::state/result-states}
+            :responses {200 {:body {:statistics ::p/statistics}}}
+            :handler (fn [{{states :body} :parameters}]
+                       (state/games-end-resp states))}}]
 
     ["/statistics"
      {:get {:summary "get user game statistics"

@@ -71,6 +71,8 @@
     (update stats :win-streak inc)
     (assoc stats :win-streak 0)))
 
+(defn- update-with-iq [stats result] (update stats result inc))
+
 (defn check-stats [stats]
   (-> stats
       (assoc :iq (g/calc-iq stats))
@@ -80,4 +82,4 @@
       update-row-sizes))
 
 (defn on-end [stats result]
-  (-> stats check-stats (update-win-streak result)))
+  (-> stats check-stats (update-with-iq result) (update-win-streak result)))
