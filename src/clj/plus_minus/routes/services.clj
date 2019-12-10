@@ -129,8 +129,8 @@
                              {:data [{:id ::validation/id
                                       :iq int?
                                       :statistics ::contract/statistics}]}}}
-            :handler (fn [_]
-                       (statistics/get-all-online-stats))}}]]
+            :handler (fn [{{id :identity} :session}]
+                       (statistics/get-all-online-stats id))}}]]
 
    ["/restricted"
     {:swagger {:tags ["restricted"]}

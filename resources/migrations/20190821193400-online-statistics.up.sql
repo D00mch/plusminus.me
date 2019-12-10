@@ -4,3 +4,6 @@ CREATE TABLE online_statistics (
   statistics JSONB,
   FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+--;; CREATE INDEX statistics_sort_iq_desc ON online_statistics USING btree (iq DESC);
+--;; in further migration files

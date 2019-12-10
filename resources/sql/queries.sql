@@ -72,3 +72,8 @@ WHERE id = :id
 -- :doc retrieves all online statistics records, ordered by iq
 SELECT * FROM online_statistics
 ORDER BY iq DESC
+
+-- :name get-online-stats-limit :? :*
+-- :doc retrieves sorted online statistics limited by limit
+SELECT * FROM online_statistics
+ORDER BY iq DESC limit :limit
