@@ -30,8 +30,14 @@
      "api/game/move"
      {:url-params {:id id, :move mv}
       :handler #(change-state-with-anim state mv :sync (db/get :game-sync-request))
-      :error-handler #(let [{msg :message} (get % :response)]
+      :error-handler (fn [_]
+                        (prn :bot "erorr")
                         (db/put! :game-sync-request true)
+                        (db/put! :modal (c/info-modal
+                          "You need to be online in rating game"
+                          (str "You can logout to play without rating. "
+                               "This is temporarily, we hired highly trained gnomes to fix this issue. 
+")))
                         (fn [_] (change-state (s/move state mv))))})
     (change-state-with-anim state mv)))
 
