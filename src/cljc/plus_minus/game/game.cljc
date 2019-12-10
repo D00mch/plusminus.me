@@ -71,10 +71,9 @@
 (defn play
   "Simulate game til the end with best moves"
   [{:as state}]
-  (->> (iterate move-bot state)
-       (take-while #(st/moves? %))
-       last
-       move-bot))
+  (if (st/moves? state)
+    (recur (move-bot state))
+    state))
 
 (defn calc-iq [{:keys [win lose draw]}]
   (if (= 0 win lose draw)

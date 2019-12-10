@@ -6,7 +6,8 @@
             [plus-minus.game.progress :as p]
             [com.walmartlabs.cond-let :refer [cond-let]]
             [clojure.spec.alpha :as s]
-            [plus-minus.routes.services.auth :as auth]))
+            [plus-minus.routes.services.auth :as auth]
+            [plus-minus.validation :as valid]))
 
 ;; current game state with bot
 
@@ -49,30 +50,41 @@
    :fun #(let [stats (get-stats id)] {:statistics (p/check-stats stats)})
    :msg "server error occured while getting stats"))
 
+(s/def ::usr-hrz boolean?)
+(s/def ::give-up boolean?)
+(s/def ::result-state (s/keys :req-un [::st/state ::usr-hrz ::give-up ::valid/id]))
+(s/def ::result-states (s/coll-of ::result-state))
 
+(defn- upsert-stats [id stats]
+  (db/upsert-statistics! {:id id :statistics stats}) {:statistics stats})
+
+(defn- result-f [usr-give-up state usr-hrz]
+  (if usr-give-up :lose (g/on-game-end state usr-hrz)))
 
 (defn game-end-resp [id state usr-hrz usr-give-up]
   (if (and (st/moves? state) (not usr-give-up))
     (response/e-precondition "can't end the game with free moves and not giving-up")
-    (let [result (if usr-give-up :lose (g/on-game-end state usr-hrz))
-          stats  (update (get-stats id) result inc)
+    (let [result (result-f usr-give-up state usr-hrz)
+          stats  (get-stats id)
           stats  (p/on-end stats result)]
       (response/try-with-wrap-internal-error
-       :fun #(do (db/upsert-statistics! {:id id :statistics stats})
-                 {:statistics stats})
+       :fun #(upsert-stats id stats)
        :msg  "server error occured while saving stats"))))
 
-#_(defn make-move [mv]
-  (let [state ])
-  )
+(defn- states->stats
+  "gets vector of states and returns reduced stats"
+  [states stats]
+  (let [results (map #(result-f (:give-up %) (:state %) (:usr-hrz %)) states)
+        stats   stats
+        stats   (reduce #(p/on-end %1 %2) stats results)]
+    stats))
 
-#_(db/upsert-statistics! {:id "dumch" :statistics {:win 0 :lose 0 :draw 0}})
-
-#_(db/upsert-state! {:id "dumch",
-                   :state {:board {:cells [3,6,3,-8,-1,7,3,-1,-4,-8,4,1,-2,8,3,9]
-                                   :row-size 2}
-                           :start 6
-                           :moves []
-                           :hrz-points 0
-                           :vrt-points 0
-                           :hrz-turn true}})
+(defn games-end-resp [states]
+  (let [states (filter #(not (st/moves? (:state %))) states)]
+    (if (empty? states)
+      (response/e-precondition
+       "you either passed empty states or states was unfinished")
+      (let [id (-> states first :id)]
+        (response/try-with-wrap-internal-error
+         :fun (fn[] (upsert-stats id (states->stats states (get-stats id))))
+         :msg "server error occured while processing accumulated states")))))

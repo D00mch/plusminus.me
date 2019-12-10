@@ -11,7 +11,8 @@
             [plus-minus.routes.multiplayer.matcher :as matcher]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [plus-minus.game.game :as game]
-            [plus-minus.game.board :as b])
+            [plus-minus.game.board :as b]
+            [plus-minus.game.progress :as p])
   (:import [plus_minus.multiplayer.contract Game Reply]))
 
 (use-fixtures
@@ -70,7 +71,8 @@
 
     (let [{{game :game} :data} (get-with-timeout!! result>)]
       (testing "winner got influence"
-        (is (= c/influence-on-win (c/influence-get game "p2"))))
+        (is (= (+ c/influence-initial c/influence-on-win)
+               (c/influence-get game "p2"))))
       (testing "agressor spent his influence"
         (is (= (- c/influence-on-win (c/mock-price mock))
               (c/influence-get game "p1")))))
@@ -83,7 +85,7 @@
           game    (matcher/initial-state b/row-count-min p1 p2)
           [r1 r2] (#'reply/game-end-replies game (->Message :give-up p1 nil))
           game    (-> r1 :data :game)]
-      (is (= c/influence-on-win (c/influence-get game p2)))
+      (is (= (+ c/influence-initial c/influence-on-win) (c/influence-get game p2)))
       (is (= (-> r1 :data :outcome) :lose))
       (is (= (-> r2 :data :outcome) :win))
       (is (= (-> r1 :data :cause) (-> r2 :data :cause) :give-up))))

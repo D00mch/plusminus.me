@@ -5,7 +5,6 @@
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
             [plus-minus.game.achivement :as ach]
-            [plus-minus.components.rich :as rich]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
@@ -31,8 +30,14 @@
      "api/game/move"
      {:url-params {:id id, :move mv}
       :handler #(change-state-with-anim state mv :sync (db/get :game-sync-request))
-      :error-handler #(let [{msg :message} (get % :response)]
+      :error-handler (fn [_]
+                        (prn :bot "erorr")
                         (db/put! :game-sync-request true)
+                        (db/put! :modal (c/info-modal
+                          "You need to be online in rating game"
+                          (str "You can logout to play without rating. "
+                               "This is temporarily, we hired highly trained gnomes to fix this issue. 
+")))
                         (fn [_] (change-state (s/move state mv))))})
     (change-state-with-anim state mv)))
 
@@ -172,9 +177,5 @@
    [:div.column.is-one-third
     [:div.flex {:justify-content "flex-start"}
      [:div.column
-      [game-settings]
-      [ach/component]]
-     [:div.flex.column
-      [rich/donation]
-      [rich/donation-ru]
-      [rich/donate-justify]]]]])
+      [:div {:style {:margin-left 10}} [game-settings]]
+      [ach/component]]]]])

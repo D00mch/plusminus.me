@@ -76,10 +76,12 @@
 
 (s/def ::statistics (s/keys :req-un [::win ::lose ::draw ::influence]))
 
+(def ^:const influence-initial 50)
+
 (def stats-initial {:win       {:give-up 0, :time-out 0, :no-moves 0},
                     :lose      {:give-up 0, :time-out 0, :no-moves 0},
                     :draw      0
-                    :influence 50})
+                    :influence influence-initial})
 
 (defn stats-sum [stats key]
   (->> (get stats key) (map second) (reduce +)))

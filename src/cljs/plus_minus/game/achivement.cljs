@@ -16,7 +16,7 @@
   [:div.dropdown
    {:class (when (= @active n) "is-active")
     :on-click #(reset! active (if (= @active n) nil n))
-    :style {:margin-top 10}}
+    :style {:margin-top 10, :margin-right 10}}
    [:div.dropdown-trigger
     [:button.button {:aria-haspopup "true", :aria-controls "dropdown-menu2"}
      (when done [:span.icon.is-small>i {:class icon-done}])
@@ -35,7 +35,9 @@
     (fn [progress]
       [:div.flex.column
        [:label.disable-selection {:style {:margin-bottom 10}} "Achivements:"]
-       (doall
+       [:div.flex.board
+        {:style {:align-content "flext-start"
+                 :flex-wrap "wrap"}}
         (for [{n :ach-name :as a} achivements]
           ^{:key (str "achivment-" n)}
-          [ach-dropdown a (some #{(:ach-name a)} progress) active]))])))
+          [ach-dropdown a (some #{(:ach-name a)} progress) active])]])))

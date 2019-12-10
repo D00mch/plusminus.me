@@ -13,7 +13,6 @@
    [plus-minus.components.common :as c]
    [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
-   [plus-minus.components.theme :as theme]
    [reitit.core :as reitit]
    [ajax.core :as a]
    [clojure.string :as string]
@@ -74,8 +73,7 @@
      (login/login-button #(on-logged-in expanded?))]))
 
 (defn navbar []
-  (r/with-let [expanded? (r/atom false)
-               light?     (r/atom (theme/is-light?))]
+  (r/with-let [expanded? (r/atom false)]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
       [:a.navbar-item.disable-selection
@@ -92,10 +90,6 @@
        [nav-link "#/about" "About" :about expanded?]
        [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
        [nav-link "#/statistics" "Statistics" :statistics expanded?]]
-      [:a.navbar-item.div
-       {:on-click #(do (swap! light? not)
-                       (theme/dark-reader! @light?))}
-       [:span.icon.has-text-dangeri.fas.fa-moon]]
       [user-menu expanded?]]]))
 
 (defn about-page []
@@ -182,22 +176,18 @@
 
 ;; -------------------------
 ;; Initialize app
-#_(defn fetch-docs! []
-  (GET "/docs" {:handler #(db/put! :docs %)}))
 
 (defn mount-components []
   (r/render [#'navbar] (.getElementById js/document "navbar"))
   (r/render [#'page] (.getElementById js/document "app")))
 
-(defn init! [dev?]
-  (db/put! :dev? dev?)
-  (ajax/load-interceptors!)
-  #_(fetch-docs!)
+(defn init! []
   (hook-browser-navigation!)
+  (ajax/load-interceptors!)
   (db/put! :identity js/identity)
+  (db/put! :dev? (= (.-host js/location) "localhost:3000"))
 
   ;; init states
-  (theme/set-up)
   (init-online-state!)
   (bot/init-game-state!)
   (stats/init-stats!)
