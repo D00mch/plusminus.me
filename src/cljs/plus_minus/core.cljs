@@ -13,20 +13,13 @@
    [plus-minus.components.common :as c]
    [plus-minus.game.about :as about]
    [plus-minus.game.statistics :as stats]
+   [plus-minus.components.theme :as theme :refer [color]]
+   [herb.core :refer [<class]]
    [reitit.core :as reitit]
    [ajax.core :as a]
    [clojure.string :as string]
    [plus-minus.components.rich :as rich])
   (:import goog.History))
-
-(defn- close-expanded! [expanded?] (reset! expanded? false))
-
-(defn nav-link [uri title page expanded?]
-  [:a.navbar-item
-   {:href   uri
-    :on-click #(close-expanded! expanded?)
-    :active (when (= page (db/get :page)) "is-active")}
-   title])
 
 (defn- init-online-state! []
   (when (db/get :identity)
@@ -35,62 +28,6 @@
      #(do
         (online/initial-state!)
         (ws/push-message! :state)))))
-
-(defn account-actions [expanded?]
-  [:div.navbar-item.has-dropdown.is-hoverable
-   [:a.navbar-link "User actions"]
-   [:div.navbar-dropdown
-    [:a.navbar-item
-     {:on-click #(do (close-expanded! expanded?)
-                     (ws/close!)
-                     (login/logout!))}
-     "Logout"]
-    [:a.navbar-item
-     {:on-click #(reg/delete-account!
-                  (fn []
-                    (close-expanded! expanded?)
-                    (ws/close!)))} "Delete account!"]
-    [:a.navbar-item
-     {:on-click #(db/put! :modal (reg/change-pass-form))}
-     "Change password"]]])
-
-(defn- on-logged-in [expanded?]
-  (init-online-state!)
-  (close-expanded! expanded?)
-  (bot/init-game-state!))
-
-(defn user-menu [expanded?]
-  (if (db/get :identity)
-    [account-actions expanded?]
-    [:div.navbar-end>div.navbar-item>div.buttons
-     [:a.button {:href "/oauth/init"
-                 :on-click (fn[] (c/clear-cache))}
-      [:span.icon>img {:width 20
-                       :alt "Google &quot;G&quot; Logo"
-                       :src "/img/google.png"}]
-      [:span "Google"]]
-     (reg/registration-button #(on-logged-in expanded?))
-     (login/login-button #(on-logged-in expanded?))]))
-
-(defn navbar []
-  (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item.disable-selection
-       {:href "/" :style {:font-weight :bold}} "Plus-minus"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-start
-       [nav-link "#/" "Home" :home expanded?]
-       [nav-link "#/about" "About" :about expanded?]
-       [nav-link "#/multiplayer" "Multiplayer" :multiplayer expanded?]
-       [nav-link "#/statistics" "Statistics" :statistics expanded?]]
-      [user-menu expanded?]]]))
 
 (defn about-page []
   [:div.container>div.column>div.columns
@@ -104,8 +41,28 @@
       [:div [rich/donation]]
       [:div {:style {:margin-left 10}} [rich/donation-ru]]]]]])
 
-(defn home-page []
+(defn single-page []
   [bot/game-component])
+
+(defn- menu-item [name]
+  [:a {:href (str "#/" name)
+       :style {:margin-top 10, :margin-right 10}
+       :class (<class
+               #(with-meta
+                  {:color (color :text)}
+                  {:pseudo {:hover {:color (color :blue)}}}))} name])
+
+(defn home-page []
+  [:div.flex {:style {:justify-content "center"
+                      :align-items "center"
+                      :height "100vh"}}
+   [:div
+    [:div.flex.column
+     [menu-item "single"]
+     [menu-item "multiplayer"]
+     [menu-item "management"]
+     [menu-item "user"]
+     [menu-item "about"]]]])
 
 (defn multiplayer-page []
   (fn []
@@ -122,12 +79,6 @@
 (defn statistics-page []
   (stats/stats-component))
 
-(def pages
-  {:home        #'home-page
-   :about       #'about-page
-   :multiplayer #'multiplayer-page
-   :statistics  #'statistics-page})
-
 (defn modal []
   (when-let [session-modal (db/get :modal)]
     [session-modal]))
@@ -141,24 +92,33 @@
   (when-let [el (db/get :common-el)]
     [el]))
 
-(defn page []
-  [:div
-   [modal]
-   [snack]
-   [(pages (db/get :page))]
-   [common-top-el]])
-
 ;; -------------------------
 ;; Routes
+
+(def pages
+  {:home        #'home-page
+   :single      #'single-page
+   :about       #'about-page
+   :multiplayer #'multiplayer-page
+   :statistics  #'statistics-page})
+
+(defn page []
+  [:div {:style {:background-color (color :bg)
+                 :height "100vh"}}
+   [modal]
+   [(pages (db/get :page))]
+   [common-top-el]])
 
 (def router
   (reitit/router
     [["/" :home]
+     ["/single" :single]
      ["/about" :about]
      ["/multiplayer" :multiplayer]
      ["/statistics" :statistics]]))
 
 (defn match-route [uri]
+  (prn :uri uri)
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
        (reitit/match-by-path router)
        :data
@@ -178,7 +138,6 @@
 ;; Initialize app
 
 (defn mount-components []
-  (r/render [#'navbar] (.getElementById js/document "navbar"))
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []

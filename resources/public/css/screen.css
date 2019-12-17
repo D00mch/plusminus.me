@@ -3,7 +3,7 @@ html,
     box-sizing: border-box;
 }
 body {
-	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-family: 'Roboto Mono', Roboto, mono;
 }
 html, body {
     background: #F5F5F5;
@@ -91,12 +91,11 @@ html, body {
     display: flex;
 }
 .cell {
-    background: WhiteSmoke;
     color: white;
     flex: 1 0 auto;
     position: relative;
     /* border: 1px solid gray; */
-    border-radius: 3px;
+    border-radius: 12px;
     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
 }
 .cell:after {

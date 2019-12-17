@@ -1,6 +1,7 @@
 (ns plus-minus.components.board
   (:require [plus-minus.game.board :as b]
             [plus-minus.game.state :as s]
+            [plus-minus.components.theme :refer [color]]
             [reagent.core :as r]
             [reanimated.core :as anim]
             [plus-minus.components.common :as c]
@@ -39,18 +40,18 @@
         your-p    (if h (:hrz-points s) (:vrt-points s))
         you-moved (= hrz-turn (not h))]
     [:div.board.scors.disable-selection
-     [:div.tags.has-addons
-      {:style {:margin 3}
-       :id    "scors-you"
-       :class (if you-moved "rotate" "")}
-      [:span.tag.is-light you]
-      [:span.tag {:class (if (> his-p your-p) "is-danger" "is-light")} your-p]]
-     [:div.tags.has-addons
-      {:style {:margin 3}
-       :id    "scors-he"
-       :class (if you-moved "" "rotate")}
-      [:span.tag.is-light he]
-      [:span.tag.is-light his-p]]]))
+     [:div.flex {:style {:flex-direction "column"}}
+      [:div
+       {:style {:color (color :blue), :font-size 24}
+        :id    "scors-you"
+        :class (if you-moved "rotate" "")} your-p]
+      [:div {:style {:color (color :blue)}} (or you "You")]]
+     [:div.flex {:style {:flex-direction "column"}}
+      [:div.flex
+       {:style {:color (color :red), :font-size 24, :justify-content "flex-end"}
+        :id    "scors-he"
+        :class (if you-moved "" "rotate")} your-p]
+      [:div {:style {:color (color :red)}} (or he "He")]]]))
 
 (defn cell-id [index] (str "board-cell" index))
 
@@ -94,6 +95,7 @@
          [:div
           {:style {:position "absolute"
                    :opacity "0.3"
+                   :color (color (if turn? :blue :red))
                    :font-size 20
                    :top  @top-a
                    :left @left-a}}
@@ -120,16 +122,16 @@
               hidden (some #{i} moves)
               id     (cell-id i)
               v      (nth cells i)]
-          [:div.cell {:style {:margin 4
+          [:div.cell {:style {:margin 6
                               :visibility (when hidden "hidden")
                               :background (cond
                                             (and valid turn) "#209cee"
                                             valid            "#ee1f1f"
                                             cell-bg          cell-bg
-                                            :else            "Gainsboro")}
+                                            :else            (color :button))}
                       :id id
                       :key i
                       :on-click #(on-click turn state i)
                       :class (when valid "pulse")}
-           [:div.inner.disable-selection {:style {:color (when valid "white")}}
+           [:div.inner.disable-selection {:style {:color (color :text)}}
             v]]))])])

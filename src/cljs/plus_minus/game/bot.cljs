@@ -5,6 +5,7 @@
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
             [plus-minus.game.achivement :as ach]
+            [plus-minus.components.theme :refer [color]]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
@@ -137,9 +138,8 @@
         stats (db/get :game-statistics)
         iq    (:iq stats)]
     (cond
-      (not id) [:div {:style {:margin-left 5
-                              :margin-bottom 5}}
-                [:label "Authorize to rate your IQ"]]
+      (not id) [:div {:style {:color (color :blue)}}
+                "authorize!"]
       (> iq 0) [:div.tags.has-addons.disable-selection {:style {:margin 3}}
                 [:span.tag.is-dark "IQ"]
                 [:span.tag.is-info iq]])))
@@ -161,21 +161,23 @@
     (board/show-info-near-cell! index "Can't make this move")))
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
-  [:section.section>div.container>div.columns
-   [:div.flex.column.is-half
-    [:div.board {:style {:display :flex :flex-direction :column}}
+  [:div.flex {:style
+              {:justify-content "center"
+               :align-items "center"
+               :width "100vw"}}
+   [:div.board.flex.column {:style {:justify-content "space-between"
+                                    :height "100vh"}}
+    [:div.flex {:style {:flex-direction "column"
+                        :background-color "greed"}}
+     [board/scors
+      :state   (db/get :game-state)
+      :usr-hrz usr-hrz
+      :you     (db/get :identity)
+      :he      "IQ rater"]
      [game-stats]]
-    [board/scors
-     :state   (db/get :game-state)
-     :usr-hrz usr-hrz
-     :you     (db/get :identity)
-     :he      "IQ rater"]
     [board/matrix
      :on-click  on-click
      :game-state (db/get :game-state)
-     :user-hrz   usr-hrz]]
-   [:div.column.is-one-third
-    [:div.flex {:justify-content "flex-start"}
-     [:div.column
-      [:div {:style {:margin-left 10}} [game-settings]]
-      [ach/component]]]]])
+     :user-hrz   usr-hrz]
+    [:div {:style {:font-size 16, :color (color :blue)}} "<"]
+    ]])
