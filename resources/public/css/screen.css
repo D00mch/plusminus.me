@@ -47,6 +47,13 @@ html, body {
     -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
 }
 
+.center-hv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
 .flex {display: flex}
 .flex.center {align-items: center}
 .flex.column {flex-direction: column}
@@ -91,7 +98,6 @@ html, body {
     display: flex;
 }
 .cell {
-    color: white;
     flex: 1 0 auto;
     position: relative;
     /* border: 1px solid gray; */
@@ -115,7 +121,6 @@ html, body {
     right: 0;
     bottom: 0;
     top: 0;
-    color: Gray;
     display: flex;
     align-items: center;
     justify-content: center;

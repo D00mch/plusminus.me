@@ -140,9 +140,8 @@
     (cond
       (not id) [:div {:style {:color (color :blue)}}
                 "authorize!"]
-      (> iq 0) [:div.tags.has-addons.disable-selection {:style {:margin 3}}
-                [:span.tag.is-dark "IQ"]
-                [:span.tag.is-info iq]])))
+      (> iq 0) [:div {:style {:color (color :blue)}}
+                (str "iq: " iq)])))
 
 (defn game-settings []
   [board/game-settings
@@ -179,5 +178,6 @@
      :on-click  on-click
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]
-    [:div {:style {:font-size 16, :color (color :blue)}} "<"]
+    [:div {:style {:font-size 16, :color (color :blue)}
+           :on-click #(.back (.-history js/window))} "<"]
     ]])

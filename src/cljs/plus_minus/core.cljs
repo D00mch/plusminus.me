@@ -44,25 +44,23 @@
 (defn single-page []
   [bot/game-component])
 
+(defn- hover []
+  ^{:pseudo {:hover {:color (color :blue)}}}
+  {:color (color :text)})
+
 (defn- menu-item [name]
   [:a {:href (str "#/" name)
        :style {:margin-top 10, :margin-right 10}
-       :class (<class
-               #(with-meta
-                  {:color (color :text)}
-                  {:pseudo {:hover {:color (color :blue)}}}))} name])
+       :class (<class hover)} name])
 
 (defn home-page []
-  [:div.flex {:style {:justify-content "center"
-                      :align-items "center"
-                      :height "100vh"}}
-   [:div
-    [:div.flex.column
+  [:div.center-hv
+   [:div>div.flex.column
      [menu-item "single"]
      [menu-item "multiplayer"]
      [menu-item "management"]
      [menu-item "user"]
-     [menu-item "about"]]]])
+     [menu-item "about"]]])
 
 (defn multiplayer-page []
   (fn []
@@ -78,6 +76,29 @@
 
 (defn statistics-page []
   (stats/stats-component))
+
+(defn- auth-item [name & [onclick href]]
+  [:a {:style {:margin-top 10, :margin-right 10}
+       :class (<class hover)
+       :href href
+       :on-click (or onclick #(c/clear-cache))}
+   name])
+
+(defn- on-logged-in []
+  (init-online-state!)
+  (bot/init-game-state!))
+
+(defn user-page []
+  [:div.center-hv
+   (if (db/get :identity)
+     [:div>div.flex.column
+      [auth-item "logout" #(do (ws/close!) (login/logout!))]
+      [auth-item "delete account!" #(reg/delete-account! ws/close!)]
+      [auth-item "change password" #(db/put! :modal (reg/change-pass-form))]]
+     [:div>div.flex.column
+      [auth-item "google auth" nil "/oauth/init"]
+      [auth-item "register" #(db/put! :modal (reg/registration-form on-logged-in))]
+      [auth-item "login" #(db/put! :modal (login/login-form on-logged-in))]])])
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]
@@ -99,6 +120,7 @@
   {:home        #'home-page
    :single      #'single-page
    :about       #'about-page
+   :user        #'user-page
    :multiplayer #'multiplayer-page
    :statistics  #'statistics-page})
 
@@ -113,6 +135,7 @@
   (reitit/router
     [["/" :home]
      ["/single" :single]
+     ["/user" :user]
      ["/about" :about]
      ["/multiplayer" :multiplayer]
      ["/statistics" :statistics]]))

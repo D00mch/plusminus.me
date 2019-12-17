@@ -1,17 +1,20 @@
 (ns plus-minus.components.common
   (:require [clojure.string :as str]
             [plus-minus.app-db :as db]
+            [herb.core :refer [<class]]
+            [plus-minus.components.theme :refer [color]]
             [reagent.core :as r]))
 
 (defn modal [& {:keys [header body footer style]}]
-  [:div.modal.is-active.disable-selection
-   [:div.modal-background
-    {:on-click #(db/remove! :modal)}]
-   [:div.modal-card
-    (merge {:style {:width "95vw" :max-width "400px"}} style)
-    [:header.modal-card-head header]
-    [:section.modal-card-body body]
-    [:footer.modal-card-foot footer]]])
+  (let [theme-style {:background-color (color :bg), :color (color :text)}]
+    [:div.modal.is-active.disable-selection
+    [:div.modal-background
+     {:on-click #(db/remove! :modal)}]
+    [:div.modal-card
+     (merge {:style {:width "95vw" :max-width "400px"}} style)
+     [:header.modal-card-head {:style theme-style} header]
+     [:section.modal-card-body {:style theme-style} body]
+     [:footer.modal-card-foot {:style theme-style} footer]]]))
 
 (defn info-modal [title body]
   (fn []
@@ -47,8 +50,10 @@
       [:div.field
        [:div.control
         {:class (get-in @styles [id :class])}
-        [:input.input.is-primary
-         {:type        type
+        [:input.input
+         {:style {:background-color "lightgray"
+                  :color (color :text)}
+          :type        type
           :placeholder hint
           :value       (id @fields)
           :auto-focus  (get-in @styles [id :auto-focus])

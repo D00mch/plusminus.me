@@ -69,6 +69,10 @@
     (c/show-top-el!
      [:div.notification.is-small
       {:style {:position "absolute"
+               ;:background-color (color :bg)
+               :border-color "black"
+               :border-style "solid"
+               :border-width 1
                :top (str top "px")
                :left left}}
       [:button.delete {:on-click #(db/remove! :common-el)}] text]
@@ -125,13 +129,16 @@
           [:div.cell {:style {:margin 6
                               :visibility (when hidden "hidden")
                               :background (cond
-                                            (and valid turn) "#209cee"
-                                            valid            "#ee1f1f"
+                                            (and valid turn) (color :blue)
+                                            valid            (color :red)
                                             cell-bg          cell-bg
                                             :else            (color :button))}
                       :id id
                       :key i
                       :on-click #(on-click turn state i)
                       :class (when valid "pulse")}
-           [:div.inner.disable-selection {:style {:color (color :text)}}
+           [:div.inner.disable-selection
+            {:style {:color (cond (and valid turn) (color :text-on-blue)
+                                  (and valid)      (color :text-on-red)
+                                  :else            (color :text))}}
             v]]))])])
