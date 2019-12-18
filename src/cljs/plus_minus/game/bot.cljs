@@ -4,14 +4,13 @@
             [plus-minus.app-db :as db]
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
-            [plus-minus.game.achivement :as ach]
             [plus-minus.components.theme :refer [color]]
             [ajax.core :as ajax]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
             [plus-minus.game.board :as b]))
 
-(defn- change-state [state & {sync :sync :or {sync true}}]
+(defn change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
   (cookies/set! :game-state state)
   (when (and sync (db/get :identity))
@@ -142,17 +141,6 @@
                 "authorize!"]
       (> iq 0) [:div {:style {:color (color :blue)}}
                 (str "iq: " iq)])))
-
-(defn game-settings []
-  [board/game-settings
-   :size-range (or (db/get-in [:game-statistics :opened-rows])
-                   [b/row-count-min])
-   :state      (:game-state @db/state)
-   :on-change  #(let [row-size %
-                      moves    (-> :game-state db/get :moves seq)]
-                  (if moves
-                    (db/put! :modal (alert-restart row-size))
-                    (change-state (s/state-template row-size))))])
 
 (defn on-click [turn? state index]
   (if turn?

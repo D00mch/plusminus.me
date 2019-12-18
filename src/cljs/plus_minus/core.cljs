@@ -12,7 +12,7 @@
    [plus-minus.websockets :as ws]
    [plus-minus.components.common :as c]
    [plus-minus.game.about :as about]
-   [plus-minus.game.statistics :as stats]
+   [plus-minus.game.management :as management]
    [plus-minus.components.theme :as theme :refer [color]]
    [herb.core :refer [<class]]
    [reitit.core :as reitit]
@@ -48,19 +48,20 @@
   ^{:pseudo {:hover {:color (color :blue)}}}
   {:color (color :text)})
 
-(defn- menu-item [name]
+(defn- menu-item [name & on-click]
   [:a {:href (str "#/" name)
-       :style {:margin-top 10, :margin-right 10}
+       :on-click on-click
+       :style {:margin-top 10, :margin-right 10, :font-size 24}
        :class (<class hover)} name])
 
 (defn home-page []
   [:div.center-hv
    [:div>div.flex.column
-     [menu-item "single"]
-     [menu-item "multiplayer"]
-     [menu-item "management"]
-     [menu-item "user"]
-     [menu-item "about"]]])
+    [menu-item "single"]
+    [menu-item "multiplayer"]
+    [menu-item "management" (management/init-managment)]
+    [menu-item "user"]
+    [menu-item "about"]]])
 
 (defn multiplayer-page []
   (fn []
@@ -74,11 +75,11 @@
          [:label "Authenticate to play with other people"]]
         [online/game-component]))))
 
-(defn statistics-page []
-  (stats/stats-component))
+(defn managmenet-page []
+  (management/component))
 
 (defn- auth-item [name & [onclick href]]
-  [:a {:style {:margin-top 10, :margin-right 10}
+  [:a {:style {:margin-top 10, :margin-right 10, :font-size 24}
        :class (<class hover)
        :href href
        :on-click (or onclick #(c/clear-cache))}
@@ -122,7 +123,7 @@
    :about       #'about-page
    :user        #'user-page
    :multiplayer #'multiplayer-page
-   :statistics  #'statistics-page})
+   :management  #'managmenet-page})
 
 (defn page []
   [:div {:style {:background-color (color :bg)
@@ -138,7 +139,7 @@
      ["/user" :user]
      ["/about" :about]
      ["/multiplayer" :multiplayer]
-     ["/statistics" :statistics]]))
+     ["/management" :management]]))
 
 (defn match-route [uri]
   (prn :uri uri)
@@ -172,6 +173,5 @@
   ;; init states
   (init-online-state!)
   (bot/init-game-state!)
-  (stats/init-stats!)
   (mount-components))
 
