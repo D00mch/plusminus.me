@@ -50,6 +50,9 @@
   (let [unique-users (-> (spec/gen ::validation/id) (gen/sample 100) distinct)]
     (doseq [user unique-users
             :let [stats (-> (spec/gen ::contract/statistics) gen/generate)]]
+      (-> {:id user}
+          (assoc  :email nil)
+          (assoc :pass (str "1passWord" (-> (spec/gen string?) gen/generate))))
       (db/create-user! (-> {:id user :pass (str "1234SADF" user)}
                            (assoc  :email nil)
                            (dissoc :pass-confirm)
