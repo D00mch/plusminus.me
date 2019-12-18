@@ -52,7 +52,7 @@
         {:class (get-in @styles [id :class])}
         [:input.input
          {:style {:background-color "lightgray"
-                  :color (color :text)}
+                  :color "gray"}
           :type        type
           :placeholder hint
           :value       (id @fields)
