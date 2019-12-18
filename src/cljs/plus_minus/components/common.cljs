@@ -109,3 +109,10 @@
 (defn clear-cache []
   (.then (.keys js/caches)
          (fn [cs] (.forEach cs #(.delete js/caches %)))))
+
+
+(defn offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
+(defn offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
+(defn element [id] (.getElementById js/document id))
+(defn el-width [el] (.-offsetWidth el))
+(defn el-height [el] (.-offsetHeight el))

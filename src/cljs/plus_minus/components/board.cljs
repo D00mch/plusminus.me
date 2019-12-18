@@ -21,7 +21,7 @@
        {:class (str (when (> (c/screen-height) (c/screen-width)) "is-up") " "
                     (when @active "is-active"))
         :on-click #(reset! active (not @active))}
-       [:div.dropdown-trigger 
+       [:div.dropdown-trigger
         [:button.button {:aria-haspopup "true",
                          :aria-controls "dropdown1",
                          :style style}
@@ -58,16 +58,13 @@
 
 (defn cell-id [index] (str "board-cell" index))
 
-(defn- offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
-(defn- offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
-
 (defn show-info-near-cell! [index text]
   (let [el-id (cell-id index)
         el   (.getElementById js/document el-id)
         el-w (.-offsetWidth el)
         el-h (.-offsetHeight el)
-        top  (+ (offset-top el) (* 0.8 el-h))
-        left (+ (offset-left el) (* 0.6 el-w))
+        top  (+ (c/offset-top el) (* 0.8 el-h))
+        left (+ (c/offset-left el) (* 0.6 el-w))
         left (if (> left (* 0.5 (c/screen-width))) (- left (* 2 el-w)) left)]
     (c/show-top-el!
      [:div.notification.is-small
@@ -82,14 +79,14 @@
      :delay 2000)))
 
 (defn animate-click! [index v turn?]
-  (let [cell        (.getElementById js/document (cell-id index))
-        cell-w      (.-offsetWidth cell)
-        cell-h      (.-offsetHeight cell)
-        points      (.getElementById js/document (if turn? "scors-you" "scors-he"))
-        points-top  (offset-top points)
-        points-left (+ (* 0.8 (.-offsetWidth points)) (offset-left points))
-        top         (r/atom (+ (offset-top cell) (* 0.15 cell-h)))
-        left        (r/atom (+ (offset-left cell) (* 0.25 cell-w)))]
+  (let [cell        (c/element (cell-id index))
+        cell-w      (c/el-width cell)
+        cell-h      (c/el-height cell)
+        points      (c/element (if turn? "scors-you" "scors-he"))
+        points-top  (c/offset-top points)
+        points-left (+ (* 0.8 (.-offsetWidth points)) (c/offset-left points))
+        top         (r/atom (+ (c/offset-top cell) (* 0.15 cell-h)))
+        left        (r/atom (+ (c/offset-left cell) (* 0.25 cell-w)))]
     (set! (.. cell -style -visibility) "hidden")
     (c/after-delay anim-delay
      (fn []
