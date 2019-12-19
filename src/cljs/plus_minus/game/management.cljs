@@ -10,7 +10,8 @@
             [plus-minus.game.achivement :as ach]
             [plus-minus.app-db :as db]
             [plus-minus.components.theme :as theme :refer [color]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [plus-minus.components.common :as c]))
 
 (def ^{:private true, :cons true} icon-done "far fa-check-circle")
 (def ^{:private true, :cons true} icon-lock "fa fa-lock")
@@ -117,4 +118,6 @@
         ;; online statistics
         [:div title "ONLINE STATISTICS"]
         [stats/stats-component]
-        ]]]]))
+        [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
+               :on-click #(.back (.-history js/window))}
+         [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]]]]]))

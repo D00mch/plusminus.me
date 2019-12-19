@@ -68,7 +68,8 @@
     (c/show-top-el!
      [:div.notification.is-small
       {:style {:position "absolute"
-               ;:background-color (color :bg)
+               :background-color (color :bg)
+               :color (color :text)
                :border-color "black"
                :border-style "solid"
                :border-width 1
