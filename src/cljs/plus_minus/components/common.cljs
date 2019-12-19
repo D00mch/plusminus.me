@@ -25,7 +25,8 @@
      :body   [:div [:label body]]
      :footer [:div
               [:a.button.is-primary
-               {:on-click #(db/remove! :modal)}
+               {:style {:color (color :text-on-blue)}
+                :on-click #(db/remove! :modal)}
                "Close"]]]))
 
 (defn show-info-modal! [title body]
@@ -70,7 +71,7 @@
   (fn []
     (r/with-let [time (r/atom (quot (+ millis-remains 500) 1000))]
       (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
-      [:div label @time])))
+      [:div {:style {:color (color :blue)}} label @time])))
 
 (defn line-timer-comp [millis-remains max diff]
   (fn []
@@ -82,7 +83,7 @@
                  5     "is-danger"
                  2     "is-warning"
                  "is-success")
-        :style {:height 2 :margin-bottom 10 :margin-top 10}}])))
+        :style {:height 2 :margin-bottom 10 :margin-top 2}}])))
 
 (defn show-snack! [text & [time]]
   (js/setTimeout #(db/remove! :snack) (or time 3000))

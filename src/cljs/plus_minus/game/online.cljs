@@ -58,7 +58,7 @@
       (db/put! :online-warn-timer
                (js/setTimeout #(c/play-sound "sound/time-warn.flac")
                               (- remains timeout-warn))))
-    (db/put! :online-timer (c/timer-comp remains "Turn timer: "))
+    (db/put! :online-timer (c/timer-comp remains "turn timer: "))
     (db/put! :online-timer-line (c/line-timer-comp remains (max-time-millis) 100))))
 
 (defn- update-user-stats! [game]
@@ -146,25 +146,28 @@
 (defn- drop-searching-game! []
   (ws/push-message! :drop (db/get :online-row)))
 
-(defn- new-game-panel-component []
+(defn- game-cycle-button []
   (let [style {:background-color (color :button)
+               :color (color :text)
                :margin-bottom 10}]
     (case (db/get :online-status)
-      :playing   [:a.play.button.is-info
+      :playing   [:a.button.is-info
                   {:on-click #(ws/push-message! :give-up)
-                   :style (assoc style :background-color (color :red))}
+                   :style (assoc style
+                                 :background-color (color :red)
+                                 :color (color :text-on-red))}
                   "GIVE UP"]
       :searching [:div
                   {:style {:display :flex
                            :flex-direction :column}}
-                  [:a.board.play.button.is-danger
+                  [:a.board.button.is-danger
                    {:on-click drop-searching-game!
                     :style style}
                    "cancel search"]
                   [:progress.board.progress.is-small.is-dark
                    {:max 100
                     :style {:margin-bottom "10px"}}]]
-      :idle      [:a.play.button.is-info
+      :idle      [:a.button.is-info
                    {:on-click start-new-game!
                     :style style}
                    "NEW GAME"]
@@ -185,9 +188,8 @@
       [:div.flex
       {:style {:justify-content "center"
                :align-items "center"}}
-      [new-game-panel-component]])
+      [game-cycle-button]])
     (when (db/get :online-mocks-shown) [mock/mock-buttons])
-    
     ]])
 
 (defn game-component []
@@ -230,7 +232,7 @@
             :grid-column-start 1, :grid-column-end 4}}
      (if (db/get :online-mocks-shown)
        [mock/mock-buttons]
-       [new-game-panel-component])]
+       [game-cycle-button])]
     [:div {:style
            {:position "relative"
             :border-radius "50%"
@@ -244,7 +246,7 @@
            :on-click #(db/update! :online-mocks-shown not)}
      [:div {:style {:position "absolute", :top "50%", :left "50%"
                     :transform "translate(-50%, -50%) "}}
-      "$"]]
+      (if (db/get :online-mocks-shown) "X" "$")]]
     (when (db/get :online-mocks-shown)
       [:div {:style
             {:color (color :blue)
