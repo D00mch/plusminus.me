@@ -152,10 +152,9 @@
               {:justify-content "center"
                :align-items "center"
                :width "100vw"}}
-   [:div.board.flex.column {:style {:justify-content "space-between"
-                                    :height "100vh"}}
-    [:div.flex {:style {:flex-direction "column"
-                        :background-color "greed"}}
+   [:div.board.flex.column
+    {:style {:justify-content "space-between", :height "100vh"}}
+    [:div.flex {:style {:flex-direction "column"}}
      [board/scors
       :state   (db/get :game-state)
       :usr-hrz usr-hrz
