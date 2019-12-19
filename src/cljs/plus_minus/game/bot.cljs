@@ -165,6 +165,6 @@
      :on-click  on-click
      :game-state (db/get :game-state)
      :user-hrz   usr-hrz]
-    [:div {:style {:font-size 16, :color (color :blue)}
-           :on-click #(.back (.-history js/window))} "<"]
-    ]])
+    [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
+           :on-click #(.back (.-history js/window))}
+     [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]]])

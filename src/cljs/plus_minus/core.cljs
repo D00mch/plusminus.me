@@ -42,7 +42,8 @@
     [:a {:href (str (if (db/get :dev?) "http://" "https://")
                     (.-host js/location)
                     "/privacy-policy")}
-     "privacy policy"]]])
+     "privacy policy"]]
+   [:br] [c/common-back] [:br]])
 
 (defn single-page []
   [bot/game-component])
@@ -102,7 +103,8 @@
      [:div>div.flex.column
       [auth-item "google auth" nil "/oauth/init"]
       [auth-item "register" #(db/put! :modal (reg/registration-form on-logged-in))]
-      [auth-item "login" #(db/put! :modal (login/login-form on-logged-in))]])])
+      [auth-item "login" #(db/put! :modal (login/login-form on-logged-in))]])
+   [c/common-back]])
 
 (defn modal []
   (when-let [session-modal (db/get :modal)]

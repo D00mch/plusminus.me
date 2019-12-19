@@ -189,6 +189,11 @@
     [mock/mock-buttons]
     [game-cycle-button]))
 
+(defn- comp-mock-btn []
+  [:div {:style {:position "absolute", :top "50%", :left "50%"
+                 :transform "translate(-50%, -50%) "}}
+   (if (db/get :online-mocks-shown) "X" "$")])
+
 (defn game-component []
   [:div.center-hv {:style {:padding 16}}
    [:div.board {:style
@@ -198,6 +203,10 @@
                  :grid-template-rows "16% 5% 1% 58% 15% 5%"}}
     [:div {:style {:grid-column-start 1, :grid-column-end 4, :grid-row-start 1}}
      [comp-scors]]
+    [:span.dot {:style {:height 9 :width 9 :border-radius "50%" :margin-top 10,
+                        :background-color (if (ws/connected?) "green" "red")
+                        :justify-self "center", :align-self "start"
+                        :grid-row-start 1, :grid-column-start 2}}]
     [:div {:style {:grid-column-start 1, :grid-column-end 4, :grid-row-start 2}}
      (when (= :playing (db/get :online-status)) [(db/get :online-timer)])]
     [:div {:style {:grid-column-start 1, :grid-column-end 4,
@@ -208,6 +217,9 @@
     [:div {:style {:grid-row-start 5, :justify-self "center", :align-self "center"
                    :grid-column-start 1, :grid-column-end 4}}
      [comp-buttons]]
+    [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
+           :on-click #(.back (.-history js/window))}
+     [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]
     [:div {:style
            {:border-radius "50%"
             :background-color (color :blue), :color (color :text-on-blue)
@@ -215,9 +227,7 @@
             :width "5vh", :heigh "5vh", :position "relative"
             :padding-top 10, :padding-bottom 10, :justify-self "center"}
            :on-click #(db/update! :online-mocks-shown not)}
-     [:div {:style {:position "absolute", :top "50%", :left "50%"
-                    :transform "translate(-50%, -50%) "}}
-      (if (db/get :online-mocks-shown) "X" "$")]]
+     [comp-mock-btn]]
     [:div {:style {:color (color :blue)
                    :margin-bottom -2
                    :justify-self "end", :align-self "end"

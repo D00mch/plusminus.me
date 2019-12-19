@@ -111,6 +111,14 @@
   (.then (.keys js/caches)
          (fn [cs] (.forEach cs #(.delete js/caches %)))))
 
+(defn common-back[]
+  [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)
+                 :position "absolute"
+                 :top "95%"
+                 :left "5%"}
+         :on-click #(.back (.-history js/window))}
+   [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]])
+
 
 (defn offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
 (defn offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
