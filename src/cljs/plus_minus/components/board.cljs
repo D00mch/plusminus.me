@@ -52,7 +52,7 @@
       [:div.flex
        {:style {:color (color :red), :font-size 24, :justify-content "flex-end"}
         :id    "scors-he"
-        :class (if you-moved "" "rotate")} your-p]
+        :class (if you-moved "" "rotate")} his-p]
       [:div {:style {:color (color :red)}} (or he "He")]]]))
 
 (defn cell-id [index] (str "board-cell" index))
