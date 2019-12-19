@@ -18,8 +18,7 @@
     (fn [& {state :state on-change :on-change size-range :size-range
             label :label :or {label (s/rows state)}}]
       [:div.dropdown
-       {:class (str (when (> (c/screen-height) (c/screen-width)) "is-up") " "
-                    (when @active "is-active"))
+       {:class (when @active "is-active")
         :on-click #(reset! active (not @active))}
        [:div.dropdown-trigger
         [:button.button {:aria-haspopup "true",
@@ -116,7 +115,8 @@
       cell-bg                            :cell-bg
       board-width                        :board-width}]
   [:div.board.grid
-   {:style {:max-width (or board-width "450px")}}
+   {:style {:max-width (or board-width "450px")}
+    :id "board"}
    (for [y (range r)]
      [:div.row {:key y}
       (for [x (range r)]
