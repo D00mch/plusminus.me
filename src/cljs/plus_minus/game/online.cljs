@@ -195,7 +195,7 @@
    (if (db/get :online-mocks-shown) "X" "$")])
 
 (defn game-component []
-  [:div.center-hv {:style {:padding 16}}
+  [:div.center-hv.disable-selection {:style {:padding 16}}
    [:div.board {:style
                 {:display "grid"
                  :width "100%", :height "100%"

@@ -150,11 +150,12 @@
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
   [:div.flex {:style
               {:justify-content "center"
+               :padding 4
                :align-items "center"
                :width "100vw"}}
    [:div.board.flex.column
     {:style {:justify-content "space-between", :height "100vh"}}
-    [:div.flex {:style {:flex-direction "column"}}
+    [:div.flex.disable-selection {:style {:flex-direction "column"}}
      [board/scors
       :state   (db/get :game-state)
       :usr-hrz usr-hrz

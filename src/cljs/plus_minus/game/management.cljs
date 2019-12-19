@@ -78,7 +78,7 @@
         title   {:style {:color (color :blue) :font-size 24 :margin-top mar-top}}
         text2   (assoc-in title [:style :color] (color :text))
         #_{:style {:color (color :text) :font-size 24 :margin-top 12}}]
-    [:section.section {:style {:background-color (color :bg)}}
+    [:section.section.disable-selection {:style {:background-color (color :bg)}}
      [:div.container>div.columns
       [:div.flex.column
        [:div {:style {:max-width 600}}
