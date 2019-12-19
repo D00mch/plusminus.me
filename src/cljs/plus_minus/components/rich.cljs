@@ -1,10 +1,12 @@
-(ns plus-minus.components.rich)
+(ns plus-minus.components.rich
+  (:require [plus-minus.components.theme :refer [color]]))
 
 ;; donation link
 ;; https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LZCUTSKRWUDZE&source=url
 
 (defn donation []
   [:form {:action "https://www.paypal.com/cgi-bin/webscr",
+          :style {:margin-left -25}
           :method "post", :target "_top"}
    [:input {:type "hidden", :name "cmd", :value "_s-xclick"}]
    [:input {:type "hidden", :name "hosted_button_id", :value "LZCUTSKRWUDZE"}]
@@ -18,8 +20,9 @@
           :src "https://www.paypal.com/en_KZ/i/scr/pixel.gif"}]])
 
 (defn donation-ru []
-  [:form.top-mar
-   {:method "POST", :action "https://money.yandex.ru/quickpay/confirm.xml"}
+  [:form
+   {:method "POST", :action "https://money.yandex.ru/quickpay/confirm.xml"
+    :style {:margin-left 16}}
    [:input {:type "hidden", :name "receiver", :value "410012912961469"}]
    [:input {:type "hidden", :name "formcomment", :value "Проект «Плюс Минус»: математическая головоломка"}]
    [:input {:type "hidden", :name "short-dest", :value "Игра Плюс-Минус"}]
@@ -47,9 +50,11 @@
    "You will continue seeing no adds :)"])
 
 (defn donate-explained []
-  [:div.content.disable-selection
-   [:h5 "Consider Dontaion"]
-   [:p
-    "This project is free. No adds. All feature are opened for everyone."
-    [:br]
-    "With your help, this project may grow sky-high :)"]])
+  (let [text {:style {:color (color :text)}}
+        title {:style {:color (color :blue)}}]
+    [:div.content.disable-selection
+     [:h5 title  "Consider Dontaion"]
+     [:p text
+      "This project is free. No adds. All feature are opened for everyone."
+      [:br]
+      "With your help, this project may grow sky-high :)"]]))

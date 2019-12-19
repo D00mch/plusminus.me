@@ -31,15 +31,18 @@
 
 (defn about-page []
   [:div.container>div.column>div.columns
+   {:style {:background-color (color :bg), :padding 12}}
    [:div.column.is-half
     [about/component]]
    [:div.column.is-half
     [rich/donate-explained]
-    [:div.flex
-     [:img {:src "/img/warning_clojure.png"}]
-     [:div.flex.column.left-mar
-      [:div [rich/donation]]
-      [:div {:style {:margin-left 10}} [rich/donation-ru]]]]]])
+    [:div.flex.left-mar
+     [:div [rich/donation]]
+     [:div {:style {:margin-left 10}} [rich/donation-ru]]]
+    [:a {:href (str (if (db/get :dev?) "http://" "https://")
+                    (.-host js/location)
+                    "/privacy-policy")}
+     "privacy policy"]]])
 
 (defn single-page []
   [bot/game-component])
