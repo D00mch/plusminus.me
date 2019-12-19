@@ -127,6 +127,7 @@
               id     (cell-id i)
               v      (nth cells i)]
           [:div.cell {:style {:margin 6
+                              :border-radius (quot 60 r)
                               :visibility (when hidden "hidden")
                               :background (cond
                                             (and valid turn) (color :blue)
