@@ -44,7 +44,7 @@
     [:div.board.scors.disable-selection
      [:div.flex {:style {:flex-direction "column"}}
       [:div
-       {:style {:color (color :blue), :font-size 24}
+       {:style {:color (color :blue), :font-size 24,:width 20}
         :id    "scors-you"
         :class (if you-moved "rotate" "")} your-p]
       [:div {:style {:color (color :blue)}} (or you "You")]]
