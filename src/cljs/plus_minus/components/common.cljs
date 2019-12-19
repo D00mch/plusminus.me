@@ -82,7 +82,7 @@
                  5     "is-danger"
                  2     "is-warning"
                  "is-success")
-        :style {:height 2 :margin 0 :margin-top 5}}])))
+        :style {:height 2 :margin-bottom 10 :margin-top 10}}])))
 
 (defn show-snack! [text & [time]]
   (js/setTimeout #(db/remove! :snack) (or time 3000))
