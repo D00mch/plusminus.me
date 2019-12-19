@@ -9,8 +9,7 @@
             [plus-minus.websockets :as ws]
             [plus-minus.game.mock :as mock]
             [plus-minus.components.common :as c]
-            [ajax.core :as ajax]
-            [clojure.string :as str]))
+            [ajax.core :as ajax]))
 
 (def statuses #{:playing :searching :idle})
 
@@ -129,16 +128,6 @@
   (initial-state!)
   (db/put! :modal (c/info-modal "Fail" "Game is already matched or never exist")))
 
-(defn- top-panel-component []
-  [:div.flex.board.space-between
-   [:div
-    ]
-   
-   [:div.tags.has-addons.disable-selection {:style {:margin 3}}
-    [:span.tag.is-medium "$"]
-    [:span.tag.is-info.is-medium {:class "is-light"}
-     (db/get-in [:online-user-stats :influence] "..")]]])
-
 (defn- start-new-game! []
   (ws/push-message! :new (db/get :online-row))
   (db/put! :online-status :searching))
@@ -180,17 +169,25 @@
       (board/show-info-near-cell! index "You can't go here!"))
     (board/show-info-near-cell! index "press 'new game' to start")))
 
-(defn- bottom-component []
-  [:div.board
-   [:div.flex.column
-    #_[top-panel-component]
-    (when-not (db/get :online-mocks-shown)
-      [:div.flex
-      {:style {:justify-content "center"
-               :align-items "center"}}
-      [game-cycle-button]])
-    (when (db/get :online-mocks-shown) [mock/mock-buttons])
-    ]])
+(defn- comp-board []
+  [board/matrix
+   :on-click    on-click
+   :game-state  (db/get :online-state)
+   :cell-bg     (db/get :online-cell-color)
+   :board-width (db/get :online-board-width)
+   :user-hrz    (db/get :online-hrz)])
+
+(defn- comp-scors []
+  [board/scors
+   :state   (db/get :online-state)
+   :usr-hrz (db/get :online-hrz)
+   :you     (db/get :identity)
+   :he      (db/get :online-he "He")])
+
+(defn- comp-buttons []
+  (if (db/get :online-mocks-shown)
+    [mock/mock-buttons]
+    [game-cycle-button]))
 
 (defn game-component []
   [:div.center-hv {:style {:padding 16}}
@@ -198,66 +195,35 @@
                 {:display "grid"
                  :width "100%", :height "100%"
                  :grid-template-columns "1fr 1fr 1fr"
-                 :grid-template-rows "16% 5% 1% 58% 15% 5%"
-                 }}
-    [:div {:style
-           {:grid-column-start 1, :grid-column-end 4
-            :grid-row-start 1}}
-     [board/scors
-      :state   (db/get :online-state)
-      :usr-hrz (db/get :online-hrz)
-      :he      (db/get :online-he "He")]]
-    [:div {:style
-           {:grid-column-start 1, :grid-column-end 4
-            :grid-row-start 2}} 
+                 :grid-template-rows "16% 5% 1% 58% 15% 5%"}}
+    [:div {:style {:grid-column-start 1, :grid-column-end 4, :grid-row-start 1}}
+     [comp-scors]]
+    [:div {:style {:grid-column-start 1, :grid-column-end 4, :grid-row-start 2}}
      (when (= :playing (db/get :online-status)) [(db/get :online-timer)])]
-    [:div {:style
-           {:grid-column-start 1, :grid-column-end 4
-            :align-self "center"
-            :grid-row-start 3}}
+    [:div {:style {:grid-column-start 1, :grid-column-end 4,
+                   :grid-row-start 3, :align-self "center"}}
      (when (= :playing (db/get :online-status)) [(db/get :online-timer-line)])]
+    [:div {:style {:grid-row-start 4, :grid-column-start 1, :grid-column-end 4}}
+     [comp-board]]
+    [:div {:style {:grid-row-start 5, :justify-self "center", :align-self "center"
+                   :grid-column-start 1, :grid-column-end 4}}
+     [comp-buttons]]
     [:div {:style
-           {:grid-row-start 4
-            :grid-column-start 1, :grid-column-end 4}}
-     [board/matrix
-      :on-click    on-click
-      :game-state  (db/get :online-state)
-      :cell-bg     (db/get :online-cell-color)
-      :board-width (db/get :online-board-width)
-      :user-hrz    (db/get :online-hrz)]]
-    [:div {:style
-           {:grid-row-start 5
-            :justify-self "center"
-            :align-self "center"
-            :grid-column-start 1, :grid-column-end 4}}
-     (if (db/get :online-mocks-shown)
-       [mock/mock-buttons]
-       [game-cycle-button])]
-    [:div {:style
-           {:position "relative"
-            :border-radius "50%"
-            :background-color (color :blue)
-            :color (color :text-on-blue)
-            :grid-column-start 2
-            :grid-row-start 6
-            :width "5vh", :heigh "5vh"
-            :padding-top 10, :padding-bottom 10
-            :justify-self "center"}
+           {:border-radius "50%"
+            :background-color (color :blue), :color (color :text-on-blue)
+            :grid-column-start 2, :grid-row-start 6
+            :width "5vh", :heigh "5vh", :position "relative"
+            :padding-top 10, :padding-bottom 10, :justify-self "center"}
            :on-click #(db/update! :online-mocks-shown not)}
      [:div {:style {:position "absolute", :top "50%", :left "50%"
                     :transform "translate(-50%, -50%) "}}
       (if (db/get :online-mocks-shown) "X" "$")]]
-    (when (db/get :online-mocks-shown)
-      [:div {:style
-            {:color (color :blue)
-             :margin-bottom -2
-             :justify-self "end"
-             :align-self "end"
-             :grid-row-start 6
-             :grid-column-start 3}}
-      (str "money: $" (db/get-in [:online-user-stats :influence] ".."))])
-    ]]
-  )
+    [:div {:style {:color (color :blue)
+                   :margin-bottom -2
+                   :justify-self "end", :align-self "end"
+                   :grid-row-start 6, :grid-column-start 3}}
+     (when (db/get :online-mocks-shown)
+       (str "money: $" (db/get-in [:online-user-stats :influence] "..")))]]])
 
 (comment
   (def game
