@@ -7,12 +7,9 @@
             [plus-minus.game.online :as online]
             [plus-minus.websockets :as ws]
             [plus-minus.components.board :as board]
-            [plus-minus.game.achivement :as ach]
             [herb.core :refer [<class]]
             [plus-minus.app-db :as db]
-            [plus-minus.components.theme :as theme :refer [color]]
-            [clojure.string :as str]
-            [plus-minus.components.common :as c]))
+            [plus-minus.components.theme :as theme :refer [color]]))
 
 (def ^{:private true, :cons true} icon-done "far fa-check-circle")
 (def ^{:private true, :cons true} icon-lock "fa fa-lock")
@@ -121,7 +118,8 @@
         [:br]
         ;; online statistics
         [:div title "ONLINE STATISTICS"]
-        [stats/stats-component]
-        [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
-               :on-click #(.back (.-history js/window))}
-         [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]]]]]))
+        [stats/stats-component]]]]
+     [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
+            :on-click #(.back (.-history js/window))}
+      [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]
+     ]))
