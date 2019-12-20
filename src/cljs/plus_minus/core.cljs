@@ -60,7 +60,7 @@
 
 (defn home-page []
   [:div.center-hv
-   [:div>div.flex.column
+   [:div>div.flex.column.disable-selection
     [menu-item "single"]
     [menu-item "multiplayer"]
     [menu-item "management" (management/init-managment)]
@@ -96,7 +96,7 @@
   (bot/init-game-state!))
 
 (defn user-page []
-  [:div.center-hv
+  [:div.center-hv.disable-selection
    (if (db/get :identity)
      [:div>div.flex.column
       [auth-item "logout" #(do (ws/close!) (login/logout!))]
