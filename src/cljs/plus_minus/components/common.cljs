@@ -1,17 +1,20 @@
 (ns plus-minus.components.common
   (:require [clojure.string :as str]
             [plus-minus.app-db :as db]
+            [herb.core :refer [<class]]
+            [plus-minus.components.theme :refer [color]]
             [reagent.core :as r]))
 
 (defn modal [& {:keys [header body footer style]}]
-  [:div.modal.is-active.disable-selection
-   [:div.modal-background
-    {:on-click #(db/remove! :modal)}]
-   [:div.modal-card
-    (merge {:style {:width "95vw" :max-width "400px"}} style)
-    [:header.modal-card-head header]
-    [:section.modal-card-body body]
-    [:footer.modal-card-foot footer]]])
+  (let [theme-style {:background-color (color :bg), :color (color :text)}]
+    [:div.modal.is-active.disable-selection
+    [:div.modal-background
+     {:on-click #(db/remove! :modal)}]
+    [:div.modal-card
+     (merge {:style {:width "95vw" :max-width "400px"}} style)
+     [:header.modal-card-head {:style theme-style} header]
+     [:section.modal-card-body {:style theme-style} body]
+     [:footer.modal-card-foot {:style theme-style} footer]]]))
 
 (defn info-modal [title body]
   (fn []
@@ -22,7 +25,8 @@
      :body   [:div [:label body]]
      :footer [:div
               [:a.button.is-primary
-               {:on-click #(db/remove! :modal)}
+               {:style {:color (color :text-on-blue)}
+                :on-click #(db/remove! :modal)}
                "Close"]]]))
 
 (defn show-info-modal! [title body]
@@ -47,8 +51,10 @@
       [:div.field
        [:div.control
         {:class (get-in @styles [id :class])}
-        [:input.input.is-primary
-         {:type        type
+        [:input.input
+         {:style {:background-color "lightgray"
+                  :color "gray"}
+          :type        type
           :placeholder hint
           :value       (id @fields)
           :auto-focus  (get-in @styles [id :auto-focus])
@@ -65,7 +71,7 @@
   (fn []
     (r/with-let [time (r/atom (quot (+ millis-remains 500) 1000))]
       (when (> @time 0) (js/setTimeout #(swap! time dec) 1000))
-      [:div label @time])))
+      [:div {:style {:color (color :blue)}} label @time])))
 
 (defn line-timer-comp [millis-remains max diff]
   (fn []
@@ -77,7 +83,7 @@
                  5     "is-danger"
                  2     "is-warning"
                  "is-success")
-        :style {:height 2 :margin 0 :margin-top 5}}])))
+        :style {:height 2 :margin-bottom 10 :margin-top 2}}])))
 
 (defn show-snack! [text & [time]]
   (js/setTimeout #(db/remove! :snack) (or time 3000))
@@ -104,3 +110,18 @@
 (defn clear-cache []
   (.then (.keys js/caches)
          (fn [cs] (.forEach cs #(.delete js/caches %)))))
+
+(defn common-back[]
+  [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)
+                 :position "absolute"
+                 :top "95%"
+                 :left "5%"}
+         :on-click #(.back (.-history js/window))}
+   [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]])
+
+
+(defn offset-top [el] (+ (.-offsetTop (.. el -offsetParent)) (.-offsetTop el)))
+(defn offset-left [el] (+ (.-offsetLeft (.. el -offsetParent)) (.-offsetLeft el)))
+(defn element [id] (.getElementById js/document id))
+(defn el-width [el] (.-offsetWidth el))
+(defn el-height [el] (.-offsetHeight el))

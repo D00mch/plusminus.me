@@ -82,4 +82,4 @@
       update-row-sizes))
 
 (defn on-end [stats result]
-  (-> stats check-stats (update-with-iq result) (update-win-streak result)))
+  (-> stats (update-with-iq result) check-stats (update-win-streak result)))

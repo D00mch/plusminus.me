@@ -1,6 +1,7 @@
 (ns plus-minus.game.mock
   (:require [plus-minus.app-db :as db]
             [plus-minus.multiplayer.contract :as contract]
+            [plus-minus.components.theme :refer [color]]
             [plus-minus.websockets :as ws]
             [plus-minus.components.common :as c]))
 
@@ -21,8 +22,10 @@
                  (for [type types
                        :let [name  (contract/mock-name type)
                              price (contract/mock-price type)]]
-                   [:div.button.is-link.is-outlined
-                    {:on-click (fn []
+                   [:div.button.is-link
+                    {:style {:background-color (color :blue)
+                             :color (color :text-on-blue)}
+                     :on-click (fn []
                                  (ws/push-message! :mock type)
                                  (db/remove! :modal))
                      :disabled (when (> price influence) true)}
@@ -30,18 +33,27 @@
         ]))))
 
 (defn mock-buttons []
-  (let [disabled (not= :playing (db/get :online-status))]
+  (let [disabled (not= :playing (db/get :online-status))
+        btn-style {:font-size 14}]
     [:div.buttons
     [:span.button.is-info
      {:on-click #(purchase-mock #{:alert-good-luck :alert-you-gonna-lose})
+      :style (assoc btn-style
+                    :background-color (color :blue)
+                    :color (color :text-on-blue))
       :disabled disabled}
-     "Send Alert"]
-     [:span.button.is-warning {:on-click #(purchase-mock #{:board-pink :board-small})
-                              :disabled disabled}
-     "Impair Board"]
-     [:span.button.is-primary {:on-click #(purchase-mock #{:laughter})
-                               :disabled disabled}
-     "Laugh"]]))
+     "SEND ALERT"]
+     [:span.button.is-warning
+      {:on-click #(purchase-mock #{:board-pink :board-small})
+       :style btn-style
+       :disabled disabled}
+     "IMPAIR BOARD"]
+     [:span.button.is-primary
+      {:on-click #(purchase-mock #{:laughter})
+       :style (assoc btn-style
+                     :color (color :text-on-blue))
+       :disabled disabled}
+     "LAUGH"]]))
 
 (defn mock-explained []
   [:p.disable-selection

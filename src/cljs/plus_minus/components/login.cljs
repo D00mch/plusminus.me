@@ -25,7 +25,7 @@
                    (swap! styles dissoc :loading)
                    (swap! styles assoc-in [:errors :id] message))})))
 
-(defn- login-form [on-login]
+(defn login-form [on-login]
   (fn []
     (let [fields (r/atom {})
           styles (r/atom {:id {:auto-focus true}})]

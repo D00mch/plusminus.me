@@ -47,7 +47,7 @@
                            (app-db/remove! :modal))
                 :error-handler (errors-handler styles)})))
 
-(defn- registration-form [on-reg]
+(defn registration-form [on-reg]
   (let [fields (r/atom {})
         styles (r/atom {:id {:auto-focus true}})]
     (fn [

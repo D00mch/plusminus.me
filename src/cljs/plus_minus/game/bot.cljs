@@ -4,13 +4,14 @@
             [plus-minus.app-db :as db]
             [plus-minus.cookies :as cookies]
             [plus-minus.components.board :as board]
-            [plus-minus.game.achivement :as ach]
+            [plus-minus.components.theme :refer [color]]
             [ajax.core :as ajax]
+            [herb.core :refer [<class]]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
             [plus-minus.game.board :as b]))
 
-(defn- change-state [state & {sync :sync :or {sync true}}]
+(defn change-state [state & {sync :sync :or {sync true}}]
   (db/put! :game-state state)
   (cookies/set! :game-state state)
   (when (and sync (db/get :identity))
@@ -137,23 +138,13 @@
         stats (db/get :game-statistics)
         iq    (:iq stats)]
     (cond
-      (not id) [:div {:style {:margin-left 5
-                              :margin-bottom 5}}
-                [:label "Authorize to rate your IQ"]]
-      (> iq 0) [:div.tags.has-addons.disable-selection {:style {:margin 3}}
-                [:span.tag.is-dark "IQ"]
-                [:span.tag.is-info iq]])))
-
-(defn game-settings []
-  [board/game-settings
-   :size-range (or (db/get-in [:game-statistics :opened-rows])
-                   [b/row-count-min])
-   :state      (:game-state @db/state)
-   :on-change  #(let [row-size %
-                      moves    (-> :game-state db/get :moves seq)]
-                  (if moves
-                    (db/put! :modal (alert-restart row-size))
-                    (change-state (s/state-template row-size))))])
+      (not id)
+      [:a {:class (<class #(with-meta {:color (color :blue)}
+                             {:pseudo {:hover {:color (color :text)}}}))
+           :href "#/user"}
+       "authorize!"]
+      (> iq 0) [:div {:style {:color (color :blue)}}
+                (str "iq: " iq)])))
 
 (defn on-click [turn? state index]
   (if turn?
@@ -161,21 +152,24 @@
     (board/show-info-near-cell! index "Can't make this move")))
 
 (defn game-component [& {usr-hrz :usr-hrz :or {usr-hrz true}}]
-  [:section.section>div.container>div.columns
-   [:div.flex.column.is-half
-    [:div.board {:style {:display :flex :flex-direction :column}}
+  [:div.flex {:style
+              {:justify-content "center"
+               :padding 4
+               :align-items "center"
+               :width "100vw"}}
+   [:div.board.flex.column
+    {:style {:justify-content "space-between", :height "100vh"}}
+    [:div.flex.disable-selection {:style {:flex-direction "column"}}
+     [board/scors
+      :state   (db/get :game-state)
+      :usr-hrz usr-hrz
+      :you     (db/get :identity)
+      :he      "IQ rater"]
      [game-stats]]
-    [board/scors
-     :state   (db/get :game-state)
-     :usr-hrz usr-hrz
-     :you     (db/get :identity)
-     :he      "IQ rater"]
     [board/matrix
      :on-click  on-click
      :game-state (db/get :game-state)
-     :user-hrz   usr-hrz]]
-   [:div.column.is-one-third
-    [:div.flex {:justify-content "flex-start"}
-     [:div.column
-      [:div {:style {:margin-left 10}} [game-settings]]
-      [ach/component]]]]])
+     :user-hrz   usr-hrz]
+    [:div {:style {:grid-row-start 6, :align-self "end", :color (color :button)}
+           :on-click #(.back (.-history js/window))}
+     [:span.icon.is-small>i {:class "fas fa-chevron-circle-left"}]]]])

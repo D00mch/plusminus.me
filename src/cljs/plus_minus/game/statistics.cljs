@@ -1,6 +1,7 @@
 (ns plus-minus.game.statistics
   (:require [reagent.core :as r]
             [plus-minus.app-db :as db]
+            [plus-minus.components.theme :refer (color)]
             [ajax.core :as ajax]
             [plus-minus.multiplayer.contract :as contract]))
 
@@ -31,36 +32,35 @@
   (load-stats!))
 
 (defn- stats-table []
-  [:div.container.table-container
-   (when-let [data (db/get-in [:online-stats :data])]
-     [:table.table.is-striped.is-narrow
-      [:thead
-       [:tr
-        [:th tname]
-        [:th win ]
-        [:th lose]
-        [:th draw]
-        [:th infl]]]
-      [:tfoot
-       [:tr
-        [:th tname]
-        [:th win ]
-        [:th lose]
-        [:th draw]
-        [:th infl]]]
-      [:tbody
-       (for [{id :id {:keys [win lose draw influence]} :statistics} data]
-         [:tr {:class (when (= id (db/get :identity)) "is-selected")
-               :key id}
-          [:td id]
-          [:td win]
-          [:td lose]
-          [:td draw]
-          [:td influence]])]])])
+  (let [title-style {:style {:color (color :text)}}]
+    [:div {:style {:overflow-x "auto"}}
+     (when-let [data (db/get-in [:online-stats :data])]
+       [:table  {:style
+                 {:border-spacing 20
+                  :margin-left -20 
+                  :border-collapse "separate"}}
+        [:thead
+         [:tr
+          [:th title-style tname]
+          [:th title-style win ]
+          [:th title-style lose]
+          [:th title-style draw]
+          [:th title-style infl]]]
+        [:tbody
+         (for [{id :id {:keys [win lose draw influence]} :statistics} data]
+           [:tr {:style
+                 {:color (color (if (= id (db/get :identity)) :blue :text-gray))
+                  :margin 5}
+                 :key id}
+            [:td id]
+            [:td win]
+            [:td lose]
+            [:td draw]
+            [:td influence]])]])]))
 
 (defn stats-component []
   ;;(load-stats! stats error)
-  [:div.container>div.column
+  [:div
    [stats-table]
 
    ;; loading
