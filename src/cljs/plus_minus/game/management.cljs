@@ -8,6 +8,7 @@
             [plus-minus.websockets :as ws]
             [plus-minus.components.board :as board]
             [plus-minus.game.achivement :as ach]
+            [herb.core :refer [<class]]
             [plus-minus.app-db :as db]
             [plus-minus.components.theme :as theme :refer [color]]
             [clojure.string :as str]
@@ -102,17 +103,20 @@
        [:div.flex.column.disable-selection
         ;; theme
         [:div title "THEME"]
-        (let [theme (theme/get-theme)]
+        (let [theme (theme/get-theme)
+              dark  (color (if (= theme :dark) :blue :text))
+              light  (color (if (= theme :dark) :text :blue))
+              hover (fn [txt hov]
+                      #(with-meta {:color txt}
+                        {:pseudo {:hover {:color hov}}}))]
           [:div.flex {:style {:justify-content "flex-start"
                               :margin-top 8}}
-           [:div (merge text {:style
-                              {:color (color (if (= theme :dark) :blue :text))}
-                              :on-click #(theme/set-theme :dark)})
+           [:a  {:on-click #(theme/set-theme :dark)
+                 :class (<class (hover dark light))}
             "dark"]
-           [:div (merge text {:style
-                              {:color (color (if (= theme :light) :blue :text))
-                               :margin-left 22}
-                              :on-click #(theme/set-theme :light)})
+           [:a {:style {:margin-left 22}
+                :on-click #(theme/set-theme :light)
+                :class (<class (hover light dark))}
             "light"]])
         [:br]
         ;; online statistics
