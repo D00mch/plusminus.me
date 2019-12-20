@@ -75,8 +75,10 @@
         (init-online-state!)
         (js/setTimeout #(init-online-state!) 1000))
       (if anonim
-        [:section.section>div.container>div.content
-         [:label "Authenticate to play with other people"]]
+        [:section.section>div.container>div.content.disable-selection
+         [:a {:href "#/user"
+              :class (<class hover)}
+          "Authenticate to play with other people"]]
         [online/game-component]))))
 
 (defn managmenet-page []
