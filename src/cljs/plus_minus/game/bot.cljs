@@ -6,6 +6,7 @@
             [plus-minus.components.board :as board]
             [plus-minus.components.theme :refer [color]]
             [ajax.core :as ajax]
+            [herb.core :refer [<class]]
             [plus-minus.components.common :as c]
             [reagent.core :as r]
             [plus-minus.game.board :as b]))
@@ -137,8 +138,11 @@
         stats (db/get :game-statistics)
         iq    (:iq stats)]
     (cond
-      (not id) [:div {:style {:color (color :blue)}}
-                "authorize!"]
+      (not id)
+      [:a {:class (<class #(with-meta {:color (color :blue)}
+                             {:pseudo {:hover {:color (color :text)}}}))
+           :href "#/user"}
+       "authorize!"]
       (> iq 0) [:div {:style {:color (color :blue)}}
                 (str "iq: " iq)])))
 
